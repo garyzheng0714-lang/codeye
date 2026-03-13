@@ -297,13 +297,13 @@ export default function SplitPane({ onClose }: { onClose: () => void }) {
                       <div key={tc.id} className="split-tool-item">
                         <span className="split-tool-dot" />
                         <span className="split-tool-name">{getSemanticName(tc.name)}</span>
-                        {tc.input.file_path && (
+                        {typeof tc.input.file_path === 'string' && (
                           <span className="split-tool-path">
-                            {String(tc.input.file_path).split('/').slice(-2).join('/')}
+                            {tc.input.file_path.split('/').slice(-2).join('/')}
                           </span>
                         )}
-                        {tc.input.command && (
-                          <code className="split-tool-cmd">{String(tc.input.command).slice(0, 40)}</code>
+                        {typeof tc.input.command === 'string' && (
+                          <code className="split-tool-cmd">{tc.input.command.slice(0, 40)}</code>
                         )}
                       </div>
                     ))}

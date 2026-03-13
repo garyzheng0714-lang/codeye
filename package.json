@@ -11,6 +11,7 @@
     "build": "tsc -b && vite build",
     "build:electron": "tsc -p tsconfig.electron.json",
     "dist": "npm run build && npm run build:electron && electron-builder",
+    "dist:mac": "npm run build && npm run build:electron && electron-builder --mac dmg",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",

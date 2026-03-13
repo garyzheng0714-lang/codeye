@@ -12,10 +12,11 @@ import {
   Zap,
 } from 'lucide-react';
 
+export type ToolStatus = 'pending' | 'running' | 'error' | 'success';
 
 
 export function getToolStatus(tool: { name: string; output?: string }): ToolStatus {
-  if (tool.output === undefined) return 'running';
+  if (tool.output === undefined) return 'pending';
   if (tool.output?.startsWith('Error') || tool.output?.startsWith('error')) return 'error';
   return 'success';
 }
