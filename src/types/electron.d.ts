@@ -3,7 +3,7 @@ interface ElectronAPI {
     query: (params: { prompt: string; sessionId?: string; cwd?: string; mode?: string }) => Promise<void>;
     stop: () => Promise<void>;
     checkAuth: () => Promise<{ authenticated: boolean; method?: string; error?: string }>;
-    onMessage: (callback: (message: ClaudeMessage) => void) => () => void;
+    onMessage: (callback: (message: unknown) => void) => () => void;
     onComplete: (callback: () => void) => () => void;
     onError: (callback: (error: string) => void) => () => void;
   };
@@ -17,6 +17,12 @@ interface ElectronAPI {
   projects: {
     list: () => Promise<ProjectInfo[]>;
     selectDirectory: () => Promise<string | null>;
+  };
+  secrets: {
+    get: (key: string) => Promise<string | null>;
+    set: (key: string, value: string) => Promise<boolean>;
+    delete: (key: string) => Promise<boolean>;
+    listKeys: () => Promise<string[]>;
   };
   window: {
     minimize: () => Promise<void>;
@@ -59,29 +65,6 @@ interface ProjectInfo {
 declare global {
   interface Window {
     electronAPI?: ElectronAPI;
-  }
-
-  interface ClaudeMessage {
-    type: string;
-    subtype?: string;
-    message?: {
-      role: string;
-      content: ContentBlock[];
-    };
-    result?: string;
-    session_id?: string;
-    cost_usd?: number;
-    duration_ms?: number;
-    input_tokens?: number;
-    output_tokens?: number;
-  }
-
-  interface ContentBlock {
-    type: string;
-    text?: string;
-    tool_use_id?: string;
-    name?: string;
-    input?: Record<string, unknown>;
   }
 }
 

@@ -7,6 +7,7 @@ import SlashCommandPalette from './SlashCommandPalette';
 import ModelSelector from './ModelSelector';
 import type { SlashCommand } from '../../data/slashCommands';
 import type { ModelId } from '../../types';
+import { startStreamTrace } from '../../observability/perfBaseline';
 
 export default function InputArea() {
   const [input, setInput] = useState('');
@@ -17,6 +18,7 @@ export default function InputArea() {
   const { activeSessionId, createSession } = useSessionStore();
 
   const handleSend = useCallback(() => {
+    const dispatchStart = performance.now();
     const text = input.trim();
     if (!text || isStreaming) return;
 
@@ -35,6 +37,12 @@ export default function InputArea() {
     }
 
     const state = useChatStore.getState();
+    startStreamTrace({
+      mode,
+      model: state.model,
+      transport: window.electronAPI ? 'electron' : 'ws',
+      inputDispatchMs: Number((performance.now() - dispatchStart).toFixed(2)),
+    });
     sendClaudeQuery({
       prompt: text,
       mode,
@@ -88,6 +96,7 @@ export default function InputArea() {
 
     // Skills: insert as prompt and send
     const prompt = `/${command.name}`;
+    const dispatchStart = performance.now();
     setInput('');
 
     if (!activeSessionId) {
@@ -98,6 +107,12 @@ export default function InputArea() {
     startAssistantMessage();
 
     const state = useChatStore.getState();
+    startStreamTrace({
+      mode,
+      model: state.model,
+      transport: window.electronAPI ? 'electron' : 'ws',
+      inputDispatchMs: Number((performance.now() - dispatchStart).toFixed(2)),
+    });
     sendClaudeQuery({
       prompt,
       mode,

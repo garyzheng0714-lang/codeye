@@ -33,6 +33,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
     list: () => ipcRenderer.invoke('projects:list'),
     selectDirectory: () => ipcRenderer.invoke('projects:select-directory'),
   },
+  secrets: {
+    get: (key: string) => ipcRenderer.invoke('secret:get', key),
+    set: (key: string, value: string) => ipcRenderer.invoke('secret:set', key, value),
+    delete: (key: string) => ipcRenderer.invoke('secret:delete', key),
+    listKeys: () => ipcRenderer.invoke('secret:list-keys'),
+  },
   window: {
     minimize: () => ipcRenderer.invoke('window:minimize'),
     maximize: () => ipcRenderer.invoke('window:maximize'),

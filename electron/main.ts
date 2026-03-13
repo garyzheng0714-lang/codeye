@@ -3,6 +3,7 @@ import path from 'path';
 import { registerClaudeHandlers } from './ipc/claude';
 import { registerSessionHandlers } from './ipc/sessions';
 import { registerProjectHandlers } from './ipc/projects';
+import { registerSecretHandlers } from './ipc/secrets';
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -44,6 +45,7 @@ app.whenReady().then(() => {
   registerClaudeHandlers(ipcMain);
   registerSessionHandlers(ipcMain);
   registerProjectHandlers(ipcMain);
+  registerSecretHandlers(ipcMain);
   createWindow();
 });
 
@@ -54,4 +56,3 @@ app.on('window-all-closed', () => {
 app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) createWindow();
 });
-

@@ -8,10 +8,16 @@ import { useSessionStore } from './stores/sessionStore';
 import { useChatStore } from './stores/chatStore';
 import { useUIStore } from './stores/uiStore';
 import { saveCurrentSession } from './utils/session';
+import { hydrateStoresFromPersistence, startSessionAutoPersistence } from './storage/bootstrap';
 
 export default function App() {
   useClaudeChat();
   const sidebarCollapsed = useUIStore((s) => s.sidebarCollapsed);
+
+  useEffect(() => {
+    hydrateStoresFromPersistence();
+    return startSessionAutoPersistence();
+  }, []);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {

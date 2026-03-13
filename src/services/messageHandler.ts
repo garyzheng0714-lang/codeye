@@ -1,4 +1,5 @@
 import type { ToolCallDisplay } from '../types';
+import type { ClaudeMessage } from '../types/protocol';
 
 export interface StoreActions {
   appendAssistantContent: (s: string) => void;
@@ -16,14 +17,23 @@ export function handleClaudeMessage(message: ClaudeMessage, actions: StoreAction
 
   if (message.type === 'assistant' && message.message?.content) {
     for (const block of message.message.content) {
-      if (block.type === 'text' && block.text) {
+      if (block.type === 'text' && typeof block.text === 'string' && block.text.length > 0) {
         actions.appendAssistantContent(block.text);
       }
-      if (block.type === 'tool_use' && block.name) {
+      if (block.type === 'tool_use' && typeof block.name === 'string' && block.name.length > 0) {
+        const toolId =
+          typeof block.tool_use_id === 'string' && block.tool_use_id.length > 0
+            ? block.tool_use_id
+            : crypto.randomUUID();
+        const toolInput =
+          block.input && typeof block.input === 'object' && !Array.isArray(block.input)
+            ? (block.input as Record<string, unknown>)
+            : {};
+
         actions.addToolCall({
-          id: block.tool_use_id || crypto.randomUUID(),
+          id: toolId,
           name: block.name,
-          input: block.input || {},
+          input: toolInput,
           expanded: false,
         });
       }
