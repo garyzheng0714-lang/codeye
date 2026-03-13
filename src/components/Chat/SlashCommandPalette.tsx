@@ -3,6 +3,7 @@ import {
   filterCommands,
   groupByCategory,
   categoryLabels,
+  slashCommandCategoryOrder,
   type SlashCommand,
 } from '../../data/slashCommands';
 import { getCommandIcon } from '../../data/commandIcons';
@@ -34,7 +35,7 @@ export default function SlashCommandPalette({ query, onSelect, onClose, visible 
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
-      if (!visible) return;
+      if (!visible || flatList.length === 0) return;
 
       if (e.key === 'ArrowDown') {
         e.preventDefault();
@@ -42,9 +43,10 @@ export default function SlashCommandPalette({ query, onSelect, onClose, visible 
       } else if (e.key === 'ArrowUp') {
         e.preventDefault();
         setActiveIndex((i) => (i - 1 + flatList.length) % flatList.length);
-      } else if (e.key === 'Enter' && flatList.length > 0) {
+      } else if ((e.key === 'Enter' || e.key === 'Tab') && flatList.length > 0) {
         e.preventDefault();
-        onSelect(flatList[activeIndex]);
+        const safeIndex = Math.min(activeIndex, flatList.length - 1);
+        onSelect(flatList[safeIndex]);
       } else if (e.key === 'Escape') {
         e.preventDefault();
         onClose();
@@ -67,11 +69,11 @@ export default function SlashCommandPalette({ query, onSelect, onClose, visible 
       <div className="slash-palette-header">
         <span className="slash-palette-title">Commands</span>
         <span className="slash-palette-hint">
-          <kbd>↑↓</kbd> navigate <kbd>↵</kbd> select <kbd>esc</kbd> close
+          <kbd>↑↓</kbd> navigate <kbd>↵/tab</kbd> select <kbd>esc</kbd> close
         </span>
       </div>
       <div className="slash-palette-list">
-        {(['mode', 'model', 'skill', 'action'] as const).map((cat) => {
+        {slashCommandCategoryOrder.map((cat) => {
           const items = grouped[cat];
           if (!items?.length) return null;
           return (

@@ -21,6 +21,16 @@ test.describe('Input Area', () => {
     await expect(chatPage.textarea).toBeFocused();
   });
 
+  test('Ctrl+/ opens slash commands via simulated shortcut', async ({ chatPage, page }) => {
+    await chatPage.focusInput();
+    await page.evaluate(() => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: '/', ctrlKey: true, bubbles: true }));
+    });
+    await expect(chatPage.textarea).toBeFocused();
+    await expect(chatPage.textarea).toHaveValue('/');
+    await expect(chatPage.slashPalette).toBeVisible();
+  });
+
   test('textarea auto-resizes on multi-line input', async ({ chatPage }) => {
     const initialHeight = await chatPage.textarea.evaluate((el) => el.offsetHeight);
     await chatPage.textarea.fill('Line 1\nLine 2\nLine 3\nLine 4');

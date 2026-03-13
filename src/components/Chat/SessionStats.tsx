@@ -4,7 +4,9 @@ import { useChatStore } from '../../stores/chatStore';
 export default function SessionStats() {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-  const { cost, inputTokens, outputTokens } = useChatStore();
+  const cost = useChatStore((s) => s.cost);
+  const inputTokens = useChatStore((s) => s.inputTokens);
+  const outputTokens = useChatStore((s) => s.outputTokens);
 
   const hasActivity = cost > 0 || inputTokens > 0 || outputTokens > 0;
 

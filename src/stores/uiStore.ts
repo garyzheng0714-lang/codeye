@@ -8,16 +8,19 @@ interface UIState {
   sidebarCollapsed: boolean;
   activePanel: SidebarPanel;
   theme: ThemeId;
+  splitEnabled: boolean;
 
   toggleSidebar: () => void;
   setActivePanel: (panel: SidebarPanel) => void;
   setTheme: (theme: ThemeId) => void;
+  toggleSplit: () => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
   sidebarCollapsed: false,
   activePanel: 'sessions',
   theme: getStoredTheme(),
+  splitEnabled: false,
 
   toggleSidebar: () =>
     set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
@@ -29,4 +32,6 @@ export const useUIStore = create<UIState>((set) => ({
     applyTheme(theme);
     set({ theme });
   },
+
+  toggleSplit: () => set((state) => ({ splitEnabled: !state.splitEnabled })),
 }));

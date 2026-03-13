@@ -4,6 +4,7 @@ export class ChatPage {
   readonly page: Page;
   readonly textarea: Locator;
   readonly sendBtn: Locator;
+  readonly stopBtn: Locator;
   readonly userMessages: Locator;
   readonly userBubbles: Locator;
   readonly slashPalette: Locator;
@@ -24,6 +25,7 @@ export class ChatPage {
     this.page = page;
     this.textarea = page.locator('.input-textarea');
     this.sendBtn = page.locator('.send-btn');
+    this.stopBtn = page.locator('.stop-btn');
     this.userMessages = page.locator('.user-message-row');
     this.userBubbles = page.locator('.user-bubble');
     this.slashPalette = page.locator('.slash-palette');

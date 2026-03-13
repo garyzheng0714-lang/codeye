@@ -22,20 +22,18 @@ interface FolderSection {
   sessions: SessionData[];
 }
 
-function formatSessionTime(timestamp: number) {
-  return new Date(timestamp).toLocaleString('zh-CN', {
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
+function formatRelativeTime(timestamp: number) {
+  const now = new Date();
+  const date = new Date(timestamp);
+  const diffMs = now.getTime() - date.getTime();
+  const diffDays = Math.floor(diffMs / 86400000);
 
-function folderSubtitle(folder: SessionFolder, count: number) {
-  if (folder.path) {
-    return `${count} chats · ${folder.path}`;
+  if (diffDays === 0) {
+    return date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
   }
-  return `${count} chats · Temporary workspace`;
+  if (diffDays === 1) return 'Yesterday';
+  if (diffDays < 7) return `${diffDays}d ago`;
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
 export default function SessionList({
@@ -57,7 +55,11 @@ export default function SessionList({
     saveSessionMessages,
     getFolder,
   } = useSessionStore();
-  const chatStore = useChatStore();
+  const clearMessages = useChatStore((s) => s.clearMessages);
+  const setSessionId = useChatStore((s) => s.setSessionId);
+  const setClaudeSessionId = useChatStore((s) => s.setClaudeSessionId);
+  const setCwd = useChatStore((s) => s.setCwd);
+  const loadSession = useChatStore((s) => s.loadSession);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
   const [collapsedFolderIds, setCollapsedFolderIds] = useState<Set<string>>(new Set());
@@ -129,22 +131,24 @@ export default function SessionList({
   const handleSelectSession = (session: SessionData) => {
     if (session.id === activeSessionId) return;
 
-    if (activeSessionId && chatStore.messages.length > 0) {
-      saveSessionMessages(activeSessionId, chatStore.messages, chatStore.cost, chatStore.inputTokens, chatStore.outputTokens, {
-        model: chatStore.model,
-        claudeSessionId: chatStore.claudeSessionId,
-        cwd: chatStore.cwd,
+    const chatState = useChatStore.getState();
+
+    if (activeSessionId && chatState.messages.length > 0) {
+      saveSessionMessages(activeSessionId, chatState.messages, chatState.cost, chatState.inputTokens, chatState.outputTokens, {
+        model: chatState.model,
+        claudeSessionId: chatState.claudeSessionId,
+        cwd: chatState.cwd,
       });
     }
 
     const folder = getFolder(session.folderId);
     setActiveFolder(session.folderId);
     setActiveSession(session.id);
-    chatStore.setSessionId(session.id);
-    chatStore.setCwd(session.cwd || folder?.path || '');
+    setSessionId(session.id);
+    setCwd(session.cwd || folder?.path || '');
 
     if (session.messages.length || session.claudeSessionId) {
-      chatStore.loadSession({
+      loadSession({
         messages: session.messages,
         cost: session.cost,
         inputTokens: session.inputTokens,
@@ -153,8 +157,8 @@ export default function SessionList({
         model: session.model,
       });
     } else {
-      chatStore.clearMessages();
-      chatStore.setClaudeSessionId(null);
+      clearMessages();
+      setClaudeSessionId(null);
     }
   };
 
@@ -193,10 +197,10 @@ export default function SessionList({
 
     if (session.id === activeSessionId) {
       const folder = getFolder(session.folderId);
-      chatStore.clearMessages();
-      chatStore.setSessionId(null);
-      chatStore.setClaudeSessionId(null);
-      chatStore.setCwd(folder?.path || '');
+      clearMessages();
+      setSessionId(null);
+      setClaudeSessionId(null);
+      setCwd(folder?.path || '');
     }
   };
 
@@ -208,7 +212,7 @@ export default function SessionList({
           <path d="M15 24h18M24 15v18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
         </svg>
         <p>No folders yet</p>
-        <p>Add a workspace folder, then start or continue a Claude chat</p>
+        <p>Add a workspace folder to get started</p>
       </div>
     );
   }
@@ -217,11 +221,11 @@ export default function SessionList({
     return (
       <div className="empty-state">
         <svg className="empty-state-icon" viewBox="0 0 48 48" fill="none">
-          <rect x="7" y="10" width="34" height="28" rx="5" stroke="currentColor" strokeWidth="2" />
-          <path d="M14 18h20M14 24h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          <circle cx="20" cy="20" r="11" stroke="currentColor" strokeWidth="2" />
+          <path d="M28 28l10 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
         </svg>
-        <p>No matching results</p>
-        <p>Try another folder or session keyword</p>
+        <p>No results</p>
+        <p>Try a different keyword</p>
       </div>
     );
   }
@@ -246,21 +250,19 @@ export default function SessionList({
               onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); void handleActivateFolder(folder); } }}
             >
               <div className="folder-header-main">
-                <span className="folder-icon-wrap">
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                    <path d="M2.75 5.25a1.75 1.75 0 0 1 1.75-1.75H7.8l1.4 1.8H12.5a1.75 1.75 0 0 1 1.75 1.75v4.7a2 2 0 0 1-2 2h-7.5a2 2 0 0 1-2-2z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
+                <span className={`folder-chevron ${isExpanded ? 'open' : ''}`} aria-hidden="true">
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                    <path d="M4 4.5L6 7L8 4.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </span>
-                <div className="folder-copy">
-                  <span className="folder-name">{folder.name}</span>
-                  <span className="folder-meta">{folderSubtitle(folder, folderSessions.length)}</span>
-                </div>
+                <span className="folder-name">{folder.name}</span>
+                {(isSyncing || (!folder.hasSyncedClaudeHistory && folder.kind === 'local')) && (
+                  <span className={`folder-sync-dot ${isSyncing ? 'syncing' : 'idle'}`} />
+                )}
               </div>
               <div className="folder-header-actions">
-                {folder.kind === 'local' && (
-                  <span className={`folder-sync-pill ${isSyncing ? 'syncing' : folder.hasSyncedClaudeHistory ? 'ready' : 'idle'}`}>
-                    {isSyncing ? 'Syncing…' : folder.hasSyncedClaudeHistory ? 'Synced' : 'First sync'}
-                  </span>
+                {folderSessions.length > 0 && (
+                  <span className="folder-count">{folderSessions.length}</span>
                 )}
                 <button
                   type="button"
@@ -274,17 +276,12 @@ export default function SessionList({
                     });
                     onCreateSession(folder.id);
                   }}
-                  title="New session in folder"
+                  title="New session"
                 >
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                     <path d="M7 3v8M3 7h8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
                   </svg>
                 </button>
-                <span className={`folder-chevron ${isExpanded ? 'open' : ''}`} aria-hidden="true">
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                    <path d="M4.5 5.5L7 8.5L9.5 5.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </span>
               </div>
             </div>
 
@@ -300,7 +297,6 @@ export default function SessionList({
                         className={`session-item ${activeSessionId === session.id ? 'active' : ''}`}
                         onClick={() => handleSelectSession(session)}
                       >
-                        <span className="session-item-icon">#</span>
                         <div
                           className="session-item-content"
                           onDoubleClick={(event) => {
@@ -327,11 +323,11 @@ export default function SessionList({
                           ) : (
                             <span className="session-name">{session.name}</span>
                           )}
-                          <span className="session-meta">
-                            {session.messages.length > 0 ? `${session.messages.length} msgs` : 'Ready to continue'}
-                            {' · '}
-                            {formatSessionTime(session.updatedAt)}
-                          </span>
+                          {!isEditing && (
+                            <span className="session-time">
+                              {formatRelativeTime(session.updatedAt)}
+                            </span>
+                          )}
                         </div>
                         <div className={`session-actions ${isPendingDelete ? 'confirming' : ''}`}>
                           <button
@@ -359,7 +355,7 @@ export default function SessionList({
                   })
                 ) : (
                   <div className="folder-empty">
-                    <span>No chats in this folder yet</span>
+                    <span>No chats yet.</span>
                     <button type="button" onClick={() => onCreateSession(folder.id)}>
                       Start one
                     </button>

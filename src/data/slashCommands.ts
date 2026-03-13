@@ -43,7 +43,15 @@ const slashCommands: SlashCommand[] = [
   { name: 'compact', description: 'Compress conversation context', category: 'action', icon: 'compact' },
 ];
 
-export const categoryLabels: Record<string, string> = {
+export const slashCommandCategoryOrder: SlashCommand['category'][] = [
+  'mode',
+  'model',
+  'effort',
+  'skill',
+  'action',
+];
+
+export const categoryLabels: Record<SlashCommand['category'], string> = {
   mode: 'Modes',
   model: 'Models',
   effort: 'Thinking',
@@ -51,29 +59,40 @@ export const categoryLabels: Record<string, string> = {
   action: 'Actions',
 };
 
-import { readJson, writeJson } from '../utils/jsonStorage';
+import { readJson } from '../utils/jsonStorage';
 
 const CUSTOM_COMMANDS_KEY = 'codeye.custom-commands';
+let cachedCustomCommands: SlashCommand[] | null = null;
+let cachedAllCommands: SlashCommand[] | null = null;
 
 function loadCustomCommands(): SlashCommand[] {
+  if (cachedCustomCommands) {
+    return cachedCustomCommands;
+  }
   const parsed = readJson<SlashCommand[]>(CUSTOM_COMMANDS_KEY);
-  return Array.isArray(parsed) ? parsed : [];
+  cachedCustomCommands = Array.isArray(parsed) ? parsed : [];
+  return cachedCustomCommands;
 }
 
-export function saveCustomCommands(commands: SlashCommand[]): void {
-  writeJson(CUSTOM_COMMANDS_KEY, commands);
+export function invalidateSlashCommandsCache(): void {
+  cachedCustomCommands = null;
+  cachedAllCommands = null;
 }
 
-export function getAllCommands(): SlashCommand[] {
-  return [...slashCommands, ...loadCustomCommands()];
+
+function getAllCommands(): SlashCommand[] {
+  if (!cachedAllCommands) {
+    cachedAllCommands = [...slashCommands, ...loadCustomCommands()];
+  }
+  return cachedAllCommands;
 }
 
 export function filterCommands(query: string): SlashCommand[] {
   const all = getAllCommands();
-  const q = query.toLowerCase();
+  const q = query.trim().toLowerCase();
   if (!q) return all;
   return all.filter(
-    (c) => c.name.includes(q) || c.description.toLowerCase().includes(q)
+    (c) => c.name.toLowerCase().includes(q) || c.description.toLowerCase().includes(q)
   );
 }
 
@@ -84,4 +103,10 @@ export function groupByCategory(commands: SlashCommand[]): Record<string, SlashC
     groups[cmd.category].push(cmd);
   }
   return groups;
+}
+
+export function getSlashCommandByName(name: string): SlashCommand | undefined {
+  const normalized = name.trim().toLowerCase();
+  if (!normalized) return undefined;
+  return getAllCommands().find((cmd) => cmd.name.toLowerCase() === normalized);
 }

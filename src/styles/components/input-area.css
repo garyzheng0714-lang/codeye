@@ -1,6 +1,6 @@
 .input-area {
   padding: var(--space-3) var(--space-6) var(--space-4);
-  background: linear-gradient(to top, var(--bg-base) 60%, transparent);
+  background: linear-gradient(to top, var(--bg-base) 70%, transparent);
   position: relative;
 }
 
@@ -8,17 +8,16 @@
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  background: var(--bg-base);
+  background: var(--bg-secondary);
   border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   padding: var(--space-3);
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
-  box-shadow: var(--shadow-md);
 }
 
 .input-container:focus-within {
   border-color: var(--border-accent);
-  box-shadow: var(--shadow-md), 0 0 0 3px var(--accent-glow);
+  box-shadow: 0 0 0 2px var(--accent-muted);
 }
 
 .input-textarea {
@@ -46,8 +45,8 @@
 }
 
 .send-btn, .stop-btn {
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
   border: none;
   border-radius: var(--radius-full);
   cursor: pointer;
@@ -65,11 +64,10 @@
 .send-btn:hover:not(:disabled) {
   background: var(--accent-hover);
   transform: translateY(-1px);
-  box-shadow: var(--shadow-sm);
 }
 
 .send-btn:disabled {
-  opacity: 0.3;
+  opacity: 0.25;
   cursor: default;
 }
 
@@ -178,7 +176,7 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
-  padding: 2px var(--space-2);
+  padding: 1px 8px;
   background: var(--accent-muted);
   color: var(--accent);
   border-radius: var(--radius-full);
@@ -186,24 +184,9 @@
   font-weight: 500;
 }
 
-/* ============================================
-   Dark Theme Overrides
-   ============================================ */
-[data-theme="dark"] .input-area {
-  background: linear-gradient(to top, var(--bg-base) 60%, transparent);
-}
+/* ── Light Theme ── */
 
-[data-theme="dark"] .input-container {
-  background: var(--bg-secondary);
-  border-color: rgba(142, 71, 255, 0.15);
-}
-
-[data-theme="dark"] .input-container:focus-within {
-  border-color: rgba(142, 71, 255, 0.45);
-  box-shadow: var(--shadow-md), 0 0 0 3px rgba(142, 71, 255, 0.12);
-}
-
-[data-theme="dark"] .context-suggestions {
-  background: var(--bg-elevated);
-  border-color: rgba(142, 71, 255, 0.15);
+[data-theme="light"] .input-container {
+  background: var(--bg-base);
+  box-shadow: var(--shadow-sm);
 }

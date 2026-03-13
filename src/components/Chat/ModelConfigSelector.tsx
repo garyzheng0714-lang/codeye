@@ -12,7 +12,11 @@ const tierLabels: Record<string, string> = {
 export default function ModelConfigSelector() {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-  const { model, effort, setModel, setEffort, isStreaming } = useChatStore();
+  const model = useChatStore((s) => s.model);
+  const effort = useChatStore((s) => s.effort);
+  const isStreaming = useChatStore((s) => s.isStreaming);
+  const setModel = useChatStore((s) => s.setModel);
+  const setEffort = useChatStore((s) => s.setEffort);
   const currentModel = getModelInfo(model);
   const currentEffort = getEffortInfo(effort);
 

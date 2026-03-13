@@ -9,18 +9,19 @@ import ActivityStream from '../Chat/ActivityStream';
 import type { SessionFolder } from '../../types';
 
 export default function Sidebar() {
-  const { activePanel } = useUIStore();
-  const {
-    folders,
-    activeFolderId,
-    createFolder,
-    createSession,
-    setActiveFolder,
-    setActiveSession,
-    importClaudeSessions,
-    markFolderSynced,
-  } = useSessionStore();
-  const chatStore = useChatStore();
+  const activePanel = useUIStore((s) => s.activePanel);
+  const folders = useSessionStore((s) => s.folders);
+  const activeFolderId = useSessionStore((s) => s.activeFolderId);
+  const createFolder = useSessionStore((s) => s.createFolder);
+  const createSession = useSessionStore((s) => s.createSession);
+  const setActiveFolder = useSessionStore((s) => s.setActiveFolder);
+  const setActiveSession = useSessionStore((s) => s.setActiveSession);
+  const importClaudeSessions = useSessionStore((s) => s.importClaudeSessions);
+  const markFolderSynced = useSessionStore((s) => s.markFolderSynced);
+  const clearMessages = useChatStore((s) => s.clearMessages);
+  const setSessionId = useChatStore((s) => s.setSessionId);
+  const setClaudeSessionId = useChatStore((s) => s.setClaudeSessionId);
+  const setCwd = useChatStore((s) => s.setCwd);
   const [search, setSearch] = useState('');
   const [syncingFolderIds, setSyncingFolderIds] = useState<string[]>([]);
 
@@ -61,12 +62,12 @@ export default function Sidebar() {
       saveCurrentSession();
       setActiveFolder(folder.id);
       setActiveSession(null);
-      chatStore.clearMessages();
-      chatStore.setSessionId(null);
-      chatStore.setClaudeSessionId(null);
-      chatStore.setCwd(folder.path);
+      clearMessages();
+      setSessionId(null);
+      setClaudeSessionId(null);
+      setCwd(folder.path);
     },
-    [chatStore, setActiveFolder, setActiveSession]
+    [clearMessages, setActiveFolder, setActiveSession, setClaudeSessionId, setCwd, setSessionId]
   );
 
   const handleAddFolder = useCallback(async () => {
@@ -89,10 +90,10 @@ export default function Sidebar() {
   const handleNewSession = useCallback(
     (folderId?: string) => {
       saveCurrentSession();
-      chatStore.clearMessages();
+      clearMessages();
       createSession(undefined, folderId);
     },
-    [chatStore, createSession]
+    [clearMessages, createSession]
   );
 
   return (
@@ -112,15 +113,10 @@ export default function Sidebar() {
         </div>
         {activePanel === 'sessions' && (
           <div className="sidebar-actions">
-            <button className="sidebar-action-btn add-folder-btn" onClick={handleAddFolder} title="Add Folder">
+            <button className="sidebar-action-btn" onClick={handleAddFolder} title="Add Folder">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                 <path d="M2.5 5.5h3l1.4-1.8H13a1 1 0 0 1 1 1V11a2 2 0 0 1-2 2H4A2 2 0 0 1 2 11V6.5a1 1 0 0 1 .5-1z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
                 <path d="M8 5.8v4.4M5.8 8h4.4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-              </svg>
-            </button>
-            <button className="sidebar-action-btn new-session-btn primary" onClick={() => handleNewSession()} title="New Session (Cmd+N)">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
               </svg>
             </button>
           </div>

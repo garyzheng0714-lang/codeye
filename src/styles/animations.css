@@ -1,6 +1,8 @@
 /* ============================================
-   Animations
+   Animations — Codeye
    ============================================ */
+
+/* Basic utility animations */
 @keyframes blink {
   0%, 50% { opacity: 1; }
   51%, 100% { opacity: 0; }
@@ -26,11 +28,6 @@
   50%      { box-shadow: 0 0 20px var(--accent-glow); }
 }
 
-@keyframes floatBounce {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-6px); }
-}
-
 @keyframes shelfRise {
   from {
     opacity: 0;
@@ -50,5 +47,114 @@
   to {
     opacity: 1;
     transform: translateX(0);
+  }
+}
+
+/* ── Logo: Welcome float bounce ── */
+@keyframes floatBounce {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25%      { transform: translateY(-5px) rotate(-2deg); }
+  50%      { transform: translateY(-8px) rotate(0deg); }
+  75%      { transform: translateY(-5px) rotate(2deg); }
+}
+
+/* ── Logo: Eye blink (scales pupils vertically) ── */
+@keyframes eyeBlink {
+  0%, 42%, 48%, 100% { transform: scaleY(1); }
+  45%                 { transform: scaleY(0.05); }
+}
+
+/* ── Logo: Thinking — pupils look left-right ── */
+@keyframes thinkingEyes {
+  0%, 100% { transform: translateX(0); }
+  20%      { transform: translateX(-3px); }
+  40%      { transform: translateX(3px); }
+  60%      { transform: translateX(-1.5px) translateY(-1px); }
+  80%      { transform: translateX(2px) translateY(1px); }
+}
+
+/* ── Logo: Thinking — body gentle wobble ── */
+@keyframes thinkingWobble {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  15%      { transform: rotate(-3deg) scale(1.02); }
+  30%      { transform: rotate(2deg) scale(0.98); }
+  45%      { transform: rotate(-2deg) scale(1.01); }
+  60%      { transform: rotate(3deg) scale(0.99); }
+  75%      { transform: rotate(-1deg) scale(1.01); }
+  90%      { transform: rotate(1deg) scale(1); }
+}
+
+/* ── Logo: Thinking — purple glow pulse behind logo ── */
+@keyframes thinkingGlow {
+  0%, 100% { filter: drop-shadow(0 0 8px rgba(139, 92, 246, 0.3)); }
+  50%      { filter: drop-shadow(0 0 20px rgba(139, 92, 246, 0.6)) drop-shadow(0 0 40px rgba(139, 92, 246, 0.2)); }
+}
+
+/* ── Logo: Hop (new message arrival) ── */
+@keyframes logoHop {
+  0%   { transform: translateY(0) scale(1, 1); }
+  15%  { transform: translateY(0) scale(1.1, 0.9); }
+  30%  { transform: translateY(-12px) scale(0.95, 1.05); }
+  50%  { transform: translateY(0) scale(1.05, 0.95); }
+  65%  { transform: translateY(-4px) scale(0.98, 1.02); }
+  80%  { transform: translateY(0) scale(1.01, 0.99); }
+  100% { transform: translateY(0) scale(1, 1); }
+}
+
+/* ── Streaming cursor with glow ── */
+@keyframes cursorPulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 8px var(--accent-glow); }
+  50%      { opacity: 0.3; box-shadow: 0 0 4px transparent; }
+}
+
+/* ── Tool card: staggered entrance ── */
+@keyframes toolCardEnter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Tool icon: success pop ── */
+@keyframes toolIconPop {
+  0%   { transform: scale(0.6); opacity: 0; }
+  50%  { transform: scale(1.15); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* ── Expand reveal (search results, diff, bash extra) ── */
+@keyframes expandReveal {
+  from {
+    opacity: 0;
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 500px;
+  }
+}
+
+/* ── Thinking: 3-dot wave ── */
+@keyframes thinkingDotWave {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30%           { transform: translateY(-4px); opacity: 1; }
+}
+
+/* ── AI text: fade in after tools ── */
+@keyframes textBodyFadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Accessibility: respect reduced motion preference ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

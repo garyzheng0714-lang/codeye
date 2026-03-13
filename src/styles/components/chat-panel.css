@@ -11,40 +11,39 @@
   align-items: center;
   justify-content: center;
   background:
-    radial-gradient(ellipse 600px 400px at 50% 35%, rgba(124, 58, 237, 0.06), transparent),
-    radial-gradient(ellipse 400px 300px at 30% 60%, rgba(79, 70, 229, 0.03), transparent);
+    radial-gradient(ellipse 500px 350px at 50% 40%, rgba(168, 85, 247, 0.04), transparent);
 }
 
 .welcome-content {
   text-align: center;
-  max-width: 560px;
+  max-width: 540px;
   padding: var(--space-8);
   animation: fadeIn var(--transition-slow);
 }
 
 .welcome-logo {
-  margin-bottom: var(--space-4);
-  animation: floatBounce 3s ease-in-out infinite;
+  margin-bottom: var(--space-5);
+  animation: floatBounce 4s ease-in-out infinite;
 }
 
 .welcome-logo svg {
-  filter: drop-shadow(0 8px 24px rgba(124, 58, 237, 0.25));
+  filter: drop-shadow(0 6px 20px rgba(168, 85, 247, 0.25));
 }
 
 .welcome-title {
-  font-size: var(--text-4xl);
+  font-size: var(--text-3xl);
   font-weight: 800;
-  letter-spacing: -0.04em;
+  letter-spacing: -0.03em;
   margin-bottom: var(--space-3);
-  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 50%, #a78bfa 100%);
+  background: linear-gradient(135deg, #d8b4fe 0%, var(--accent) 60%, #7c3aed 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .welcome-subtitle {
-  font-size: var(--text-lg);
-  color: var(--text-secondary);
+  font-size: var(--text-md);
+  color: var(--text-muted);
   margin-bottom: var(--space-8);
   line-height: 1.6;
   font-weight: 400;
@@ -57,10 +56,10 @@
 }
 
 .hint-card {
-  padding: var(--space-4) var(--space-5);
-  background: var(--bg-base);
+  padding: var(--space-4) var(--space-4);
+  background: var(--bg-secondary);
   border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   color: var(--text-secondary);
   font-size: var(--text-base);
   text-align: left;
@@ -68,19 +67,80 @@
   transition: all var(--transition-base);
   line-height: 1.5;
   position: relative;
-  box-shadow: var(--shadow-sm);
 }
 
 .hint-card:hover {
-  background: var(--bg-base);
+  background: var(--bg-hover);
   color: var(--text-primary);
-  border-color: var(--border-accent);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+  border-color: var(--border-strong);
+  transform: translateY(-1px);
 }
 
-[data-theme="dark"] .welcome-screen {
+/* ── Codeye Logo Animations ── */
+
+.codeye-body.thinking {
+  animation: thinkingWobble 2.5s ease-in-out infinite;
+  transform-origin: 60px 60px;
+}
+
+.codeye-body.hop {
+  animation: logoHop 0.6s ease-out;
+  transform-origin: 60px 110px;
+}
+
+.codeye-pupil.blinking {
+  animation: eyeBlink 4s ease-in-out infinite;
+  transform-origin: center center;
+}
+
+.codeye-pupil.thinking {
+  animation: thinkingEyes 1.8s ease-in-out infinite;
+}
+
+.codeye-glow.thinking {
+  animation: thinkingGlow 2s ease-in-out infinite;
+}
+
+/* ── Thinking indicator (inline with messages) ── */
+
+.thinking-indicator {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) 0;
+  animation: fadeIn var(--transition-base);
+}
+
+.thinking-indicator-text {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  font-style: italic;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* ── Light theme adjustments ── */
+
+[data-theme="light"] .welcome-screen {
   background:
-    radial-gradient(ellipse 600px 400px at 50% 35%, rgba(142, 71, 255, 0.06), transparent),
-    radial-gradient(ellipse 400px 300px at 30% 60%, rgba(79, 70, 229, 0.03), transparent);
+    radial-gradient(ellipse 500px 350px at 50% 40%, rgba(147, 51, 234, 0.05), transparent);
+}
+
+[data-theme="light"] .welcome-logo svg {
+  filter: drop-shadow(0 6px 20px rgba(147, 51, 234, 0.2));
+}
+
+[data-theme="light"] .welcome-title {
+  background: linear-gradient(135deg, var(--accent) 0%, #7c3aed 60%, #6d28d9 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+[data-theme="light"] .hint-card {
+  background: var(--bg-base);
+  box-shadow: var(--shadow-sm);
+}
+
+[data-theme="light"] .hint-card:hover {
+  box-shadow: var(--shadow-md);
 }

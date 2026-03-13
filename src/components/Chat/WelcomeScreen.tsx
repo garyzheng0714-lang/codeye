@@ -18,7 +18,7 @@ const modeDescriptions: Record<ChatMode, string> = {
 };
 
 export default function WelcomeScreen() {
-  const { mode } = useChatStore();
+  const mode = useChatStore((s) => s.mode);
 
   return (
     <div className="welcome-screen">

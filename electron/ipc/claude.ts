@@ -10,7 +10,19 @@ const ALLOWED_MODES = new Set(['chat', 'code', 'plan']);
 const ALLOWED_MODELS = new Set(['claude-opus-4-6', 'claude-sonnet-4-6', 'claude-haiku-4-5']);
 const ALLOWED_EFFORTS = new Set(['low', 'medium', 'high', 'max']);
 
-let currentProcess: ChildProcess | null = null;
+// Per-pane process management: 'primary' uses legacy events, others use pane-specific events
+const activeProcesses = new Map<string, ChildProcess>();
+
+function getEventChannels(paneId: string) {
+  if (paneId === 'primary') {
+    return { msg: 'claude:message', complete: 'claude:complete', error: 'claude:error' };
+  }
+  return {
+    msg: `claude:message:${paneId}`,
+    complete: `claude:complete:${paneId}`,
+    error: `claude:error:${paneId}`,
+  };
+}
 
 /**
  * Build a clean env for spawning claude CLI.
@@ -65,15 +77,18 @@ function checkClaudeAuth(): { authenticated: boolean; method?: string; error?: s
 export function registerClaudeHandlers(ipcMain: IpcMain) {
   ipcMain.handle('claude:check-auth', () => checkClaudeAuth());
 
-  ipcMain.handle('claude:query', async (event, { prompt, sessionId, cwd, mode = 'code', model, effort }) => {
-    console.log('[claude:query] received:', { prompt: prompt?.slice(0, 50), sessionId, cwd, mode, model, effort });
+  ipcMain.handle('claude:query', async (event, { prompt, sessionId, cwd, mode = 'code', model, effort, paneId }) => {
+    const safePaneId = typeof paneId === 'string' && paneId.length > 0 ? paneId : 'primary';
+    console.log('[claude:query] received:', { prompt: prompt?.slice(0, 50), sessionId, cwd, mode, model, effort, paneId: safePaneId });
     const win = BrowserWindow.fromWebContents(event.sender);
     if (!win) { console.log('[claude:query] no window found'); return; }
 
-    if (currentProcess) {
-      currentProcess.kill('SIGTERM');
-      currentProcess = null;
+    const existing = activeProcesses.get(safePaneId);
+    if (existing) {
+      existing.kill('SIGTERM');
+      activeProcesses.delete(safePaneId);
     }
+    const channels = getEventChannels(safePaneId);
 
     const safePrompt = typeof prompt === 'string' ? prompt.slice(0, MAX_PROMPT_LEN) : '';
     if (!safePrompt) return;
@@ -104,15 +119,16 @@ export function registerClaudeHandlers(ipcMain: IpcMain) {
     args.push(safePrompt);
 
     console.log('[claude:query] spawning:', 'claude', args.join(' '));
-    currentProcess = spawn('claude', args, {
+    const proc = spawn('claude', args, {
       cwd: safeCwd(cwd),
       env: getCleanEnv(),
       stdio: ['ignore', 'pipe', 'pipe'],
     });
+    activeProcesses.set(safePaneId, proc);
 
     let buffer = '';
 
-    currentProcess.stdout?.on('data', (data: Buffer) => {
+    proc.stdout?.on('data', (data: Buffer) => {
       buffer += data.toString();
       const lines = buffer.split('\n');
       buffer = lines.pop() || '';
@@ -121,45 +137,47 @@ export function registerClaudeHandlers(ipcMain: IpcMain) {
         if (!line.trim()) continue;
         try {
           const message = JSON.parse(line);
-          win.webContents.send('claude:message', message);
+          win.webContents.send(channels.msg, message);
         } catch {
           // partial JSON, will be handled next chunk
         }
       }
     });
 
-    currentProcess.stderr?.on('data', (data: Buffer) => {
+    proc.stderr?.on('data', (data: Buffer) => {
       const errText = data.toString();
       console.log('[claude:stderr]', errText);
       if (errText.includes('error') || errText.includes('Error')) {
-        win.webContents.send('claude:error', errText);
+        win.webContents.send(channels.error, errText);
       }
     });
 
-    currentProcess.on('close', () => {
+    proc.on('close', () => {
       if (buffer.trim()) {
         try {
           const message = JSON.parse(buffer);
-          win.webContents.send('claude:message', message);
+          win.webContents.send(channels.msg, message);
         } catch {
           // ignore
         }
       }
-      currentProcess = null;
-      win.webContents.send('claude:complete');
+      activeProcesses.delete(safePaneId);
+      win.webContents.send(channels.complete);
     });
 
-    currentProcess.on('error', (err) => {
+    proc.on('error', (err) => {
       console.log('[claude:error]', err.message);
-      win.webContents.send('claude:error', err.message);
-      currentProcess = null;
+      win.webContents.send(channels.error, err.message);
+      activeProcesses.delete(safePaneId);
     });
   });
 
-  ipcMain.handle('claude:stop', () => {
-    if (currentProcess) {
-      currentProcess.kill('SIGTERM');
-      currentProcess = null;
+  ipcMain.handle('claude:stop', (_, paneId?: string) => {
+    const safePaneId = typeof paneId === 'string' && paneId.length > 0 ? paneId : 'primary';
+    const proc = activeProcesses.get(safePaneId);
+    if (proc) {
+      proc.kill('SIGTERM');
+      activeProcesses.delete(safePaneId);
     }
   });
 }

@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import type { DisplayMessage } from '../../types';
+import CodeyeMark from '../Brand/CodeyeMark';
 
 export default memo(function UserMessage({ message }: { message: DisplayMessage }) {
   const time = new Date(message.timestamp).toLocaleTimeString('zh-CN', {
@@ -14,7 +15,9 @@ export default memo(function UserMessage({ message }: { message: DisplayMessage 
           <div className="user-bubble">{message.content}</div>
           <span className="user-timestamp">{time}</span>
         </div>
-        <div className="user-avatar">U</div>
+        <div className="user-avatar">
+          <CodeyeMark size={28} />
+        </div>
       </div>
     </div>
   );

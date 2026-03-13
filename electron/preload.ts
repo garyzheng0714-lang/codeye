@@ -5,7 +5,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   claude: {
     query: (params: { prompt: string; sessionId?: string; cwd?: string; mode?: string }) =>
       ipcRenderer.invoke('claude:query', params),
-    stop: () => ipcRenderer.invoke('claude:stop'),
+    stop: () => ipcRenderer.invoke('claude:stop', 'primary'),
     checkAuth: () => ipcRenderer.invoke('claude:check-auth'),
     onMessage: (callback: (message: unknown) => void) => {
       const handler = (_: unknown, message: unknown) => callback(message);
@@ -21,6 +21,24 @@ contextBridge.exposeInMainWorld('electronAPI', {
       const handler = (_: unknown, error: string) => callback(error);
       ipcRenderer.on('claude:error', handler);
       return () => ipcRenderer.removeListener('claude:error', handler);
+    },
+    queryPane: (paneId: string, params: { prompt: string; sessionId?: string; cwd?: string; mode?: string; model?: string; effort?: string }) =>
+      ipcRenderer.invoke('claude:query', { ...params, paneId }),
+    stopPane: (paneId: string) => ipcRenderer.invoke('claude:stop', paneId),
+    onPaneMessage: (paneId: string, callback: (message: unknown) => void) => {
+      const handler = (_: unknown, message: unknown) => callback(message);
+      ipcRenderer.on(`claude:message:${paneId}`, handler);
+      return () => ipcRenderer.removeListener(`claude:message:${paneId}`, handler);
+    },
+    onPaneComplete: (paneId: string, callback: () => void) => {
+      const handler = () => callback();
+      ipcRenderer.on(`claude:complete:${paneId}`, handler);
+      return () => ipcRenderer.removeListener(`claude:complete:${paneId}`, handler);
+    },
+    onPaneError: (paneId: string, callback: (error: string) => void) => {
+      const handler = (_: unknown, error: string) => callback(error);
+      ipcRenderer.on(`claude:error:${paneId}`, handler);
+      return () => ipcRenderer.removeListener(`claude:error:${paneId}`, handler);
     },
   },
   sessions: {

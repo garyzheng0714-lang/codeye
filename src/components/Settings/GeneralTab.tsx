@@ -5,8 +5,10 @@ import type { ThemeId } from '../../services/themeManager';
 import { getLocale, setLocale, AVAILABLE_LOCALES, type Locale } from '../../i18n';
 
 export default function GeneralTab() {
-  const { cwd, setCwd } = useChatStore();
-  const { theme, setTheme } = useUIStore();
+  const cwd = useChatStore((s) => s.cwd);
+  const setCwd = useChatStore((s) => s.setCwd);
+  const theme = useUIStore((s) => s.theme);
+  const setTheme = useUIStore((s) => s.setTheme);
   const [dirInput, setDirInput] = useState(cwd);
   const [locale, setLocaleState] = useState<Locale>(getLocale());
 

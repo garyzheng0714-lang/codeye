@@ -39,31 +39,6 @@ export default function ActivityBar() {
           <SessionsIcon collapsed={sidebarCollapsed} />
         </button>
       </div>
-      <div className="activity-bar-bottom">
-        <button
-          className={`activity-btn ${activePanel === 'activity' && !sidebarCollapsed ? 'active' : ''}`}
-          onClick={() => setActivePanel('activity')}
-          title="Activity"
-          aria-label="Open activity stream"
-          type="button"
-        >
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-            <path d="M3 10h3l2-6 3 12 2-8 2 4h2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </button>
-        <button
-          className={`activity-btn ${activePanel === 'settings' && !sidebarCollapsed ? 'active' : ''}`}
-          onClick={() => setActivePanel('settings')}
-          title="Settings"
-          aria-label="Open settings"
-          type="button"
-        >
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-            <circle cx="10" cy="10" r="3" stroke="currentColor" strokeWidth="1.5" />
-            <path d="M10 2v2M10 16v2M2 10h2M16 10h2M4.22 4.22l1.42 1.42M14.36 14.36l1.42 1.42M4.22 15.78l1.42-1.42M14.36 5.64l1.42-1.42" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-          </svg>
-        </button>
-      </div>
     </div>
   );
 }

@@ -3,7 +3,9 @@ import { useSessionStore } from '../../stores/sessionStore';
 import { sendClaudeQuery } from '../../hooks/useClaudeChat';
 
 export default function HintCard({ text }: { text: string }) {
-  const { addUserMessage, startAssistantMessage, mode } = useChatStore();
+  const addUserMessage = useChatStore((s) => s.addUserMessage);
+  const startAssistantMessage = useChatStore((s) => s.startAssistantMessage);
+  const mode = useChatStore((s) => s.mode);
   const { activeSessionId, createSession } = useSessionStore();
 
   const handleClick = () => {

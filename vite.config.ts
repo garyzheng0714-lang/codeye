@@ -14,7 +14,7 @@ export default defineConfig({
   server: {
     port: 5180,
     strictPort: true,
-    allowedHosts: process.env.TUNNEL_MODE === 'true' ? true : ['localhost', '127.0.0.1'],
+    allowedHosts: true,
   },
   build: {
     outDir: 'dist',

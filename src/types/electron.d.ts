@@ -7,6 +7,11 @@ interface ElectronAPI {
     onMessage: (callback: (message: unknown) => void) => () => void;
     onComplete: (callback: () => void) => () => void;
     onError: (callback: (error: string) => void) => () => void;
+    queryPane: (paneId: string, params: { prompt: string; sessionId?: string; cwd?: string; mode?: string; model?: string; effort?: string }) => Promise<void>;
+    stopPane: (paneId: string) => Promise<void>;
+    onPaneMessage: (paneId: string, callback: (message: unknown) => void) => () => void;
+    onPaneComplete: (paneId: string, callback: () => void) => () => void;
+    onPaneError: (paneId: string, callback: (error: string) => void) => () => void;
   };
   sessions: {
     list: () => Promise<Session[]>;

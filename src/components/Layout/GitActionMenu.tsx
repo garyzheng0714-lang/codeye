@@ -63,8 +63,12 @@ function GitActionIcon({ action }: { action: GitAction['key'] }) {
 export default function GitActionMenu() {
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-  const { isStreaming, addUserMessage, startAssistantMessage, setMode } = useChatStore();
-  const { activeSessionId, createSession } = useSessionStore();
+  const isStreaming = useChatStore((s) => s.isStreaming);
+  const addUserMessage = useChatStore((s) => s.addUserMessage);
+  const startAssistantMessage = useChatStore((s) => s.startAssistantMessage);
+  const setMode = useChatStore((s) => s.setMode);
+  const activeSessionId = useSessionStore((s) => s.activeSessionId);
+  const createSession = useSessionStore((s) => s.createSession);
 
   useEffect(() => {
     const handlePointerDown = (event: PointerEvent) => {

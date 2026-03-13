@@ -1,118 +1,342 @@
-.tool-call {
-  background: var(--bg-primary);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
+/* ══════════════════════════════════════════
+   Steps Taken Block
+   ══════════════════════════════════════════ */
+
+.ai-steps-block {
+  background: var(--surface-glass);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--surface-glass-border);
+  border-radius: var(--radius-lg);
   overflow: hidden;
-  border-left: 4px solid var(--info);
+  animation: toolCardEnter var(--transition-slow) both;
 }
 
-.tool-call[data-tool-type="read"],
-.tool-call[data-tool-type="glob"],
-.tool-call[data-tool-type="grep"] {
-  border-left-color: var(--info);
+/* Header */
+.steps-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+  background: var(--surface-glass-hover);
+  border-bottom: 1px solid var(--surface-glass-divider);
 }
 
-.tool-call[data-tool-type="write"],
-.tool-call[data-tool-type="edit"] {
-  border-left-color: var(--success);
-}
-
-.tool-call[data-tool-type="bash"] {
-  border-left-color: var(--warning);
-}
-
-.tool-call[data-tool-type="websearch"],
-.tool-call[data-tool-type="webfetch"] {
-  border-left-color: #c084fc;
-}
-
-.tool-call-header {
+.steps-header-label {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  width: 100%;
-  padding: var(--space-2) var(--space-3);
-  border: none;
-  background: transparent;
-  color: var(--text-primary);
-  font-size: var(--text-base);
-  cursor: pointer;
-  transition: all var(--transition-fast);
+  font-size: var(--text-xs);
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
 }
 
-.tool-call-header:hover {
-  background: var(--bg-hover);
+.steps-status {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
+
+.steps-status--completed { color: var(--success); }
+.steps-status--running   { color: var(--text-muted); }
+.steps-status--error     { color: var(--danger); }
+
+/* Step rows (inside steps block) */
+.steps-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.step-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-2) var(--space-4);
+  transition: background var(--transition-fast);
+  animation: fadeIn 200ms both;
+  animation-delay: calc(var(--tool-index, 0) * 30ms);
+}
+
+.step-row:hover {
+  background: var(--surface-glass-hover);
+}
+
+.step-row + .step-row,
+.tool-card + .tool-card,
+.step-row + .tool-card,
+.tool-card + .step-row {
+  border-top: 1px solid var(--surface-glass-divider);
+}
+
+.step-row-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.step-label {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.step-badges {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex-wrap: wrap;
+}
+
+.step-file-pill {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  background: var(--surface-pill);
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-xs);
+}
+
+.step-count {
+  font-size: var(--text-xs);
+  color: var(--text-disabled);
+}
+
+/* ══════════════════════════════════════════
+   Tool Card (used for non-step items + bash inside steps)
+   ══════════════════════════════════════════ */
+
+.tool-card {
+  overflow: hidden;
+  transition: background var(--transition-fast);
+  animation: fadeIn 200ms both;
+  animation-delay: calc(var(--tool-index, 0) * 30ms);
+}
+
+/* Bash as standalone terminal block */
+.ai-message > .tool-card {
+  background: var(--surface-terminal);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--surface-glass-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  animation: toolCardEnter var(--transition-slow) both;
+}
+
+.tool-card--error {
+  background: rgba(248, 113, 113, 0.03);
+}
+
+/* Main row */
+.tool-card-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  min-height: 36px;
+}
+
+.tool-card-row--clickable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.tool-card-row--clickable:hover {
+  background: var(--surface-glass-hover);
+}
+
+.tool-card-row--clickable:active {
+  background: var(--surface-glass-hover);
+}
+
+/* ── Icon ── */
 
 .tool-icon {
   width: 18px;
   height: 18px;
-  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
 }
 
-.tool-name {
-  font-weight: 600;
-  font-family: var(--font-mono);
+.tool-icon--done {
+  animation: toolIconPop 300ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Spinner */
+.tool-spinner {
+  animation: toolSpin 0.9s linear infinite;
+}
+
+@keyframes toolSpin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* Label */
+.tool-card-label {
   font-size: var(--text-sm);
-  color: var(--accent);
-}
-
-.tool-summary {
-  color: var(--text-muted);
-  font-size: var(--text-sm);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  flex: 1;
-  text-align: left;
-}
-
-.tool-chevron {
-  color: var(--text-muted);
-  transition: transform var(--transition-fast);
-  flex-shrink: 0;
-}
-
-.tool-chevron.expanded {
-  transform: rotate(180deg);
-}
-
-.tool-call-detail {
-  border-top: 1px solid var(--border-subtle);
-  padding: var(--space-3);
-  background: var(--bg-secondary);
-}
-
-.tool-call-json {
-  font-family: var(--font-mono);
-  font-size: var(--text-sm);
+  font-weight: 500;
   color: var(--text-secondary);
-  white-space: pre-wrap;
-  word-break: break-all;
-  max-height: 200px;
+  flex-shrink: 0;
+}
+
+/* Badges */
+.tool-card-badges {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex: 1;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+/* File pill */
+.tool-file-badge {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  background: var(--surface-pill);
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-xs);
+}
+
+/* Count badge */
+.tool-count-badge {
+  font-size: var(--text-xs);
+  color: var(--text-disabled);
+  font-style: italic;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Diff / expand toggles */
+.tool-diff-btn {
+  display: flex;
+  align-items: center;
+  border: none;
+  background: transparent;
+  color: var(--text-disabled);
+  cursor: pointer;
+  padding: var(--space-1);
+  border-radius: var(--radius-xs);
+  margin-left: auto;
+  flex-shrink: 0;
+  transition: color var(--transition-fast), background var(--transition-fast), transform var(--transition-fast);
+}
+
+.tool-diff-btn:hover {
+  color: var(--text-secondary);
+  background: var(--surface-glass-hover);
+}
+
+.tool-diff-btn.open {
+  transform: rotate(180deg);
+  color: var(--text-muted);
+}
+
+.tool-expand-icon {
+  display: flex;
+  align-items: center;
+  color: var(--text-disabled);
+  margin-left: auto;
+  flex-shrink: 0;
+  padding: var(--space-1);
+  border-radius: var(--radius-xs);
+  transition: transform var(--transition-fast), color var(--transition-fast);
+}
+
+.tool-card-row--clickable:hover .tool-expand-icon {
+  color: var(--text-muted);
+}
+
+.tool-expand-icon.open { transform: rotate(180deg); }
+
+/* ══════════════════════════════════════════
+   Terminal Output (Bash inline sections)
+   ══════════════════════════════════════════ */
+
+.tool-bash-inline {
+  font-family: var(--font-mono);
+  font-size: var(--text-base);
+  line-height: 1.7;
+  animation: expandReveal 250ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  overflow: hidden;
+}
+
+.tool-bash-cmd {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--surface-glass-divider);
+}
+
+.tool-bash-out {
+  padding: var(--space-3) var(--space-4);
+  color: var(--text-muted);
+  max-height: 224px;
   overflow-y: auto;
 }
 
-.tool-output-label {
-  font-size: var(--text-xs);
+.tool-bash-out .tool-bash-out-line:first-child {
+  color: var(--success);
+}
+
+.tool-bash-out-line {
+  white-space: pre-wrap;
+  word-break: break-all;
+  min-height: 1em;
+}
+
+.tool-bash-out-line:last-child:not(:first-child) {
   font-weight: 600;
+  color: var(--text-primary);
+  margin-top: var(--space-1);
+}
+
+.tool-bash-more-btn {
+  border: none;
+  background: transparent;
   color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-top: var(--space-2);
-  margin-bottom: var(--space-1);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  cursor: pointer;
+  padding: var(--space-1) 0;
+  transition: color var(--transition-fast);
 }
 
-/* ============================================
-   Dark Theme Overrides
-   ============================================ */
-[data-theme="dark"] .tool-call {
-  background: rgba(142, 71, 255, 0.06);
-  border-color: rgba(142, 71, 255, 0.12);
+.tool-bash-more-btn:hover { color: var(--text-secondary); }
+
+/* ── Diff viewer ── */
+
+.tool-diff-body {
+  border-top: 1px solid var(--surface-glass-divider);
+  animation: expandReveal 250ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  overflow: hidden;
 }
 
-[data-theme="dark"] .tool-call-detail {
-  background: rgba(142, 71, 255, 0.04);
-  border-top-color: rgba(142, 71, 255, 0.12);
+/* ── Search results ── */
+
+.tool-search-inline {
+  border-top: 1px solid var(--surface-glass-divider);
+  padding: var(--space-2) var(--space-4);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  max-height: 176px;
+  overflow-y: auto;
+  line-height: 1.6;
+  animation: expandReveal 250ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.tool-search-line {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }

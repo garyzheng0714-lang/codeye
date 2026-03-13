@@ -1,10 +1,10 @@
 import { test, expect } from '../../fixtures/app';
 
 test.describe('Slash Command Palette', () => {
-  test('typing / opens the command palette with 3 categories', async ({ chatPage }) => {
+  test('typing / opens the command palette with 5 categories', async ({ chatPage }) => {
     await chatPage.openSlashPalette();
     await expect(chatPage.slashPalette).toBeVisible();
-    await expect(chatPage.slashCategories).toHaveCount(4);
+    await expect(chatPage.slashCategories).toHaveCount(5);
   });
 
   test('typing filters commands to exact match', async ({ chatPage }) => {

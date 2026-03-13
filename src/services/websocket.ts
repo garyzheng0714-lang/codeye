@@ -10,20 +10,6 @@ let reconnectDelay = INITIAL_RECONNECT_DELAY;
 let reconnectCount = 0;
 let pendingMessages: string[] = [];
 
-type ConnectionListener = (status: 'connected' | 'disconnected' | 'connecting') => void;
-const connectionListeners = new Set<ConnectionListener>();
-
-function notifyListeners(status: 'connected' | 'disconnected' | 'connecting') {
-  for (const listener of connectionListeners) {
-    listener(status);
-  }
-}
-
-export function onConnectionChange(listener: ConnectionListener): () => void {
-  connectionListeners.add(listener);
-  return () => connectionListeners.delete(listener);
-}
-
 function flushPending(ws: WebSocket) {
   while (pendingMessages.length > 0) {
     const msg = pendingMessages.shift()!;
@@ -53,21 +39,18 @@ function connectWs(): WebSocket {
     reconnectTimer = null;
   }
 
-  notifyListeners('connecting');
   const ws = new WebSocket(WS_URL);
   globalWs = ws;
 
   ws.onopen = () => {
     reconnectDelay = INITIAL_RECONNECT_DELAY;
     reconnectCount = 0;
-    notifyListeners('connected');
     startHeartbeat(ws);
     flushPending(ws);
   };
 
   ws.onclose = () => {
     stopHeartbeat();
-    notifyListeners('disconnected');
     if (globalWs === ws) {
       reconnectDelay = Math.min(reconnectDelay * 2, MAX_RECONNECT_DELAY);
       reconnectCount += 1;
@@ -103,6 +86,3 @@ export function sendMessage(payload: Record<string, unknown>) {
   }
 }
 
-export function getReconnectCount(): number {
-  return reconnectCount;
-}

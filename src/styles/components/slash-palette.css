@@ -50,7 +50,7 @@
   border-radius: 3px;
   padding: 0 4px;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--text-xs);
   color: var(--text-muted);
   line-height: 1.6;
 }

@@ -2,9 +2,9 @@ import { Page, Locator } from '@playwright/test';
 
 export class SidebarPage {
   readonly page: Page;
-  readonly newSessionBtn: Locator;
   readonly sessionItems: Locator;
   readonly folderSections: Locator;
+  readonly folderHeaders: Locator;
   readonly searchInput: Locator;
   readonly emptyState: Locator;
   readonly folderEmptyState: Locator;
@@ -16,11 +16,12 @@ export class SidebarPage {
   readonly settingsContent: Locator;
   readonly settingsSelect: Locator;
   readonly shortcutRows: Locator;
+  readonly addFolderBtn: Locator;
 
   constructor(page: Page) {
     this.page = page;
-    this.newSessionBtn = page.locator('.new-session-btn');
     this.folderSections = page.locator('.folder-section');
+    this.folderHeaders = page.locator('.folder-header');
     this.sessionItems = page.locator('.session-item');
     this.searchInput = page.locator('.sidebar-search input');
     this.emptyState = page.locator('.empty-state');
@@ -33,10 +34,18 @@ export class SidebarPage {
     this.settingsContent = page.locator('.settings-content');
     this.settingsSelect = page.locator('.settings-select').first();
     this.shortcutRows = page.locator('.shortcut-row');
+    this.addFolderBtn = page.getByRole('button', { name: 'Add Folder' });
   }
 
   async createSession() {
-    await this.newSessionBtn.click();
+    const folderCount = await this.folderSections.count();
+    if (folderCount === 0) {
+      await this.addFolderBtn.click();
+      await this.folderHeaders.first().waitFor({ state: 'visible' });
+    }
+    await this.folderHeaders.first().hover();
+    const newBtn = this.page.locator('.folder-new-session').first();
+    await newBtn.click();
   }
 
   async createSessionViaShortcut() {

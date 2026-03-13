@@ -3,7 +3,6 @@ type TransportType = 'ws' | 'electron';
 
 const METRICS_STORAGE_KEY = 'codeye.perf-baseline.v1';
 const MAX_METRICS = 200;
-const FPS_WINDOW_MS = 500;
 
 interface PerfBaselineSample {
   traceId: string;
@@ -41,7 +40,7 @@ function saveSample(sample: PerfBaselineSample): void {
   }
 }
 
-export function getPerfBaselineSamples(): PerfBaselineSample[] {
+function getPerfBaselineSamples(): PerfBaselineSample[] {
   try {
     const raw = window.localStorage.getItem(METRICS_STORAGE_KEY);
     if (!raw) return [];
@@ -118,53 +117,6 @@ export function finishStreamTrace(status: StreamStatus): void {
 
   saveSample(sample);
   activeTrace = null;
-}
-
-let fpsRafId: number | null = null;
-let fpsFrameCount = 0;
-let fpsWindowStart = 0;
-let fpsCallback: ((fps: number) => void) | null = null;
-
-function fpsLoop(timestamp: number): void {
-  fpsFrameCount += 1;
-  const elapsed = timestamp - fpsWindowStart;
-
-  if (elapsed >= FPS_WINDOW_MS) {
-    const fps = (fpsFrameCount / elapsed) * 1000;
-    fpsCallback?.(Math.round(fps));
-    fpsFrameCount = 0;
-    fpsWindowStart = timestamp;
-  }
-
-  fpsRafId = requestAnimationFrame(fpsLoop);
-}
-
-export function startFpsMonitor(onFps: (fps: number) => void): () => void {
-  fpsCallback = onFps;
-  fpsFrameCount = 0;
-  fpsWindowStart = performance.now();
-  fpsRafId = requestAnimationFrame(fpsLoop);
-
-  return () => {
-    if (fpsRafId !== null) {
-      cancelAnimationFrame(fpsRafId);
-      fpsRafId = null;
-    }
-    fpsCallback = null;
-  };
-}
-
-export function measureInputLatency(keydownTimestamp: number): number {
-  const now = performance.now();
-  const latency = now - keydownTimestamp;
-
-  performance.mark('codeye:input-echo');
-
-  if (latency > 50) {
-    console.warn(`[codeye:perf] Input latency ${latency.toFixed(1)}ms exceeds 50ms threshold`);
-  }
-
-  return latency;
 }
 
 export function getMemoryUsageMB(): number | null {
