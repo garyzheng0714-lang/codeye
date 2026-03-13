@@ -30,3 +30,25 @@
   0%, 100% { transform: translateY(0); }
   50%      { transform: translateY(-6px); }
 }
+
+@keyframes shelfRise {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes sessionSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}

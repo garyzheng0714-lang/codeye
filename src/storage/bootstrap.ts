@@ -13,25 +13,38 @@ export function hydrateStoresFromPersistence(): void {
   if (!snapshot) return;
 
   useSessionStore.setState({
+    folders: snapshot.folders,
     sessions: snapshot.sessions,
+    activeFolderId: snapshot.activeFolderId,
     activeSessionId: snapshot.activeSessionId,
   });
 
-  if (!snapshot.activeSessionId) return;
-  const activeSession = snapshot.sessions.find((session) => session.id === snapshot.activeSessionId);
-  if (!activeSession) return;
-
   const chatStore = useChatStore.getState();
-  chatStore.setSessionId(activeSession.id);
-  chatStore.setCwd(activeSession.cwd);
-  chatStore.loadSession({
-    messages: activeSession.messages,
-    cost: activeSession.cost,
-    inputTokens: activeSession.inputTokens,
-    outputTokens: activeSession.outputTokens,
-    claudeSessionId: activeSession.claudeSessionId ?? null,
-    model: activeSession.model,
-  });
+  const activeSession = snapshot.activeSessionId
+    ? snapshot.sessions.find((session) => session.id === snapshot.activeSessionId)
+    : undefined;
+
+  if (activeSession) {
+    chatStore.setSessionId(activeSession.id);
+    chatStore.setCwd(activeSession.cwd);
+    chatStore.loadSession({
+      messages: activeSession.messages,
+      cost: activeSession.cost,
+      inputTokens: activeSession.inputTokens,
+      outputTokens: activeSession.outputTokens,
+      claudeSessionId: activeSession.claudeSessionId ?? null,
+      model: activeSession.model,
+    });
+    return;
+  }
+
+  const activeFolder = snapshot.activeFolderId
+    ? snapshot.folders.find((folder) => folder.id === snapshot.activeFolderId)
+    : undefined;
+
+  chatStore.setSessionId(null);
+  chatStore.setClaudeSessionId(null);
+  chatStore.setCwd(activeFolder?.path ?? '');
 }
 
 export function startSessionAutoPersistence(): () => void {
@@ -43,7 +56,9 @@ export function startSessionAutoPersistence(): () => void {
 
   const unsubscribe = useSessionStore.subscribe((state) => {
     const snapshot: SessionStoreSnapshot = {
+      folders: state.folders,
       sessions: state.sessions,
+      activeFolderId: state.activeFolderId,
       activeSessionId: state.activeSessionId,
     };
 
@@ -61,7 +76,9 @@ export function startSessionAutoPersistence(): () => void {
     }
     const state = useSessionStore.getState();
     flush({
+      folders: state.folders,
       sessions: state.sessions,
+      activeFolderId: state.activeFolderId,
       activeSessionId: state.activeSessionId,
     });
     unsubscribe();

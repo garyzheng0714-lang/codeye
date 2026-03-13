@@ -1,28 +1,35 @@
+import { getEffortInfo, getModelInfo } from '../../data/models';
 import { useChatStore } from '../../stores/chatStore';
+import CodeyeMark from '../Brand/CodeyeMark';
+import GitActionMenu from './GitActionMenu';
 
-const modes = [
-  { key: 'chat' as const, label: 'Chat' },
-  { key: 'code' as const, label: 'Code' },
-  { key: 'plan' as const, label: 'Plan' },
-];
+const modeLabels = {
+  chat: 'Chat',
+  code: 'Code',
+  plan: 'Plan',
+} as const;
 
 export default function TitleBar() {
-  const { mode, setMode, cwd } = useChatStore();
+  const { mode, model, effort, cwd, messages } = useChatStore();
 
   const breadcrumbParts = cwd ? cwd.split('/').filter(Boolean).slice(-2) : [];
+  const modelInfo = getModelInfo(model);
+  const effortInfo = getEffortInfo(effort);
+  const messageLabel =
+    messages.length === 0 ? 'Fresh thread' : `${messages.length} ${messages.length === 1 ? 'msg' : 'msgs'}`;
 
   return (
     <div className="title-bar">
+      <div className="title-bar-watchpost" aria-hidden="true">
+        <span className="title-bar-watchpost-glow" />
+        <span className="title-bar-watchpost-wall" />
+        <CodeyeMark className="title-bar-watchpost-mark" size={34} />
+      </div>
       <div className="title-bar-content">
         <div className="title-bar-left">
-          <svg className="title-bar-icon" width="24" height="24" viewBox="0 0 120 120" fill="none">
-            <path d="M52 8C30 10, 10 30, 12 58C14 86, 34 110, 62 110C90 110, 112 86, 110 56C108 28, 88 6, 66 6C60 6, 56 7, 52 8Z" fill="var(--accent)"/>
-            <ellipse cx="48" cy="62" rx="9" ry="12" fill="white"/>
-            <ellipse cx="72" cy="62" rx="9" ry="12" fill="white"/>
-            <ellipse cx="50" cy="65" rx="5" ry="7" fill="var(--text-primary)"/>
-            <ellipse cx="74" cy="65" rx="5" ry="7" fill="var(--text-primary)"/>
-            <circle cx="30" cy="78" r="3" fill="rgba(30,22,37,0.15)"/>
-          </svg>
+          <div className="title-bar-mark-shell">
+            <CodeyeMark className="title-bar-icon" size={24} />
+          </div>
           <span className="title-bar-logo">Codeye</span>
           {breadcrumbParts.length > 0 && (
             <div className="title-bar-breadcrumb">
@@ -36,16 +43,20 @@ export default function TitleBar() {
             </div>
           )}
         </div>
-        <div className="mode-switcher">
-          {modes.map((m) => (
-            <button
-              key={m.key}
-              className={`mode-btn ${mode === m.key ? 'active' : ''}`}
-              onClick={() => setMode(m.key)}
-            >
-              {m.label}
-            </button>
-          ))}
+        <div className="title-bar-actions">
+          <div className="title-glass-cluster">
+            <GitActionMenu />
+            <div className="title-chip context-chip" title={`Mode: ${modeLabels[mode]} • ${messageLabel}`}>
+              <span className={`context-dot context-dot-${mode}`} aria-hidden="true" />
+              <span className="title-chip-text">{modeLabels[mode]}</span>
+            </div>
+            <div className="title-chip agent-chip" title={`Agent: ${modelInfo.label} • ${effortInfo.label}`}>
+              <span className="agent-spark" aria-hidden="true" />
+              <span className="title-chip-text">{modelInfo.shortLabel}</span>
+              <span className="title-chip-sep">/</span>
+              <span className="title-chip-subtle">{effortInfo.shortLabel}</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>

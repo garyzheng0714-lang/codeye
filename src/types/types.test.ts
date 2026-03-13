@@ -38,6 +38,8 @@ describe('Type exports from types/index', () => {
   it('SessionData structure is correct', () => {
     const session: SessionData = {
       id: 'sess-1',
+      folderId: 'folder-1',
+      source: 'local',
       name: 'Test Session',
       cwd: '/tmp',
       messages: [],

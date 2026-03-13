@@ -1,5 +1,6 @@
 import { useUIStore } from '../../stores/uiStore';
 import type { SidebarPanel } from '../../stores/uiStore';
+import SidebarPeekToggle from './SidebarPeekToggle';
 
 const panels: { key: SidebarPanel; icon: React.ReactNode }[] = [
   {
@@ -13,25 +14,24 @@ const panels: { key: SidebarPanel; icon: React.ReactNode }[] = [
 ];
 
 export default function ActivityBar() {
-  const { activePanel, setActivePanel, sidebarCollapsed, toggleSidebar } = useUIStore();
+  const { activePanel, setActivePanel, sidebarCollapsed } = useUIStore();
 
   const handleClick = (key: SidebarPanel) => {
-    if (activePanel === key && !sidebarCollapsed) {
-      toggleSidebar();
-    } else {
-      setActivePanel(key);
-    }
+    setActivePanel(key);
   };
 
   return (
     <div className="activity-bar">
       <div className="activity-bar-top">
+        <SidebarPeekToggle />
         {panels.map((p) => (
           <button
             key={p.key}
             className={`activity-btn ${activePanel === p.key && !sidebarCollapsed ? 'active' : ''}`}
             onClick={() => handleClick(p.key)}
-            title={p.key}
+            title="Sessions"
+            aria-label="Open sessions"
+            type="button"
           >
             {p.icon}
           </button>
@@ -42,6 +42,8 @@ export default function ActivityBar() {
           className={`activity-btn ${activePanel === 'settings' && !sidebarCollapsed ? 'active' : ''}`}
           onClick={() => handleClick('settings')}
           title="Settings"
+          aria-label="Open settings"
+          type="button"
         >
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
             <circle cx="10" cy="10" r="3" stroke="currentColor" strokeWidth="1.5" />

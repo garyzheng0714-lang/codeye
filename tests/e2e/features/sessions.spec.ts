@@ -1,13 +1,14 @@
 import { test, expect } from '../../fixtures/app';
 
 test.describe('Session Management', () => {
-  test('empty state shows when no sessions exist', async ({ sidebarPage }) => {
+  test('empty state shows when no folders exist', async ({ sidebarPage }) => {
     await expect(sidebarPage.emptyState).toBeVisible();
-    await expect(sidebarPage.emptyState).toContainText('No sessions yet');
+    await expect(sidebarPage.emptyState).toContainText('No folders yet');
   });
 
   test('new session button creates a session', async ({ sidebarPage }) => {
     await sidebarPage.createSession();
+    await expect(sidebarPage.folderSections).toHaveCount(1);
     await expect(sidebarPage.sessionItems).toHaveCount(1);
     await expect(sidebarPage.sessionItems.first()).toHaveClass(/active/);
   });
@@ -56,7 +57,16 @@ test.describe('Session Management', () => {
 
     await sidebarPage.deleteSession(0);
     await expect(sidebarPage.sessionItems).toHaveCount(0);
-    await expect(sidebarPage.emptyState).toBeVisible();
+    await expect(sidebarPage.folderEmptyState).toBeVisible();
+  });
+
+  test('delete requires inline confirmation before removing the session', async ({ sidebarPage }) => {
+    await sidebarPage.createSession();
+    await expect(sidebarPage.sessionItems).toHaveCount(1);
+
+    await sidebarPage.revealDeleteConfirm(0);
+    await expect(sidebarPage.sessionDeleteConfirm(0)).toBeVisible();
+    await expect(sidebarPage.sessionItems).toHaveCount(1);
   });
 
   test('search filters sessions', async ({ sidebarPage }) => {

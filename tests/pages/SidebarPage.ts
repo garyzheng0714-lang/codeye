@@ -4,8 +4,10 @@ export class SidebarPage {
   readonly page: Page;
   readonly newSessionBtn: Locator;
   readonly sessionItems: Locator;
+  readonly folderSections: Locator;
   readonly searchInput: Locator;
   readonly emptyState: Locator;
+  readonly folderEmptyState: Locator;
   readonly settingsBtn: Locator;
   readonly sessionsBtn: Locator;
   readonly settingsPanel: Locator;
@@ -14,9 +16,11 @@ export class SidebarPage {
   constructor(page: Page) {
     this.page = page;
     this.newSessionBtn = page.locator('.new-session-btn');
+    this.folderSections = page.locator('.folder-section');
     this.sessionItems = page.locator('.session-item');
     this.searchInput = page.locator('.sidebar-search input');
     this.emptyState = page.locator('.empty-state');
+    this.folderEmptyState = page.locator('.folder-empty');
     this.settingsBtn = page.locator('.activity-bar-bottom .activity-btn');
     this.sessionsBtn = page.locator('.activity-bar-top .activity-btn');
     this.settingsPanel = page.locator('.settings-panel');
@@ -41,8 +45,17 @@ export class SidebarPage {
   }
 
   async deleteSession(index: number) {
+    await this.revealDeleteConfirm(index);
+    await this.sessionItems.nth(index).locator('.session-confirm-delete').click();
+  }
+
+  async revealDeleteConfirm(index: number) {
     await this.sessionItems.nth(index).hover();
     await this.sessionItems.nth(index).locator('.session-delete').click();
+  }
+
+  sessionDeleteConfirm(index: number) {
+    return this.sessionItems.nth(index).locator('.session-confirm-delete');
   }
 
   async searchSessions(query: string) {

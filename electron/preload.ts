@@ -32,6 +32,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   projects: {
     list: () => ipcRenderer.invoke('projects:list'),
     selectDirectory: () => ipcRenderer.invoke('projects:select-directory'),
+    importClaudeHistory: (folderPath: string) => ipcRenderer.invoke('projects:import-claude-history', folderPath),
   },
   secrets: {
     get: (key: string) => ipcRenderer.invoke('secret:get', key),

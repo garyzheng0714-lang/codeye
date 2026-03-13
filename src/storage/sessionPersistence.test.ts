@@ -23,11 +23,26 @@ class TestStorageAdapter implements StorageAdapter {
 }
 
 function buildSnapshot(): SessionStoreSnapshot {
+  const folderId = 'f1';
   return {
+    activeFolderId: folderId,
     activeSessionId: 's1',
+    folders: [
+      {
+        id: folderId,
+        name: 'tmp',
+        path: '/tmp',
+        kind: 'local',
+        hasSyncedClaudeHistory: false,
+        createdAt: 1,
+        updatedAt: 1,
+      },
+    ],
     sessions: [
       {
         id: 's1',
+        folderId,
+        source: 'local',
         name: 'Session 1',
         cwd: '/tmp',
         messages: [],
@@ -42,7 +57,7 @@ function buildSnapshot(): SessionStoreSnapshot {
 }
 
 describe('sessionPersistence', () => {
-  it('persists and loads v1 document', () => {
+  it('persists and loads v2 document', () => {
     const adapter = new TestStorageAdapter();
     const snapshot = buildSnapshot();
 
@@ -57,12 +72,21 @@ describe('sessionPersistence', () => {
     adapter.setItem(
       'codeye.session-store',
       JSON.stringify({
-        sessions: buildSnapshot().sessions,
+        sessions: buildSnapshot().sessions.map(({ folderId: _folderId, source: _source, ...session }) => session),
         activeSessionId: 's1',
       })
     );
 
     const restored = loadSessionSnapshot(adapter);
-    expect(restored).toEqual(buildSnapshot());
+    expect(restored?.activeSessionId).toBe('s1');
+    expect(restored?.sessions).toHaveLength(1);
+    expect(restored?.sessions[0]).toMatchObject({
+      id: 's1',
+      folderId: expect.any(String),
+      source: 'local',
+      cwd: '/tmp',
+    });
+    expect(restored?.folders).toHaveLength(1);
+    expect(restored?.activeFolderId).toBe(restored?.sessions[0].folderId);
   });
 });

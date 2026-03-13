@@ -1,10 +1,12 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { groupSessionsByDate } from './sessionGrouping';
 import type { SessionData } from '../types';
 
 function makeSession(updatedAt: number): SessionData {
   return {
     id: crypto.randomUUID(),
+    folderId: 'folder-1',
+    source: 'local',
     name: 'Test',
     cwd: '/tmp',
     messages: [],

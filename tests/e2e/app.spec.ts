@@ -5,13 +5,14 @@ test.describe('App Launch', () => {
     await expect(appPage.welcomeTitle).toHaveText('Codeye');
   });
 
-  test('renders title bar with logo and mode switcher', async ({ appPage }) => {
+  test('renders title bar with logo and control cluster', async ({ appPage }) => {
     await expect(appPage.titleBarLogo).toBeVisible();
-    await expect(appPage.modeSwitcher).toBeVisible();
-    await expect(appPage.modeButtons).toHaveCount(3);
-    await expect(appPage.modeButtons.nth(0)).toHaveText('Chat');
-    await expect(appPage.modeButtons.nth(1)).toHaveText('Code');
-    await expect(appPage.modeButtons.nth(2)).toHaveText('Plan');
+    await expect(appPage.titleBarActions).toBeVisible();
+    await expect(appPage.titleGlassCluster).toBeVisible();
+    await expect(appPage.titleChips).toHaveCount(3);
+    await expect(appPage.contextChip).toContainText('Code');
+    await expect(appPage.agentChip).toContainText('Sonnet');
+    await expect(appPage.gitMenuTrigger).toContainText('Submit');
   });
 
   test('renders activity bar and sidebar', async ({ appPage }) => {
@@ -26,18 +27,17 @@ test.describe('App Launch', () => {
   test('renders 4 hint cards on welcome screen', async ({ appPage }) => {
     await expect(appPage.hintCards).toHaveCount(4);
   });
-});
 
-test.describe('Mode Switching', () => {
-  test('can switch between Chat, Code, and Plan modes', async ({ appPage }) => {
+  test('opens git actions dropdown with commit push and pr actions', async ({ appPage }) => {
+    await appPage.openGitMenu();
+    await expect(appPage.gitDropdown).toBeVisible();
+    await expect(appPage.gitMenuItems).toHaveCount(3);
+    await expect(appPage.gitMenuItems.nth(0)).toContainText('Commit Changes');
+    await expect(appPage.gitMenuItems.nth(1)).toContainText('Push Branch');
+    await expect(appPage.gitMenuItems.nth(2)).toContainText('Create PR');
+  });
+
+  test('shows current mode in the context pill', async ({ appPage }) => {
     await expect(appPage.activeMode()).toHaveText('Code');
-
-    await appPage.switchMode('Chat');
-    await expect(appPage.activeMode()).toHaveText('Chat');
-    await expect(appPage.welcomeSubtitle).toContainText('questions');
-
-    await appPage.switchMode('Plan');
-    await expect(appPage.activeMode()).toHaveText('Plan');
-    await expect(appPage.welcomeSubtitle).toContainText('Plan');
   });
 });

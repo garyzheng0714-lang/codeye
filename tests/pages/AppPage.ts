@@ -6,11 +6,18 @@ export class AppPage {
   readonly welcomeSubtitle: Locator;
   readonly hintCards: Locator;
   readonly titleBarLogo: Locator;
-  readonly modeSwitcher: Locator;
-  readonly modeButtons: Locator;
+  readonly titleBarActions: Locator;
+  readonly titleGlassCluster: Locator;
+  readonly titleChips: Locator;
+  readonly contextChip: Locator;
+  readonly agentChip: Locator;
+  readonly gitMenuTrigger: Locator;
+  readonly gitDropdown: Locator;
+  readonly gitMenuItems: Locator;
   readonly activityBar: Locator;
   readonly sidebar: Locator;
   readonly appBody: Locator;
+  readonly peekToggle: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -18,11 +25,18 @@ export class AppPage {
     this.welcomeSubtitle = page.locator('.welcome-subtitle');
     this.hintCards = page.locator('.hint-card');
     this.titleBarLogo = page.locator('.title-bar-logo');
-    this.modeSwitcher = page.locator('.mode-switcher');
-    this.modeButtons = page.locator('.mode-btn');
+    this.titleBarActions = page.locator('.title-bar-actions');
+    this.titleGlassCluster = page.locator('.title-glass-cluster');
+    this.titleChips = page.locator('.title-chip');
+    this.contextChip = page.locator('.context-chip');
+    this.agentChip = page.locator('.agent-chip');
+    this.gitMenuTrigger = page.locator('.git-pill-trigger');
+    this.gitDropdown = page.locator('.git-dropdown');
+    this.gitMenuItems = page.locator('.git-menu-item');
     this.activityBar = page.locator('.activity-bar');
     this.sidebar = page.locator('.sidebar');
     this.appBody = page.locator('.app-body');
+    this.peekToggle = page.locator('.sidebar-peek-toggle');
   }
 
   async goto() {
@@ -30,15 +44,15 @@ export class AppPage {
   }
 
   activeMode() {
-    return this.page.locator('.mode-btn.active');
+    return this.page.locator('.context-chip .title-chip-text');
   }
 
   modeBadge() {
     return this.page.locator('.mode-badge');
   }
 
-  async switchMode(mode: 'Chat' | 'Code' | 'Plan') {
-    await this.modeButtons.filter({ hasText: mode }).click();
+  async openGitMenu() {
+    await this.gitMenuTrigger.click();
   }
 
   async toggleSidebar() {

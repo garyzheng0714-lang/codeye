@@ -19,9 +19,12 @@ test.describe('Sidebar', () => {
     await expect(sidebarPage.settingsPanel).not.toBeVisible();
   });
 
-  test('clicking active panel button collapses sidebar', async ({ appPage, sidebarPage }) => {
-    await sidebarPage.openSessions();
+  test('peek toggle collapses and reopens the sidebar', async ({ appPage, sidebarPage }) => {
+    await appPage.peekToggle.click();
     await expect(appPage.appBody).toHaveClass(/sidebar-collapsed/);
+
+    await sidebarPage.openSessions();
+    await expect(appPage.appBody).not.toHaveClass(/sidebar-collapsed/);
   });
 
   test('search input has aria-label', async ({ sidebarPage }) => {

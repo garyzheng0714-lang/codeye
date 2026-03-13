@@ -17,6 +17,7 @@ interface ElectronAPI {
   projects: {
     list: () => Promise<ProjectInfo[]>;
     selectDirectory: () => Promise<string | null>;
+    importClaudeHistory: (folderPath: string) => Promise<ImportedClaudeSession[]>;
   };
   secrets: {
     get: (key: string) => Promise<string | null>;
@@ -60,6 +61,34 @@ interface ProjectInfo {
   id: string;
   path: string;
   name: string;
+}
+
+interface ImportedClaudeSession {
+  claudeSessionId: string;
+  name: string;
+  cwd: string;
+  model?: string;
+  messages: ImportedDisplayMessage[];
+  inputTokens: number;
+  outputTokens: number;
+  createdAt: number;
+  updatedAt: number;
+}
+
+interface ImportedDisplayMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  toolCalls: ImportedToolCall[];
+  timestamp: number;
+}
+
+interface ImportedToolCall {
+  id: string;
+  name: string;
+  input: Record<string, unknown>;
+  output?: string;
+  expanded: boolean;
 }
 
 declare global {
