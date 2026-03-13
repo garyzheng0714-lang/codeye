@@ -1,0 +1,20 @@
+import type { DisplayMessage } from '../../stores/chatStore';
+
+export default function UserMessage({ message }: { message: DisplayMessage }) {
+  const time = new Date(message.timestamp).toLocaleTimeString('zh-CN', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+
+  return (
+    <div className="message-row user-message-row">
+      <div className="user-message-wrapper">
+        <div className="user-bubble-wrapper">
+          <div className="user-bubble">{message.content}</div>
+          <span className="user-timestamp">{time}</span>
+        </div>
+        <div className="user-avatar">U</div>
+      </div>
+    </div>
+  );
+}

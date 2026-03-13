@@ -1,0 +1,164 @@
+import { create } from 'zustand';
+import type { ModelId } from '../data/models';
+import { DEFAULT_MODEL } from '../data/models';
+
+type ChatMode = 'chat' | 'code' | 'plan';
+
+export interface DisplayMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  toolCalls: ToolCallDisplay[];
+  timestamp: number;
+  isStreaming?: boolean;
+}
+
+export interface ToolCallDisplay {
+  id: string;
+  name: string;
+  input: Record<string, unknown>;
+  output?: string;
+  expanded: boolean;
+}
+
+interface ChatState {
+  messages: DisplayMessage[];
+  isStreaming: boolean;
+  mode: ChatMode;
+  model: ModelId;
+  cwd: string;
+  sessionId: string | null;
+  claudeSessionId: string | null;
+  cost: number;
+  inputTokens: number;
+  outputTokens: number;
+
+  setMode: (mode: ChatMode) => void;
+  setModel: (model: ModelId) => void;
+  setCwd: (cwd: string) => void;
+  setSessionId: (id: string | null) => void;
+  setClaudeSessionId: (id: string | null) => void;
+  addUserMessage: (content: string) => void;
+  appendAssistantContent: (content: string) => void;
+  startAssistantMessage: () => void;
+  finishStreaming: () => void;
+  addToolCall: (tool: ToolCallDisplay) => void;
+  toggleToolExpand: (messageId: string, toolId: string) => void;
+  updateCost: (cost: number, input: number, output: number) => void;
+  clearMessages: () => void;
+  loadSession: (data: { messages: DisplayMessage[]; cost: number; inputTokens: number; outputTokens: number; claudeSessionId?: string | null; model?: ModelId }) => void;
+}
+
+export const useChatStore = create<ChatState>((set) => ({
+  messages: [],
+  isStreaming: false,
+  mode: 'code',
+  model: DEFAULT_MODEL,
+  cwd: '',
+  sessionId: null,
+  claudeSessionId: null,
+  cost: 0,
+  inputTokens: 0,
+  outputTokens: 0,
+
+  setMode: (mode) => set({ mode }),
+  setModel: (model) => set({ model }),
+  setCwd: (cwd) => set({ cwd }),
+  setSessionId: (sessionId) => set({ sessionId }),
+  setClaudeSessionId: (claudeSessionId) => set({ claudeSessionId }),
+
+  addUserMessage: (content) =>
+    set((state) => ({
+      messages: [
+        ...state.messages,
+        {
+          id: crypto.randomUUID(),
+          role: 'user',
+          content,
+          toolCalls: [],
+          timestamp: Date.now(),
+        },
+      ],
+    })),
+
+  startAssistantMessage: () =>
+    set((state) => ({
+      isStreaming: true,
+      messages: [
+        ...state.messages,
+        {
+          id: crypto.randomUUID(),
+          role: 'assistant',
+          content: '',
+          toolCalls: [],
+          timestamp: Date.now(),
+          isStreaming: true,
+        },
+      ],
+    })),
+
+  appendAssistantContent: (content) =>
+    set((state) => {
+      const msgs = [...state.messages];
+      const last = msgs[msgs.length - 1];
+      if (last?.role === 'assistant') {
+        msgs[msgs.length - 1] = { ...last, content: last.content + content };
+      }
+      return { messages: msgs };
+    }),
+
+  finishStreaming: () =>
+    set((state) => {
+      const msgs = state.messages.map((m) =>
+        m.isStreaming ? { ...m, isStreaming: false } : m
+      );
+      return { messages: msgs, isStreaming: false };
+    }),
+
+  addToolCall: (tool) =>
+    set((state) => {
+      const msgs = [...state.messages];
+      const last = msgs[msgs.length - 1];
+      if (last?.role === 'assistant') {
+        msgs[msgs.length - 1] = {
+          ...last,
+          toolCalls: [...last.toolCalls, tool],
+        };
+      }
+      return { messages: msgs };
+    }),
+
+  toggleToolExpand: (messageId, toolId) =>
+    set((state) => ({
+      messages: state.messages.map((m) =>
+        m.id === messageId
+          ? {
+              ...m,
+              toolCalls: m.toolCalls.map((t) =>
+                t.id === toolId ? { ...t, expanded: !t.expanded } : t
+              ),
+            }
+          : m
+      ),
+    })),
+
+  updateCost: (cost, input, output) =>
+    set((state) => ({
+      cost: state.cost + cost,
+      inputTokens: state.inputTokens + input,
+      outputTokens: state.outputTokens + output,
+    })),
+
+  clearMessages: () => set({ messages: [], cost: 0, inputTokens: 0, outputTokens: 0, isStreaming: false, claudeSessionId: null }),
+
+  loadSession: (data) =>
+    set({
+      messages: data.messages,
+      cost: data.cost,
+      inputTokens: data.inputTokens,
+      outputTokens: data.outputTokens,
+      claudeSessionId: data.claudeSessionId ?? null,
+      model: data.model ?? DEFAULT_MODEL,
+      isStreaming: false,
+    }),
+}));

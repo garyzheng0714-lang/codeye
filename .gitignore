@@ -1,0 +1,12 @@
+node_modules
+dist
+dist-electron
+dist-ssr
+release
+*.local
+.DS_Store
+.env
+*.log
+*.png
+!public/logo.png
+.playwright-mcp/
