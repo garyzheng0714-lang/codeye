@@ -12,6 +12,10 @@
     display: none;
   }
 
+  .sidebar-boundary-toggle {
+    display: none;
+  }
+
   .title-bar-content {
     padding: 0 var(--space-3);
   }

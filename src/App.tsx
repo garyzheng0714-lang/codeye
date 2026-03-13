@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import TitleBar from './components/Layout/TitleBar';
 import ActivityBar from './components/Layout/ActivityBar';
 import Sidebar from './components/Layout/Sidebar';
+import SidebarBoundaryToggle from './components/Layout/SidebarBoundaryToggle';
 import ChatPanel from './components/Chat/ChatPanel';
 import { useClaudeChat } from './hooks/useClaudeChat';
 import { useSessionStore } from './stores/sessionStore';
@@ -47,6 +48,7 @@ export default function App() {
       <div className={`app-body ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
         <ActivityBar />
         <Sidebar />
+        {!sidebarCollapsed && <SidebarBoundaryToggle />}
         <main className="app-main">
           <ChatPanel />
         </main>

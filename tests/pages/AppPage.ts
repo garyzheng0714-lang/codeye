@@ -17,7 +17,7 @@ export class AppPage {
   readonly activityBar: Locator;
   readonly sidebar: Locator;
   readonly appBody: Locator;
-  readonly peekToggle: Locator;
+  readonly boundaryToggle: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -36,7 +36,7 @@ export class AppPage {
     this.activityBar = page.locator('.activity-bar');
     this.sidebar = page.locator('.sidebar');
     this.appBody = page.locator('.app-body');
-    this.peekToggle = page.locator('.sidebar-peek-toggle');
+    this.boundaryToggle = page.locator('.sidebar-boundary-toggle');
   }
 
   async goto() {

@@ -35,3 +35,90 @@
   min-height: 0;
   background: var(--bg-base);
 }
+
+.sidebar-boundary-toggle {
+  position: absolute;
+  left: calc(var(--activity-bar-w) + var(--sidebar-w) - 18px);
+  top: 76px;
+  width: 58px;
+  height: 84px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  z-index: 11;
+  overflow: visible;
+}
+
+.sidebar-boundary-toggle::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 20px;
+  background: linear-gradient(90deg, rgba(250, 249, 254, 0.98), rgba(250, 249, 254, 0.9));
+  border-right: 1px solid var(--border-subtle);
+  z-index: 2;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.sidebar-boundary-toggle::after {
+  content: '';
+  position: absolute;
+  left: 20px;
+  top: 10px;
+  bottom: 10px;
+  width: 26px;
+  border-radius: 999px;
+  background: radial-gradient(circle at left center, rgba(124, 58, 237, 0.16), rgba(124, 58, 237, 0) 70%);
+  z-index: 0;
+}
+
+.sidebar-boundary-toggle:hover::before,
+.sidebar-boundary-toggle:focus-visible::before {
+  border-right-color: rgba(124, 58, 237, 0.28);
+  box-shadow: 10px 0 20px rgba(124, 58, 237, 0.08);
+}
+
+.sidebar-boundary-avatar,
+.sidebar-boundary-icon {
+  position: absolute;
+  top: 50%;
+  transition:
+    opacity 170ms ease,
+    transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.sidebar-boundary-avatar {
+  left: -6px;
+  transform: translate3d(0, -50%, 0);
+  z-index: 1;
+}
+
+.sidebar-boundary-mark {
+  display: block;
+  filter: drop-shadow(0 12px 18px rgba(124, 58, 237, 0.16));
+}
+
+.sidebar-boundary-icon {
+  left: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-active);
+  opacity: 0;
+  transform: translate3d(8px, -50%, 0);
+  z-index: 3;
+}
+
+.sidebar-boundary-toggle:hover .sidebar-boundary-avatar,
+.sidebar-boundary-toggle:focus-visible .sidebar-boundary-avatar {
+  opacity: 0.18;
+  transform: translate3d(8px, -50%, 0) scale3d(0.88, 0.88, 1);
+}
+
+.sidebar-boundary-toggle:hover .sidebar-boundary-icon,
+.sidebar-boundary-toggle:focus-visible .sidebar-boundary-icon {
+  opacity: 1;
+  transform: translate3d(0, -50%, 0);
+}

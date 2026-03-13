@@ -56,6 +56,22 @@ function buildSnapshot(): SessionStoreSnapshot {
   };
 }
 
+function stripLegacyFields(snapshot: SessionStoreSnapshot) {
+  return snapshot.sessions.map((session) => ({
+    id: session.id,
+    name: session.name,
+    cwd: session.cwd,
+    claudeSessionId: session.claudeSessionId,
+    model: session.model,
+    messages: session.messages,
+    cost: session.cost,
+    inputTokens: session.inputTokens,
+    outputTokens: session.outputTokens,
+    createdAt: session.createdAt,
+    updatedAt: session.updatedAt,
+  }));
+}
+
 describe('sessionPersistence', () => {
   it('persists and loads v2 document', () => {
     const adapter = new TestStorageAdapter();
@@ -72,7 +88,7 @@ describe('sessionPersistence', () => {
     adapter.setItem(
       'codeye.session-store',
       JSON.stringify({
-        sessions: buildSnapshot().sessions.map(({ folderId: _folderId, source: _source, ...session }) => session),
+        sessions: stripLegacyFields(buildSnapshot()),
         activeSessionId: 's1',
       })
     );

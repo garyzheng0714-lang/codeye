@@ -1,7 +1,8 @@
 import { test, expect } from '../../fixtures/app';
 
 test.describe('Sidebar', () => {
-  test('can toggle sidebar with Ctrl+B', async ({ appPage }) => {
+  test('can toggle sidebar with Ctrl+B', async ({ appPage, sidebarPage }) => {
+    await sidebarPage.openSessions();
     await expect(appPage.sidebar).toBeVisible();
 
     await appPage.toggleSidebar();
@@ -19,8 +20,8 @@ test.describe('Sidebar', () => {
     await expect(sidebarPage.settingsPanel).not.toBeVisible();
   });
 
-  test('peek toggle collapses and reopens the sidebar', async ({ appPage, sidebarPage }) => {
-    await appPage.peekToggle.click();
+  test('boundary logo collapses and sessions icon reopens the sidebar', async ({ appPage, sidebarPage }) => {
+    await appPage.boundaryToggle.click();
     await expect(appPage.appBody).toHaveClass(/sidebar-collapsed/);
 
     await sidebarPage.openSessions();
