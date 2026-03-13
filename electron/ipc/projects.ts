@@ -41,7 +41,7 @@ function resolveProjectPath(folderPath: string): string {
 }
 
 function encodeClaudeProjectPath(folderPath: string): string {
-  return resolveProjectPath(folderPath).replace(/[\\/]/g, '-');
+  return resolveProjectPath(folderPath).replace(/[^a-zA-Z0-9]/g, '-');
 }
 
 function toTimestamp(value: unknown): number {

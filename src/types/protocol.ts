@@ -41,9 +41,14 @@ export const claudeMessageSchema = z
     result: z.string().optional(),
     session_id: z.string().optional(),
     cost_usd: z.number().optional(),
+    total_cost_usd: z.number().optional(),
     duration_ms: z.number().optional(),
     input_tokens: z.number().optional(),
     output_tokens: z.number().optional(),
+    usage: z.object({
+      input_tokens: z.number().optional(),
+      output_tokens: z.number().optional(),
+    }).passthrough().optional(),
   })
   .passthrough();
 

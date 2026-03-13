@@ -12,11 +12,24 @@ const ALLOWED_EFFORTS = new Set(['low', 'medium', 'high', 'max']);
 
 let currentProcess: ChildProcess | null = null;
 
-const MODE_TOOLS: Record<string, string[]> = {
-  chat: ['Read', 'Glob', 'Grep', 'WebSearch'],
-  code: ['Read', 'Write', 'Edit', 'Bash', 'Glob', 'Grep'],
-  plan: ['Read', 'Glob', 'Grep'],
-};
+/**
+ * Build a clean env for spawning claude CLI.
+ * - Strips CLAUDE* / ANTHROPIC_CLAUDE_CODE* to avoid nested-session detection
+ * - Disables color output to keep stdout pure JSON
+ * Pattern from: claude-ui (cacdcaecawae/claude-ui)
+ */
+function getCleanEnv(): NodeJS.ProcessEnv {
+  const env = { ...process.env };
+  const keysToRemove = Object.keys(env).filter(
+    (k) => k.startsWith('CLAUDE') || k.startsWith('ANTHROPIC_CLAUDE_CODE')
+  );
+  for (const key of keysToRemove) {
+    delete env[key];
+  }
+  env.FORCE_COLOR = '0';
+  env.NO_COLOR = '1';
+  return env;
+}
 
 function safeCwd(requestedCwd?: string): string {
   if (!requestedCwd) return process.cwd();
@@ -53,15 +66,24 @@ export function registerClaudeHandlers(ipcMain: IpcMain) {
   ipcMain.handle('claude:check-auth', () => checkClaudeAuth());
 
   ipcMain.handle('claude:query', async (event, { prompt, sessionId, cwd, mode = 'code', model, effort }) => {
+    console.log('[claude:query] received:', { prompt: prompt?.slice(0, 50), sessionId, cwd, mode, model, effort });
     const win = BrowserWindow.fromWebContents(event.sender);
-    if (!win) return;
+    if (!win) { console.log('[claude:query] no window found'); return; }
+
+    if (currentProcess) {
+      currentProcess.kill('SIGTERM');
+      currentProcess = null;
+    }
 
     const safePrompt = typeof prompt === 'string' ? prompt.slice(0, MAX_PROMPT_LEN) : '';
     if (!safePrompt) return;
 
     const safeMode = typeof mode === 'string' && ALLOWED_MODES.has(mode) ? mode : 'code';
 
-    const args = ['--print', '--output-format', 'stream-json'];
+    // -p = print mode (non-interactive)
+    // --output-format stream-json requires --verbose
+    // message goes last as positional argument
+    const args = ['-p', '--output-format', 'stream-json', '--verbose'];
 
     if (sessionId && typeof sessionId === 'string' && SESSION_ID_RE.test(sessionId)) {
       args.push('--resume', sessionId);
@@ -75,21 +97,17 @@ export function registerClaudeHandlers(ipcMain: IpcMain) {
       args.push('--effort', effort);
     }
 
-    const allowedTools = MODE_TOOLS[safeMode] || MODE_TOOLS.code;
-    for (const tool of allowedTools) {
-      args.push('--allowedTools', tool);
-    }
-
     if (safeMode === 'plan') {
-      args.push('--system-prompt', 'You are in planning mode. Analyze and plan only. Do NOT modify any files.');
+      args.push('--permission-mode', 'plan');
     }
 
     args.push(safePrompt);
 
+    console.log('[claude:query] spawning:', 'claude', args.join(' '));
     currentProcess = spawn('claude', args, {
       cwd: safeCwd(cwd),
-      env: { ...process.env },
-      stdio: ['pipe', 'pipe', 'pipe'],
+      env: getCleanEnv(),
+      stdio: ['ignore', 'pipe', 'pipe'],
     });
 
     let buffer = '';
@@ -112,17 +130,27 @@ export function registerClaudeHandlers(ipcMain: IpcMain) {
 
     currentProcess.stderr?.on('data', (data: Buffer) => {
       const errText = data.toString();
+      console.log('[claude:stderr]', errText);
       if (errText.includes('error') || errText.includes('Error')) {
         win.webContents.send('claude:error', errText);
       }
     });
 
     currentProcess.on('close', () => {
+      if (buffer.trim()) {
+        try {
+          const message = JSON.parse(buffer);
+          win.webContents.send('claude:message', message);
+        } catch {
+          // ignore
+        }
+      }
       currentProcess = null;
       win.webContents.send('claude:complete');
     });
 
     currentProcess.on('error', (err) => {
+      console.log('[claude:error]', err.message);
       win.webContents.send('claude:error', err.message);
       currentProcess = null;
     });

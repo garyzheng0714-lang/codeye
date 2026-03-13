@@ -44,7 +44,10 @@ export function handleClaudeMessage(message: ClaudeMessage, actions: StoreAction
     actions.appendAssistantContent(message.result);
   }
 
-  if (message.cost_usd !== undefined) {
-    actions.updateCost(message.cost_usd || 0, message.input_tokens || 0, message.output_tokens || 0);
+  const costUsd = message.total_cost_usd ?? message.cost_usd;
+  const inputToks = message.usage?.input_tokens ?? message.input_tokens;
+  const outputToks = message.usage?.output_tokens ?? message.output_tokens;
+  if (costUsd !== undefined) {
+    actions.updateCost(costUsd || 0, inputToks || 0, outputToks || 0);
   }
 }

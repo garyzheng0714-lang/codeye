@@ -36,6 +36,7 @@ export function hydrateStoresFromPersistence(): void {
       claudeSessionId: activeSession.claudeSessionId ?? null,
       model: activeSession.model,
     });
+    syncAllFoldersFromCli();
     return;
   }
 
@@ -46,6 +47,50 @@ export function hydrateStoresFromPersistence(): void {
   chatStore.setSessionId(null);
   chatStore.setClaudeSessionId(null);
   chatStore.setCwd(activeFolder?.path ?? '');
+  syncAllFoldersFromCli();
+}
+
+/**
+ * Auto-sync CLI session history for all local folders on startup.
+ * If no local folder exists, auto-create one from the current cwd.
+ * Runs async in background — does not block UI.
+ */
+function syncAllFoldersFromCli(): void {
+  if (!window.electronAPI?.projects.importClaudeHistory) return;
+
+  const sessionStore = useSessionStore.getState();
+  const chatStore = useChatStore.getState();
+  let { folders } = sessionStore;
+  let localFolders = folders.filter((f) => f.kind === 'local' && f.path);
+
+  // Auto-create a folder for cwd if none exist
+  if (localFolders.length === 0 && window.electronAPI?.getCwd) {
+    window.electronAPI.getCwd().then((cwd) => {
+      if (!cwd) return;
+      const store = useSessionStore.getState();
+      const folder = store.createFolder(cwd);
+      store.setActiveFolder(folder.id);
+      useChatStore.getState().setCwd(cwd);
+      syncFolderFromCli(folder);
+    }).catch(() => { /* silent */ });
+    return;
+  }
+
+  for (const folder of localFolders) {
+    syncFolderFromCli(folder);
+  }
+}
+
+function syncFolderFromCli(folder: { id: string; path: string }): void {
+  if (!window.electronAPI?.projects.importClaudeHistory) return;
+  window.electronAPI.projects.importClaudeHistory(folder.path).then((imported) => {
+    if (imported.length > 0) {
+      useSessionStore.getState().importClaudeSessions(folder.id, imported);
+    }
+    useSessionStore.getState().markFolderSynced(folder.id);
+  }).catch(() => {
+    // silent — don't block startup
+  });
 }
 
 function syncChatToSession(): void {

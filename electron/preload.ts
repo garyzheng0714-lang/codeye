@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
 contextBridge.exposeInMainWorld('electronAPI', {
+  getCwd: () => ipcRenderer.invoke('app:get-cwd'),
   claude: {
     query: (params: { prompt: string; sessionId?: string; cwd?: string; mode?: string }) =>
       ipcRenderer.invoke('claude:query', params),

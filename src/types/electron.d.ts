@@ -1,4 +1,5 @@
 interface ElectronAPI {
+  getCwd: () => Promise<string>;
   claude: {
     query: (params: { prompt: string; sessionId?: string; cwd?: string; mode?: string }) => Promise<void>;
     stop: () => Promise<void>;

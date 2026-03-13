@@ -32,6 +32,7 @@ function createWindow() {
 
   if (process.env.VITE_DEV_SERVER_URL) {
     mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL);
+    mainWindow.webContents.openDevTools({ mode: 'detach' });
   } else {
     mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
   }
@@ -116,6 +117,7 @@ app.whenReady().then(() => {
   }
   Menu.setApplicationMenu(buildMenu());
   registerGlobalShortcuts();
+  ipcMain.handle('app:get-cwd', () => process.cwd());
   registerClaudeHandlers(ipcMain);
   registerSessionHandlers(ipcMain);
   registerProjectHandlers(ipcMain);

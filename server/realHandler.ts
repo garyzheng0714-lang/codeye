@@ -39,6 +39,8 @@ function getCleanEnv(): NodeJS.ProcessEnv {
   for (const key of keysToRemove) {
     delete env[key];
   }
+  env.FORCE_COLOR = '0';
+  env.NO_COLOR = '1';
   return env;
 }
 
@@ -66,7 +68,7 @@ export function handleRealQuery(ws: WebSocket, msg: QueryMessage) {
   }
 
   const prompt = msg.prompt.slice(0, MAX_PROMPT_LEN);
-  const args = ['-p', '--output-format', 'stream-json'];
+  const args = ['-p', '--output-format', 'stream-json', '--verbose'];
 
   if (msg.model && typeof msg.model === 'string' && ALLOWED_MODELS.has(msg.model)) {
     args.push('--model', msg.model);
@@ -89,7 +91,7 @@ export function handleRealQuery(ws: WebSocket, msg: QueryMessage) {
   const childProcess = spawn('claude', args, {
     cwd: safeCwd(msg.cwd),
     env: getCleanEnv(),
-    stdio: ['pipe', 'pipe', 'pipe'],
+    stdio: ['ignore', 'pipe', 'pipe'],
   });
 
   clientProcesses.set(ws, childProcess);

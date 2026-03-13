@@ -52,8 +52,11 @@ export function useClaudeChat() {
               actions.addToolCall({ id: toolId, name: block.name, input: toolInput, expanded: false });
             }
           }
-          if (parsed.cost_usd !== undefined) {
-            actions.updateCost(parsed.cost_usd || 0, parsed.input_tokens || 0, parsed.output_tokens || 0);
+          const costUsd = parsed.total_cost_usd ?? parsed.cost_usd;
+          const inputToks = parsed.usage?.input_tokens ?? parsed.input_tokens;
+          const outputToks = parsed.usage?.output_tokens ?? parsed.output_tokens;
+          if (costUsd !== undefined) {
+            actions.updateCost(costUsd || 0, inputToks || 0, outputToks || 0);
           }
         } else {
           textBatcher.flush();
@@ -104,8 +107,11 @@ export function useClaudeChat() {
                 actions.addToolCall({ id: toolId, name: block.name, input: toolInput, expanded: false });
               }
             }
-            if (msg.cost_usd !== undefined) {
-              actions.updateCost(msg.cost_usd || 0, msg.input_tokens || 0, msg.output_tokens || 0);
+            const wsCost = msg.total_cost_usd ?? msg.cost_usd;
+            const wsInput = msg.usage?.input_tokens ?? msg.input_tokens;
+            const wsOutput = msg.usage?.output_tokens ?? msg.output_tokens;
+            if (wsCost !== undefined) {
+              actions.updateCost(wsCost || 0, wsInput || 0, wsOutput || 0);
             }
           } else {
             textBatcher.flush();
@@ -136,7 +142,9 @@ export function useClaudeChat() {
 export function sendClaudeQuery(
   params: { prompt: string; mode?: string; model?: string; effort?: string; cwd?: string; sessionId?: string }
 ) {
+  console.log('[sendClaudeQuery]', { hasElectronAPI: !!window.electronAPI, params });
   if (window.electronAPI) {
+    console.log('[sendClaudeQuery] calling electronAPI.claude.query');
     window.electronAPI.claude.query(params);
     return;
   }
