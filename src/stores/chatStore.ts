@@ -1,25 +1,6 @@
 import { create } from 'zustand';
-import type { ModelId } from '../data/models';
+import type { ChatMode, DisplayMessage, ToolCallDisplay, ModelId } from '../types';
 import { DEFAULT_MODEL } from '../data/models';
-
-type ChatMode = 'chat' | 'code' | 'plan';
-
-export interface DisplayMessage {
-  id: string;
-  role: 'user' | 'assistant';
-  content: string;
-  toolCalls: ToolCallDisplay[];
-  timestamp: number;
-  isStreaming?: boolean;
-}
-
-export interface ToolCallDisplay {
-  id: string;
-  name: string;
-  input: Record<string, unknown>;
-  output?: string;
-  expanded: boolean;
-}
 
 interface ChatState {
   messages: DisplayMessage[];
@@ -103,6 +84,15 @@ export const useChatStore = create<ChatState>((set) => ({
       const last = msgs[msgs.length - 1];
       if (last?.role === 'assistant') {
         msgs[msgs.length - 1] = { ...last, content: last.content + content };
+      } else {
+        msgs.push({
+          id: crypto.randomUUID(),
+          role: 'assistant',
+          content,
+          toolCalls: [],
+          timestamp: Date.now(),
+          isStreaming: true,
+        });
       }
       return { messages: msgs };
     }),
@@ -124,6 +114,15 @@ export const useChatStore = create<ChatState>((set) => ({
           ...last,
           toolCalls: [...last.toolCalls, tool],
         };
+      } else {
+        msgs.push({
+          id: crypto.randomUUID(),
+          role: 'assistant',
+          content: '',
+          toolCalls: [tool],
+          timestamp: Date.now(),
+          isStreaming: true,
+        });
       }
       return { messages: msgs };
     }),

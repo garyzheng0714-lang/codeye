@@ -1,0 +1,37 @@
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+}
+
+.app-body {
+  display: grid;
+  grid-template-columns: var(--activity-bar-w) var(--sidebar-w) 1fr;
+  flex: 1;
+  overflow: hidden;
+  transition: grid-template-columns var(--transition-base);
+  position: relative;
+  min-height: 0;
+}
+
+.app-body.sidebar-collapsed {
+  display: flex;
+}
+
+.sidebar-collapsed .activity-bar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 10;
+}
+
+.app-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+  background: var(--bg-base);
+}

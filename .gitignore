@@ -10,3 +10,8 @@ release
 *.png
 !public/logo.png
 .playwright-mcp/
+build/
+playwright-report/
+playwright-results.json
+test-results/
+screenshots/

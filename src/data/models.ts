@@ -1,12 +1,4 @@
-export type ModelId = 'claude-opus-4-6' | 'claude-sonnet-4-6' | 'claude-haiku-4-5';
-
-export interface ModelInfo {
-  id: ModelId;
-  label: string;
-  shortLabel: string;
-  description: string;
-  tier: 'premium' | 'standard' | 'fast';
-}
+import type { ModelId, ModelInfo } from '../types';
 
 export const MODELS: ModelInfo[] = [
   { id: 'claude-opus-4-6', label: 'Opus 4.6', shortLabel: 'Opus', description: 'Deepest reasoning', tier: 'premium' },

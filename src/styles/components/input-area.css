@@ -1,0 +1,121 @@
+.input-area {
+  padding: var(--space-3) var(--space-6) var(--space-4);
+  background: linear-gradient(to top, var(--bg-base) 60%, transparent);
+  position: relative;
+}
+
+.input-container {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: var(--bg-base);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  box-shadow: var(--shadow-md);
+}
+
+.input-container:focus-within {
+  border-color: var(--border-accent);
+  box-shadow: var(--shadow-md), 0 0 0 3px var(--accent-glow);
+}
+
+.input-textarea {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-md);
+  line-height: 1.5;
+  resize: none;
+  outline: none;
+  max-height: 200px;
+  padding: 0 var(--space-1);
+}
+
+.input-textarea::placeholder {
+  color: var(--text-disabled);
+}
+
+.input-actions {
+  display: flex;
+  gap: var(--space-1);
+  flex-shrink: 0;
+}
+
+.send-btn, .stop-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.send-btn {
+  background: var(--accent);
+  color: white;
+}
+
+.send-btn:hover:not(:disabled) {
+  background: var(--accent-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.send-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.stop-btn {
+  background: var(--danger);
+  color: white;
+  animation: pulseGlow 2s infinite;
+}
+
+.stop-btn:hover {
+  opacity: 0.9;
+}
+
+.input-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-2) var(--space-1) 0;
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.input-footer-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.input-footer-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--text-muted);
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full);
+}
+
+.status-dot.idle {
+  background: var(--success);
+}
+
+.status-dot.streaming {
+  background: var(--accent);
+  animation: pulse 1.5s infinite;
+}

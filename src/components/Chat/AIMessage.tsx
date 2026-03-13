@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import type { DisplayMessage } from '../../stores/chatStore';
+import type { DisplayMessage } from '../../types';
 import ToolCall from './ToolCall';
 import CodeBlock from './CodeBlock';
 

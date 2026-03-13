@@ -22,7 +22,7 @@ const slashCommands: SlashCommand[] = [
   { name: 'code-review', description: 'Security and quality review of changes', category: 'skill', icon: 'review' },
   { name: 'tdd', description: 'Test-driven development workflow', category: 'skill', icon: 'test' },
   { name: 'e2e', description: 'Generate and run E2E tests with Playwright', category: 'skill', icon: 'test' },
-  { name: 'plan', description: 'Create implementation plan before coding', category: 'skill', icon: 'plan' },
+  { name: 'impl-plan', description: 'Create implementation plan before coding', category: 'skill', icon: 'plan' },
   { name: 'refactor-clean', description: 'Remove dead code and unused dependencies', category: 'skill', icon: 'clean' },
   { name: 'security-scan', description: 'Scan configuration for vulnerabilities', category: 'skill', icon: 'security' },
   { name: 'search-first', description: 'Research before coding workflow', category: 'skill', icon: 'search' },

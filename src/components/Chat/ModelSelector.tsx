@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useChatStore } from '../../stores/chatStore';
 import { MODELS, getModelInfo } from '../../data/models';
-import type { ModelId } from '../../data/models';
+import type { ModelId } from '../../types';
 
 const tierColors: Record<string, string> = {
   premium: 'var(--accent)',

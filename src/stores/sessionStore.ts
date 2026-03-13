@@ -1,20 +1,5 @@
 import { create } from 'zustand';
-import type { DisplayMessage } from './chatStore';
-import type { ModelId } from '../data/models';
-
-interface SessionData {
-  id: string;
-  name: string;
-  cwd: string;
-  claudeSessionId?: string;
-  model?: ModelId;
-  messages: DisplayMessage[];
-  cost: number;
-  inputTokens: number;
-  outputTokens: number;
-  createdAt: number;
-  updatedAt: number;
-}
+import type { DisplayMessage, ModelId, SessionData } from '../types';
 
 interface SessionState {
   sessions: SessionData[];

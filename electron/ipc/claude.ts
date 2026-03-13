@@ -4,6 +4,10 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 
+const MAX_PROMPT_LEN = 32_000;
+const SESSION_ID_RE = /^[a-zA-Z0-9_-]{1,128}$/;
+const ALLOWED_MODES = new Set(['chat', 'code', 'plan']);
+
 let currentProcess: ChildProcess | null = null;
 
 const MODE_TOOLS: Record<string, string[]> = {
@@ -11,6 +15,19 @@ const MODE_TOOLS: Record<string, string[]> = {
   code: ['Read', 'Write', 'Edit', 'Bash', 'Glob', 'Grep'],
   plan: ['Read', 'Glob', 'Grep'],
 };
+
+function safeCwd(requestedCwd?: string): string {
+  if (!requestedCwd) return process.cwd();
+  const resolved = path.resolve(requestedCwd);
+  try {
+    if (!fs.existsSync(resolved) || !fs.statSync(resolved).isDirectory()) {
+      return process.cwd();
+    }
+  } catch {
+    return process.cwd();
+  }
+  return resolved;
+}
 
 function checkClaudeAuth(): { authenticated: boolean; method?: string; error?: string } {
   if (process.env.ANTHROPIC_API_KEY) {
@@ -37,25 +54,30 @@ export function registerClaudeHandlers(ipcMain: IpcMain) {
     const win = BrowserWindow.fromWebContents(event.sender);
     if (!win) return;
 
+    const safePrompt = typeof prompt === 'string' ? prompt.slice(0, MAX_PROMPT_LEN) : '';
+    if (!safePrompt) return;
+
+    const safeMode = typeof mode === 'string' && ALLOWED_MODES.has(mode) ? mode : 'code';
+
     const args = ['--print', '--output-format', 'stream-json'];
 
-    if (sessionId) {
+    if (sessionId && typeof sessionId === 'string' && SESSION_ID_RE.test(sessionId)) {
       args.push('--resume', sessionId);
     }
 
-    const allowedTools = MODE_TOOLS[mode] || MODE_TOOLS.code;
+    const allowedTools = MODE_TOOLS[safeMode] || MODE_TOOLS.code;
     for (const tool of allowedTools) {
       args.push('--allowedTools', tool);
     }
 
-    if (mode === 'plan') {
+    if (safeMode === 'plan') {
       args.push('--system-prompt', 'You are in planning mode. Analyze and plan only. Do NOT modify any files.');
     }
 
-    args.push(prompt);
+    args.push(safePrompt);
 
     currentProcess = spawn('claude', args, {
-      cwd: cwd || process.cwd(),
+      cwd: safeCwd(cwd),
       env: { ...process.env },
       stdio: ['pipe', 'pipe', 'pipe'],
     });

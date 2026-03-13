@@ -1,4 +1,4 @@
-import type { DisplayMessage } from '../../stores/chatStore';
+import type { DisplayMessage } from '../../types';
 
 export default function UserMessage({ message }: { message: DisplayMessage }) {
   const time = new Date(message.timestamp).toLocaleTimeString('zh-CN', {

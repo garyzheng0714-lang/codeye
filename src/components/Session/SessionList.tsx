@@ -1,6 +1,7 @@
 import { useState, useRef, useMemo } from 'react';
 import { useSessionStore } from '../../stores/sessionStore';
 import { useChatStore } from '../../stores/chatStore';
+import { groupSessionsByDate } from '../../utils/sessionGrouping';
 
 interface Props {
   searchQuery?: string;
@@ -19,29 +20,10 @@ export default function SessionList({ searchQuery = '' }: Props) {
     return sessions.filter((s) => s.name.toLowerCase().includes(q));
   }, [sessions, searchQuery]);
 
-  const groupedSessions = useMemo(() => {
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-    const yesterday = today - 86400000;
-    const weekAgo = today - 7 * 86400000;
-
-    const groups: { label: string; items: typeof filteredSessions }[] = [
-      { label: 'Today', items: [] },
-      { label: 'Yesterday', items: [] },
-      { label: 'This Week', items: [] },
-      { label: 'Earlier', items: [] },
-    ];
-
-    for (const s of filteredSessions) {
-      const t = s.updatedAt;
-      if (t >= today) groups[0].items.push(s);
-      else if (t >= yesterday) groups[1].items.push(s);
-      else if (t >= weekAgo) groups[2].items.push(s);
-      else groups[3].items.push(s);
-    }
-
-    return groups.filter((g) => g.items.length > 0);
-  }, [filteredSessions]);
+  const groupedSessions = useMemo(
+    () => groupSessionsByDate(filteredSessions),
+    [filteredSessions]
+  );
 
   const handleSelect = (id: string) => {
     if (id === activeSessionId) return;

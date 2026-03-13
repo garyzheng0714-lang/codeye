@@ -1,80 +1,7 @@
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { useChatStore } from '../stores/chatStore';
-import type { ToolCallDisplay } from '../stores/chatStore';
-
-const WS_URL = 'ws://localhost:5174';
-const RECONNECT_DELAY = 2000;
-
-interface StoreActions {
-  appendAssistantContent: (s: string) => void;
-  finishStreaming: () => void;
-  addToolCall: (t: ToolCallDisplay) => void;
-  updateCost: (c: number, i: number, o: number) => void;
-  setClaudeSessionId: (id: string) => void;
-}
-
-function handleClaudeMessage(message: ClaudeMessage, actions: StoreActions) {
-  if (message.type === 'system' && message.subtype === 'init' && message.session_id) {
-    actions.setClaudeSessionId(message.session_id);
-    return;
-  }
-
-  if (message.type === 'assistant' && message.message?.content) {
-    for (const block of message.message.content) {
-      if (block.type === 'text' && block.text) {
-        actions.appendAssistantContent(block.text);
-      }
-      if (block.type === 'tool_use' && block.name) {
-        actions.addToolCall({
-          id: block.tool_use_id || crypto.randomUUID(),
-          name: block.name,
-          input: block.input || {},
-          expanded: false,
-        });
-      }
-    }
-  }
-
-  if (message.type === 'result' && message.result) {
-    actions.appendAssistantContent(message.result);
-  }
-
-  if (message.cost_usd !== undefined) {
-    actions.updateCost(message.cost_usd || 0, message.input_tokens || 0, message.output_tokens || 0);
-  }
-}
-
-// Singleton WebSocket with auto-reconnect
-let globalWs: WebSocket | null = null;
-let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
-
-function getOrCreateWs(): WebSocket | null {
-  if (window.electronAPI) return null;
-  if (globalWs?.readyState === WebSocket.OPEN || globalWs?.readyState === WebSocket.CONNECTING) {
-    return globalWs;
-  }
-  return connectWs();
-}
-
-function connectWs(): WebSocket {
-  if (reconnectTimer) {
-    clearTimeout(reconnectTimer);
-    reconnectTimer = null;
-  }
-
-  const ws = new WebSocket(WS_URL);
-  globalWs = ws;
-
-  ws.onclose = () => {
-    reconnectTimer = setTimeout(() => connectWs(), RECONNECT_DELAY);
-  };
-
-  ws.onerror = () => {
-    // onclose will fire after this
-  };
-
-  return ws;
-}
+import { handleClaudeMessage, type StoreActions } from '../services/messageHandler';
+import { getOrCreateWs, sendMessage } from '../services/websocket';
 
 function getActions(): StoreActions {
   const s = useChatStore.getState();
@@ -88,8 +15,6 @@ function getActions(): StoreActions {
 }
 
 export function useClaudeChat() {
-  const wsRef = useRef<WebSocket | null>(null);
-
   useEffect(() => {
     if (window.electronAPI) {
       const removeMessage = window.electronAPI.claude.onMessage((msg) =>
@@ -108,7 +33,6 @@ export function useClaudeChat() {
 
     const ws = getOrCreateWs();
     if (!ws) return;
-    wsRef.current = ws;
 
     const handler = (event: MessageEvent) => {
       try {
@@ -131,7 +55,6 @@ export function useClaudeChat() {
     return () => ws.removeEventListener('message', handler);
   }, []);
 
-  return wsRef;
 }
 
 export function sendClaudeQuery(
@@ -141,17 +64,7 @@ export function sendClaudeQuery(
     window.electronAPI.claude.query(params);
     return;
   }
-
-  const ws = getOrCreateWs();
-  if (ws?.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({ type: 'query', ...params }));
-  } else {
-    const onOpen = () => {
-      ws?.send(JSON.stringify({ type: 'query', ...params }));
-      ws?.removeEventListener('open', onOpen);
-    };
-    ws?.addEventListener('open', onOpen);
-  }
+  sendMessage({ type: 'query', ...params });
 }
 
 export function stopClaude() {
@@ -159,9 +72,5 @@ export function stopClaude() {
     window.electronAPI.claude.stop();
     return;
   }
-
-  const ws = getOrCreateWs();
-  if (ws?.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({ type: 'stop' }));
-  }
+  sendMessage({ type: 'stop' });
 }

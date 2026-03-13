@@ -1,0 +1,120 @@
+.model-selector {
+  position: relative;
+}
+
+.model-selector-trigger {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-full);
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.model-selector-trigger:hover:not(:disabled) {
+  background: var(--bg-hover);
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+}
+
+.model-selector-trigger:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.model-selector-label {
+  font-weight: 500;
+}
+
+.model-tier-badge {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+.model-selector-chevron {
+  transition: transform var(--transition-fast);
+  color: var(--text-muted);
+}
+
+.model-selector-chevron.open {
+  transform: rotate(180deg);
+}
+
+.model-selector-dropdown {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  min-width: 230px;
+  background: var(--bg-base);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  padding: var(--space-1);
+  z-index: 100;
+  animation: fadeIn var(--transition-fast);
+}
+
+.model-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  text-align: left;
+  transition: all var(--transition-fast);
+}
+
+.model-option:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.model-option.active {
+  background: var(--accent-muted);
+  color: var(--text-primary);
+  position: relative;
+}
+
+.model-option.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 20%;
+  height: 60%;
+  width: 3px;
+  background: var(--accent);
+  border-radius: 0 var(--radius-full) var(--radius-full) 0;
+}
+
+.model-option-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.model-option-label {
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+
+.model-option-desc {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.model-option.active .model-option-desc {
+  color: var(--text-secondary);
+}

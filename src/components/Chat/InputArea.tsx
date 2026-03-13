@@ -6,7 +6,7 @@ import { saveCurrentSession } from '../../utils/session';
 import SlashCommandPalette from './SlashCommandPalette';
 import ModelSelector from './ModelSelector';
 import type { SlashCommand } from '../../data/slashCommands';
-import type { ModelId } from '../../data/models';
+import type { ModelId } from '../../types';
 
 export default function InputArea() {
   const [input, setInput] = useState('');
