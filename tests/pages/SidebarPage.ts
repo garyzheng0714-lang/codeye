@@ -12,6 +12,10 @@ export class SidebarPage {
   readonly sessionsBtn: Locator;
   readonly settingsPanel: Locator;
   readonly settingsInput: Locator;
+  readonly settingsTabs: Locator;
+  readonly settingsContent: Locator;
+  readonly settingsSelect: Locator;
+  readonly shortcutRows: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -21,10 +25,14 @@ export class SidebarPage {
     this.searchInput = page.locator('.sidebar-search input');
     this.emptyState = page.locator('.empty-state');
     this.folderEmptyState = page.locator('.folder-empty');
-    this.settingsBtn = page.locator('.activity-bar-bottom .activity-btn');
+    this.settingsBtn = page.getByRole('button', { name: 'Open settings' });
     this.sessionsBtn = page.locator('.activity-bar-top .activity-btn');
     this.settingsPanel = page.locator('.settings-panel');
     this.settingsInput = page.locator('.settings-input');
+    this.settingsTabs = page.locator('.settings-tab');
+    this.settingsContent = page.locator('.settings-content');
+    this.settingsSelect = page.locator('.settings-select').first();
+    this.shortcutRows = page.locator('.shortcut-row');
   }
 
   async createSession() {
@@ -77,5 +85,13 @@ export class SidebarPage {
   async setWorkingDirectory(path: string) {
     await this.settingsInput.fill(path);
     await this.settingsInput.press('Enter');
+  }
+
+  async switchSettingsTab(label: string) {
+    await this.settingsTabs.filter({ hasText: label }).click();
+  }
+
+  activeSettingsTab() {
+    return this.page.locator('.settings-tab.active');
   }
 }

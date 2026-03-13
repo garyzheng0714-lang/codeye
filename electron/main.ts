@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, nativeImage, shell } from 'electron';
+import { app, BrowserWindow, ipcMain, nativeImage, shell, globalShortcut, Menu, Notification } from 'electron';
 import path from 'path';
 import { registerClaudeHandlers } from './ipc/claude';
 import { registerSessionHandlers } from './ipc/sessions';
@@ -37,11 +37,85 @@ function createWindow() {
   }
 }
 
+function buildMenu() {
+  const template: Electron.MenuItemConstructorOptions[] = [
+    {
+      label: 'Codeye',
+      submenu: [
+        { role: 'about' },
+        { type: 'separator' },
+        { role: 'hide' },
+        { role: 'hideOthers' },
+        { role: 'unhide' },
+        { type: 'separator' },
+        { role: 'quit' },
+      ],
+    },
+    {
+      label: 'Edit',
+      submenu: [
+        { role: 'undo' },
+        { role: 'redo' },
+        { type: 'separator' },
+        { role: 'cut' },
+        { role: 'copy' },
+        { role: 'paste' },
+        { role: 'selectAll' },
+      ],
+    },
+    {
+      label: 'View',
+      submenu: [
+        { role: 'reload' },
+        { role: 'forceReload' },
+        { role: 'toggleDevTools' },
+        { type: 'separator' },
+        { role: 'resetZoom' },
+        { role: 'zoomIn' },
+        { role: 'zoomOut' },
+        { type: 'separator' },
+        { role: 'togglefullscreen' },
+      ],
+    },
+    {
+      label: 'Window',
+      submenu: [
+        { role: 'minimize' },
+        { role: 'zoom' },
+        { role: 'close' },
+      ],
+    },
+  ];
+  return Menu.buildFromTemplate(template);
+}
+
+function registerGlobalShortcuts() {
+  globalShortcut.register('CommandOrControl+Shift+C', () => {
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.show();
+      mainWindow.focus();
+    }
+  });
+}
+
+function showNotification(title: string, body: string) {
+  if (Notification.isSupported()) {
+    new Notification({ title, body }).show();
+  }
+}
+
+ipcMain.handle('notification:show', (_event, { title, body }) => {
+  showNotification(title, body);
+});
+
 app.whenReady().then(() => {
   if (process.platform === 'darwin' && app.dock) {
     const icon = nativeImage.createFromPath(path.join(__dirname, '../build/icon-source.png'));
     app.dock.setIcon(icon);
   }
+  Menu.setApplicationMenu(buildMenu());
+  registerGlobalShortcuts();
   registerClaudeHandlers(ipcMain);
   registerSessionHandlers(ipcMain);
   registerProjectHandlers(ipcMain);
@@ -51,6 +125,10 @@ app.whenReady().then(() => {
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
+});
+
+app.on('will-quit', () => {
+  globalShortcut.unregisterAll();
 });
 
 app.on('activate', () => {

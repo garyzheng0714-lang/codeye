@@ -3,6 +3,7 @@ import { spawn, execSync, ChildProcess } from 'child_process';
 import path from 'path';
 import fs from 'fs';
 import { SESSION_ID_RE, type QueryMessage } from './validators';
+import { wrapEvent } from './streamEvent';
 
 const MAX_PROMPT_LEN = 32_000;
 const ALLOWED_MODELS = new Set([
@@ -43,15 +44,14 @@ function getCleanEnv(): NodeJS.ProcessEnv {
 
 export function handleCheckAuth(ws: WebSocket, isNested: boolean) {
   if (isNested) {
-    ws.send(JSON.stringify({ type: 'auth', authenticated: true, method: 'demo' }));
+    ws.send(wrapEvent('auth', { authenticated: true, method: 'demo' }));
     return;
   }
   try {
     execSync('which claude', { stdio: 'pipe' });
-    ws.send(JSON.stringify({ type: 'auth', authenticated: true, method: 'cli' }));
+    ws.send(wrapEvent('auth', { authenticated: true, method: 'cli' }));
   } catch {
-    ws.send(JSON.stringify({
-      type: 'auth',
+    ws.send(wrapEvent('auth', {
       authenticated: false,
       error: 'Claude CLI not found. Install with: npm install -g @anthropic-ai/claude-code',
     }));
@@ -106,7 +106,7 @@ export function handleRealQuery(ws: WebSocket, msg: QueryMessage) {
       try {
         const parsed = JSON.parse(line);
         if (ws.readyState === WebSocket.OPEN) {
-          ws.send(JSON.stringify({ type: 'message', data: parsed }));
+          ws.send(wrapEvent('message', { data: parsed }));
         }
       } catch {
         // partial JSON, accumulate
@@ -123,7 +123,7 @@ export function handleRealQuery(ws: WebSocket, msg: QueryMessage) {
       try {
         const parsed = JSON.parse(buffer);
         if (ws.readyState === WebSocket.OPEN) {
-          ws.send(JSON.stringify({ type: 'message', data: parsed }));
+          ws.send(wrapEvent('message', { data: parsed }));
         }
       } catch {
         // ignore
@@ -131,13 +131,13 @@ export function handleRealQuery(ws: WebSocket, msg: QueryMessage) {
     }
     clientProcesses.delete(ws);
     if (ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({ type: 'complete' }));
+      ws.send(wrapEvent('complete', {}));
     }
   });
 
   childProcess.on('error', (err) => {
     if (ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({ type: 'error', error: err.message }));
+      ws.send(wrapEvent('error', { error: err.message }));
     }
     clientProcesses.delete(ws);
   });

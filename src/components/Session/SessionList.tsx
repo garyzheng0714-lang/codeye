@@ -238,10 +238,12 @@ export default function SessionList({
             key={folder.id}
             className={`folder-section ${isActiveFolder ? 'active' : ''}`}
           >
-            <button
-              type="button"
+            <div
+              role="button"
+              tabIndex={0}
               className="folder-header"
               onClick={() => void handleActivateFolder(folder)}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); void handleActivateFolder(folder); } }}
             >
               <div className="folder-header-main">
                 <span className="folder-icon-wrap">
@@ -284,7 +286,7 @@ export default function SessionList({
                   </svg>
                 </span>
               </div>
-            </button>
+            </div>
 
             <div className={`folder-session-shell ${isExpanded ? 'open' : ''}`}>
               <div className="folder-session-list">

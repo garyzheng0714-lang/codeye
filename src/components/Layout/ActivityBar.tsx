@@ -41,6 +41,17 @@ export default function ActivityBar() {
       </div>
       <div className="activity-bar-bottom">
         <button
+          className={`activity-btn ${activePanel === 'activity' && !sidebarCollapsed ? 'active' : ''}`}
+          onClick={() => setActivePanel('activity')}
+          title="Activity"
+          aria-label="Open activity stream"
+          type="button"
+        >
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <path d="M3 10h3l2-6 3 12 2-8 2 4h2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+        <button
           className={`activity-btn ${activePanel === 'settings' && !sidebarCollapsed ? 'active' : ''}`}
           onClick={() => setActivePanel('settings')}
           title="Settings"

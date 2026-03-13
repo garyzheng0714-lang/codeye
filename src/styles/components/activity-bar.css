@@ -71,3 +71,12 @@
 .activity-btn.launcher-collapsed:hover {
   background: rgba(124, 58, 237, 0.12);
 }
+
+[data-theme="dark"] .activity-btn.launcher-collapsed {
+  background: rgba(142, 71, 255, 0.12);
+  box-shadow: none;
+}
+
+[data-theme="dark"] .activity-btn.launcher-collapsed:hover {
+  background: rgba(142, 71, 255, 0.18);
+}

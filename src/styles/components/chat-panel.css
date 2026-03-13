@@ -78,3 +78,9 @@
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
 }
+
+[data-theme="dark"] .welcome-screen {
+  background:
+    radial-gradient(ellipse 600px 400px at 50% 35%, rgba(142, 71, 255, 0.06), transparent),
+    radial-gradient(ellipse 400px 300px at 30% 60%, rgba(79, 70, 229, 0.03), transparent);
+}

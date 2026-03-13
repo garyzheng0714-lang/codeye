@@ -7,6 +7,8 @@ import os from 'os';
 const MAX_PROMPT_LEN = 32_000;
 const SESSION_ID_RE = /^[a-zA-Z0-9_-]{1,128}$/;
 const ALLOWED_MODES = new Set(['chat', 'code', 'plan']);
+const ALLOWED_MODELS = new Set(['claude-opus-4-6', 'claude-sonnet-4-6', 'claude-haiku-4-5']);
+const ALLOWED_EFFORTS = new Set(['low', 'medium', 'high', 'max']);
 
 let currentProcess: ChildProcess | null = null;
 
@@ -50,7 +52,7 @@ function checkClaudeAuth(): { authenticated: boolean; method?: string; error?: s
 export function registerClaudeHandlers(ipcMain: IpcMain) {
   ipcMain.handle('claude:check-auth', () => checkClaudeAuth());
 
-  ipcMain.handle('claude:query', async (event, { prompt, sessionId, cwd, mode = 'code' }) => {
+  ipcMain.handle('claude:query', async (event, { prompt, sessionId, cwd, mode = 'code', model, effort }) => {
     const win = BrowserWindow.fromWebContents(event.sender);
     if (!win) return;
 
@@ -63,6 +65,14 @@ export function registerClaudeHandlers(ipcMain: IpcMain) {
 
     if (sessionId && typeof sessionId === 'string' && SESSION_ID_RE.test(sessionId)) {
       args.push('--resume', sessionId);
+    }
+
+    if (model && typeof model === 'string' && ALLOWED_MODELS.has(model)) {
+      args.push('--model', model);
+    }
+
+    if (effort && typeof effort === 'string' && ALLOWED_EFFORTS.has(effort)) {
+      args.push('--effort', effort);
     }
 
     const allowedTools = MODE_TOOLS[safeMode] || MODE_TOOLS.code;

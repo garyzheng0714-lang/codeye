@@ -1,19 +1,4 @@
-import CodeyeMark from '../Brand/CodeyeMark';
 import { useUIStore } from '../../stores/uiStore';
-
-function CollapseChevron() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-      <path
-        d="M11.5 4.5L7 9L11.5 13.5"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
 
 export default function SidebarBoundaryToggle() {
   const toggleSidebar = useUIStore((state) => state.toggleSidebar);
@@ -26,12 +11,10 @@ export default function SidebarBoundaryToggle() {
       title="Collapse conversations"
       type="button"
     >
-      <span className="sidebar-boundary-avatar" aria-hidden="true">
-        <CodeyeMark className="sidebar-boundary-mark" size={48} />
-      </span>
-      <span className="sidebar-boundary-icon" aria-hidden="true">
-        <CollapseChevron />
-      </span>
+      <span className="sidebar-boundary-handle" aria-hidden="true" />
+      <svg className="sidebar-boundary-chevron" width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+        <path d="M8.5 3.5L5 7L8.5 10.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
     </button>
   );
 }

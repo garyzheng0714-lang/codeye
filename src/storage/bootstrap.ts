@@ -7,6 +7,7 @@ import {
 } from './sessionPersistence';
 
 const PERSIST_DEBOUNCE_MS = 250;
+const CHAT_SYNC_DEBOUNCE_MS = 500;
 
 export function hydrateStoresFromPersistence(): void {
   const snapshot = loadSessionSnapshot();
@@ -47,14 +48,28 @@ export function hydrateStoresFromPersistence(): void {
   chatStore.setCwd(activeFolder?.path ?? '');
 }
 
+function syncChatToSession(): void {
+  const { messages, cost, inputTokens, outputTokens, model, claudeSessionId, cwd } =
+    useChatStore.getState();
+  const { activeSessionId, saveSessionMessages } = useSessionStore.getState();
+  if (activeSessionId && messages.length > 0) {
+    saveSessionMessages(activeSessionId, messages, cost, inputTokens, outputTokens, {
+      model,
+      claudeSessionId,
+      cwd,
+    });
+  }
+}
+
 export function startSessionAutoPersistence(): () => void {
   let persistTimer: ReturnType<typeof setTimeout> | null = null;
+  let chatSyncTimer: ReturnType<typeof setTimeout> | null = null;
 
   const flush = (snapshot: SessionStoreSnapshot) => {
     persistSessionSnapshot(snapshot);
   };
 
-  const unsubscribe = useSessionStore.subscribe((state) => {
+  const unsubSession = useSessionStore.subscribe((state) => {
     const snapshot: SessionStoreSnapshot = {
       folders: state.folders,
       sessions: state.sessions,
@@ -69,11 +84,27 @@ export function startSessionAutoPersistence(): () => void {
     }, PERSIST_DEBOUNCE_MS);
   });
 
+  const unsubChat = useChatStore.subscribe((state, prev) => {
+    if (state.messages === prev.messages && state.cost === prev.cost) return;
+    if (state.isStreaming) return;
+
+    if (chatSyncTimer) clearTimeout(chatSyncTimer);
+    chatSyncTimer = setTimeout(() => {
+      syncChatToSession();
+      chatSyncTimer = null;
+    }, CHAT_SYNC_DEBOUNCE_MS);
+  });
+
   return () => {
     if (persistTimer) {
       clearTimeout(persistTimer);
       persistTimer = null;
     }
+    if (chatSyncTimer) {
+      clearTimeout(chatSyncTimer);
+      chatSyncTimer = null;
+    }
+    syncChatToSession();
     const state = useSessionStore.getState();
     flush({
       folders: state.folders,
@@ -81,6 +112,7 @@ export function startSessionAutoPersistence(): () => void {
       activeFolderId: state.activeFolderId,
       activeSessionId: state.activeSessionId,
     });
-    unsubscribe();
+    unsubSession();
+    unsubChat();
   };
 }

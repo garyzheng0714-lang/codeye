@@ -57,3 +57,47 @@
   line-height: 1.7;
   color: #e2e0f0;
 }
+
+.code-block-shiki {
+  overflow-x: auto;
+}
+
+.code-block-shiki pre {
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  line-height: 1.7;
+  background: transparent !important;
+}
+
+.code-block-shiki code {
+  font-family: var(--font-mono);
+}
+
+/* ============================================
+   Light Theme Overrides (code blocks stay dark by default,
+   but we soften them slightly for light theme readability)
+   ============================================ */
+:root:not([data-theme="dark"]) .code-block {
+  background: #1e1b2e;
+  border-color: rgba(124, 58, 237, 0.15);
+}
+
+:root:not([data-theme="dark"]) .code-block-header {
+  background: #16132a;
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+}
+
+/* ============================================
+   Dark Theme Overrides
+   ============================================ */
+[data-theme="dark"] .code-block {
+  background: #1a1625;
+  border-color: rgba(142, 71, 255, 0.12);
+}
+
+[data-theme="dark"] .code-block-header {
+  background: #130f1e;
+  border-bottom-color: rgba(142, 71, 255, 0.10);
+}

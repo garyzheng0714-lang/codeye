@@ -1,20 +1,21 @@
 import { test, expect } from '../../fixtures/app';
 
-test.describe('Model Selector', () => {
-  test('model selector is visible and shows default Sonnet', async ({ chatPage }) => {
-    await expect(chatPage.modelSelector).toBeVisible();
+test.describe('Model Config Selector', () => {
+  test('config selector is visible and shows default Sonnet', async ({ chatPage }) => {
+    await expect(chatPage.configSelector).toBeVisible();
     await expect(chatPage.currentModelLabel()).toHaveText('Sonnet');
   });
 
-  test('clicking trigger opens dropdown with 3 options', async ({ chatPage }) => {
-    await chatPage.openModelSelector();
-    await expect(chatPage.modelDropdown).toBeVisible();
-    await expect(chatPage.modelOptions).toHaveCount(3);
+  test('clicking trigger opens dropdown with model and effort options', async ({ chatPage }) => {
+    await chatPage.openConfigSelector();
+    await expect(chatPage.configDropdown).toBeVisible();
+    // 3 models + 4 effort levels = 7 options
+    await expect(chatPage.configOptions).toHaveCount(7);
   });
 
   test('selecting Opus updates trigger label', async ({ chatPage }) => {
     await chatPage.selectModel('Opus');
-    await expect(chatPage.modelDropdown).not.toBeVisible();
+    await expect(chatPage.configDropdown).not.toBeVisible();
     await expect(chatPage.currentModelLabel()).toHaveText('Opus');
   });
 
@@ -31,10 +32,10 @@ test.describe('Model Selector', () => {
   });
 
   test('Escape closes the dropdown', async ({ chatPage, page }) => {
-    await chatPage.openModelSelector();
-    await expect(chatPage.modelDropdown).toBeVisible();
+    await chatPage.openConfigSelector();
+    await expect(chatPage.configDropdown).toBeVisible();
     await page.keyboard.press('Escape');
-    await expect(chatPage.modelDropdown).not.toBeVisible();
+    await expect(chatPage.configDropdown).not.toBeVisible();
   });
 
   test('slash command /opus switches model', async ({ chatPage }) => {

@@ -111,21 +111,37 @@ export default function GitActionMenu() {
     setOpen(false);
   };
 
+  const handleCommitDirect = () => {
+    if (isStreaming) return;
+    runAction(gitActions[0]);
+  };
+
   return (
     <div className={`git-pill-shell ${open ? 'open' : ''}`} ref={menuRef}>
-      <button
-        type="button"
-        className={`title-chip git-pill-trigger ${open ? 'open' : ''}`}
-        aria-haspopup="menu"
-        aria-expanded={open}
-        onClick={() => setOpen((prev) => !prev)}
-      >
-        <span className="git-chip-mark" aria-hidden="true" />
-        <span className="title-chip-text">Submit</span>
-        <svg className={`git-pill-chevron ${open ? 'open' : ''}`} width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-          <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      </button>
+      <div className={`git-split-btn ${open ? 'open' : ''}`}>
+        <button
+          type="button"
+          className="git-split-main"
+          onClick={handleCommitDirect}
+          disabled={isStreaming}
+          title="Commit changes"
+        >
+          <span className="git-chip-mark" aria-hidden="true" />
+          <span className="title-chip-text">Submit</span>
+        </button>
+        <button
+          type="button"
+          className="git-split-chevron"
+          aria-haspopup="menu"
+          aria-expanded={open}
+          onClick={() => setOpen((prev) => !prev)}
+          title="More git actions"
+        >
+          <svg className={`git-pill-chevron ${open ? 'open' : ''}`} width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+            <path d="M2.5 3.5L5 6.5L7.5 3.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+      </div>
 
       <div className={`git-dropdown ${open ? 'open' : ''}`} role="menu" aria-hidden={!open}>
         <div className="git-dropdown-header">

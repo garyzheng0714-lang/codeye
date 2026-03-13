@@ -27,10 +27,10 @@ test.describe('Slash Command Palette', () => {
     await expect(chatPage.slashPalette).not.toBeVisible();
   });
 
-  test('selecting a mode command switches mode', async ({ appPage, chatPage }) => {
+  test('selecting a mode command switches mode', async ({ chatPage }) => {
     await chatPage.selectSlashCommand('chat');
     await expect(chatPage.slashPalette).not.toBeVisible();
-    await expect(appPage.activeMode()).toHaveText('Chat');
+    await expect(chatPage.textarea).toHaveAttribute('placeholder', /Ask a question/);
   });
 
   test('arrow keys navigate items', async ({ chatPage, page }) => {

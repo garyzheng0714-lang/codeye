@@ -89,6 +89,7 @@ interface SessionState {
     output: number,
     options?: SaveSessionOptions
   ) => void;
+  forkSession: (sourceId: string, fromMessageIndex: number) => SessionData | null;
   getFolder: (id: string) => SessionFolder | undefined;
   getSession: (id: string) => SessionData | undefined;
 }
@@ -188,9 +189,9 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       activeSessionId: session.id,
     }));
 
+    chatStore.clearMessages();
     chatStore.setSessionId(session.id);
     chatStore.setCwd(cwd);
-    chatStore.setClaudeSessionId(null);
 
     return session;
   },
@@ -334,6 +335,52 @@ export const useSessionStore = create<SessionState>((set, get) => ({
         ),
       };
     }),
+
+  forkSession: (sourceId, fromMessageIndex) => {
+    const source = get().sessions.find((s) => s.id === sourceId);
+    if (!source) return null;
+
+    const forkedMessages = source.messages.slice(0, fromMessageIndex + 1).map((m) => ({
+      ...m,
+      id: crypto.randomUUID(),
+      toolCalls: m.toolCalls.map((tc) => ({ ...tc, id: crypto.randomUUID() })),
+    }));
+
+    const timestamp = now();
+    const forked: SessionData = {
+      id: crypto.randomUUID(),
+      folderId: source.folderId,
+      source: 'local',
+      name: `Fork: ${source.name}`,
+      cwd: source.cwd,
+      claudeSessionId: undefined,
+      model: source.model,
+      messages: forkedMessages,
+      cost: 0,
+      inputTokens: 0,
+      outputTokens: 0,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    };
+
+    set((state) => ({
+      sessions: [forked, ...state.sessions],
+      activeSessionId: forked.id,
+    }));
+
+    const chatStore = useChatStore.getState();
+    chatStore.loadSession({
+      messages: forkedMessages,
+      cost: 0,
+      inputTokens: 0,
+      outputTokens: 0,
+      model: source.model,
+    });
+    chatStore.setSessionId(forked.id);
+    chatStore.setCwd(source.cwd);
+
+    return forked;
+  },
 
   getFolder: (id) => get().folders.find((folder) => folder.id === id),
   getSession: (id) => get().sessions.find((session) => session.id === id),

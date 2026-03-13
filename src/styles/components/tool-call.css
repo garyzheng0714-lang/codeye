@@ -103,3 +103,16 @@
   margin-top: var(--space-2);
   margin-bottom: var(--space-1);
 }
+
+/* ============================================
+   Dark Theme Overrides
+   ============================================ */
+[data-theme="dark"] .tool-call {
+  background: rgba(142, 71, 255, 0.06);
+  border-color: rgba(142, 71, 255, 0.12);
+}
+
+[data-theme="dark"] .tool-call-detail {
+  background: rgba(142, 71, 255, 0.04);
+  border-top-color: rgba(142, 71, 255, 0.12);
+}

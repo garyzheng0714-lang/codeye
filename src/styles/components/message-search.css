@@ -1,0 +1,112 @@
+.message-search {
+  position: absolute;
+  top: 0;
+  right: var(--space-4);
+  z-index: 50;
+  background: var(--bg-base);
+  border: 1px solid var(--border-subtle);
+  border-top: none;
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  min-width: 320px;
+}
+
+.message-search-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  color: var(--text-muted);
+}
+
+.message-search-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  outline: none;
+}
+
+.message-search-count {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.message-search-close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+}
+
+.message-search-close:hover {
+  color: var(--text-primary);
+}
+
+.message-search-results {
+  max-height: 200px;
+  overflow-y: auto;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.message-search-result {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.message-search-result:hover {
+  background: var(--bg-hover);
+}
+
+.search-result-role {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.search-result-snippet {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.search-highlight {
+  animation: searchFlash 2s ease-out;
+}
+
+@keyframes searchFlash {
+  0% { outline: 2px solid var(--accent); outline-offset: 2px; }
+  100% { outline: 2px solid transparent; outline-offset: 2px; }
+}
+
+/* ============================================
+   Dark Theme Overrides
+   ============================================ */
+[data-theme="dark"] .message-search {
+  background: var(--bg-elevated);
+  border-color: rgba(142, 71, 255, 0.15);
+}
+
+[data-theme="dark"] .message-search-results {
+  border-top-color: rgba(142, 71, 255, 0.12);
+}
+
+[data-theme="dark"] .message-search-input::placeholder {
+  color: var(--text-disabled);
+}

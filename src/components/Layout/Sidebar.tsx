@@ -5,6 +5,7 @@ import { useChatStore } from '../../stores/chatStore';
 import { saveCurrentSession } from '../../utils/session';
 import SessionList from '../Session/SessionList';
 import SettingsPanel from '../Settings/SettingsPanel';
+import ActivityStream from '../Chat/ActivityStream';
 import type { SessionFolder } from '../../types';
 
 export default function Sidebar() {
@@ -136,6 +137,7 @@ export default function Sidebar() {
           />
         )}
         {activePanel === 'settings' && <SettingsPanel />}
+        {activePanel === 'activity' && <ActivityStream />}
       </div>
       {activeFolder?.path && (
         <div className="sidebar-footer">

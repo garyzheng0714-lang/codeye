@@ -3,6 +3,7 @@ import http from 'http';
 import { isQueryMessage, isStopMessage, isCheckAuthMessage } from './validators';
 import { handleDemoQuery } from './demoHandler';
 import { handleRealQuery, handleCheckAuth, clientProcesses } from './realHandler';
+import { wrapEvent } from './streamEvent';
 
 const PORT = 5174;
 const IS_NESTED = !!process.env.CLAUDECODE;
@@ -34,12 +35,12 @@ wss.on('connection', (ws: WebSocket, req: http.IncomingMessage) => {
           proc.kill('SIGTERM');
           clientProcesses.delete(ws);
         }
-        ws.send(JSON.stringify({ type: 'complete' }));
+        ws.send(wrapEvent('complete', {}));
       } else if (isCheckAuthMessage(msg)) {
         handleCheckAuth(ws, IS_NESTED);
       }
     } catch {
-      ws.send(JSON.stringify({ type: 'error', error: 'Invalid message format' }));
+      ws.send(wrapEvent('error', { error: 'Invalid message format' }));
     }
   });
 

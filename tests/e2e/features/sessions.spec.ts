@@ -33,6 +33,8 @@ test.describe('Session Management', () => {
     await appPage.hintCards.first().click();
     await expect(sidebarPage.sessionItems).toHaveCount(1);
     await expect(chatPage.userMessages).toBeVisible();
+    // Wait for demo streaming to complete before creating new session
+    await expect(chatPage.sendBtn).toBeVisible({ timeout: 10000 });
 
     await sidebarPage.createSession();
     await expect(sidebarPage.sessionItems).toHaveCount(2);

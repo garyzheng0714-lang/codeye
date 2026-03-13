@@ -5,14 +5,9 @@ test.describe('App Launch', () => {
     await expect(appPage.welcomeTitle).toHaveText('Codeye');
   });
 
-  test('renders title bar with logo and control cluster', async ({ appPage }) => {
-    await expect(appPage.titleBarLogo).toBeVisible();
+  test('renders title bar with submit split button', async ({ appPage }) => {
     await expect(appPage.titleBarActions).toBeVisible();
-    await expect(appPage.titleGlassCluster).toBeVisible();
-    await expect(appPage.titleChips).toHaveCount(3);
-    await expect(appPage.contextChip).toContainText('Code');
-    await expect(appPage.agentChip).toContainText('Sonnet');
-    await expect(appPage.gitMenuTrigger).toContainText('Submit');
+    await expect(appPage.page.locator('.git-split-main')).toContainText('Submit');
   });
 
   test('renders activity bar and sidebar', async ({ appPage }) => {
@@ -37,7 +32,27 @@ test.describe('App Launch', () => {
     await expect(appPage.gitMenuItems.nth(2)).toContainText('Create PR');
   });
 
-  test('shows current mode in the context pill', async ({ appPage }) => {
-    await expect(appPage.activeMode()).toHaveText('Code');
+  test('shows combined model and effort selector', async ({ appPage }) => {
+    await expect(appPage.modelConfigTrigger).toBeVisible();
+    await expect(appPage.modelConfigTrigger).toContainText('Sonnet');
+    await expect(appPage.modelConfigTrigger).toContainText('High');
+  });
+
+  test('opens model config dropdown with models and thinking levels', async ({ appPage }) => {
+    await appPage.modelConfigTrigger.click();
+    await expect(appPage.modelConfigDropdown).toBeVisible();
+    await expect(appPage.modelConfigDropdown).toContainText('Opus 4.6');
+    await expect(appPage.modelConfigDropdown).toContainText('Sonnet 4.6');
+    await expect(appPage.modelConfigDropdown).toContainText('Haiku 4.5');
+    await expect(appPage.modelConfigDropdown).toContainText('Low');
+    await expect(appPage.modelConfigDropdown).toContainText('High');
+  });
+
+  test('shows session stats panel on click', async ({ appPage }) => {
+    await appPage.sessionStatsTrigger.click();
+    await expect(appPage.sessionStatsPanel).toBeVisible();
+    await expect(appPage.sessionStatsPanel).toContainText('Input');
+    await expect(appPage.sessionStatsPanel).toContainText('Output');
+    await expect(appPage.sessionStatsPanel).toContainText('Cost');
   });
 });

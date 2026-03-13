@@ -51,10 +51,28 @@ export const categoryLabels: Record<string, string> = {
   action: 'Actions',
 };
 
+import { readJson, writeJson } from '../utils/jsonStorage';
+
+const CUSTOM_COMMANDS_KEY = 'codeye.custom-commands';
+
+function loadCustomCommands(): SlashCommand[] {
+  const parsed = readJson<SlashCommand[]>(CUSTOM_COMMANDS_KEY);
+  return Array.isArray(parsed) ? parsed : [];
+}
+
+export function saveCustomCommands(commands: SlashCommand[]): void {
+  writeJson(CUSTOM_COMMANDS_KEY, commands);
+}
+
+export function getAllCommands(): SlashCommand[] {
+  return [...slashCommands, ...loadCustomCommands()];
+}
+
 export function filterCommands(query: string): SlashCommand[] {
+  const all = getAllCommands();
   const q = query.toLowerCase();
-  if (!q) return slashCommands;
-  return slashCommands.filter(
+  if (!q) return all;
+  return all.filter(
     (c) => c.name.includes(q) || c.description.toLowerCase().includes(q)
   );
 }

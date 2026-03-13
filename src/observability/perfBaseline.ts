@@ -3,6 +3,7 @@ type TransportType = 'ws' | 'electron';
 
 const METRICS_STORAGE_KEY = 'codeye.perf-baseline.v1';
 const MAX_METRICS = 200;
+const FPS_WINDOW_MS = 500;
 
 interface PerfBaselineSample {
   traceId: string;
@@ -40,7 +41,7 @@ function saveSample(sample: PerfBaselineSample): void {
   }
 }
 
-function getPerfBaselineSamples(): PerfBaselineSample[] {
+export function getPerfBaselineSamples(): PerfBaselineSample[] {
   try {
     const raw = window.localStorage.getItem(METRICS_STORAGE_KEY);
     if (!raw) return [];
@@ -58,6 +59,9 @@ export function startStreamTrace(params: {
   inputDispatchMs: number;
 }): string {
   const traceId = crypto.randomUUID();
+
+  performance.mark('codeye:stream-start');
+
   activeTrace = {
     traceId,
     startedAt: performance.now(),
@@ -76,6 +80,12 @@ export function markStreamChunk(): void {
   activeTrace.chunkCount += 1;
   if (activeTrace.firstChunkAt === null) {
     activeTrace.firstChunkAt = performance.now();
+    performance.mark('codeye:first-token');
+    try {
+      performance.measure('codeye:ttft', 'codeye:stream-start', 'codeye:first-token');
+    } catch {
+      // marks may have been cleared
+    }
   }
 }
 
@@ -83,6 +93,13 @@ export function finishStreamTrace(status: StreamStatus): void {
   if (!activeTrace) return;
 
   const now = performance.now();
+  performance.mark('codeye:stream-end');
+  try {
+    performance.measure('codeye:stream-duration', 'codeye:stream-start', 'codeye:stream-end');
+  } catch {
+    // marks may have been cleared
+  }
+
   const sample: PerfBaselineSample = {
     traceId: activeTrace.traceId,
     createdAt: Date.now(),
@@ -101,4 +118,91 @@ export function finishStreamTrace(status: StreamStatus): void {
 
   saveSample(sample);
   activeTrace = null;
+}
+
+let fpsRafId: number | null = null;
+let fpsFrameCount = 0;
+let fpsWindowStart = 0;
+let fpsCallback: ((fps: number) => void) | null = null;
+
+function fpsLoop(timestamp: number): void {
+  fpsFrameCount += 1;
+  const elapsed = timestamp - fpsWindowStart;
+
+  if (elapsed >= FPS_WINDOW_MS) {
+    const fps = (fpsFrameCount / elapsed) * 1000;
+    fpsCallback?.(Math.round(fps));
+    fpsFrameCount = 0;
+    fpsWindowStart = timestamp;
+  }
+
+  fpsRafId = requestAnimationFrame(fpsLoop);
+}
+
+export function startFpsMonitor(onFps: (fps: number) => void): () => void {
+  fpsCallback = onFps;
+  fpsFrameCount = 0;
+  fpsWindowStart = performance.now();
+  fpsRafId = requestAnimationFrame(fpsLoop);
+
+  return () => {
+    if (fpsRafId !== null) {
+      cancelAnimationFrame(fpsRafId);
+      fpsRafId = null;
+    }
+    fpsCallback = null;
+  };
+}
+
+export function measureInputLatency(keydownTimestamp: number): number {
+  const now = performance.now();
+  const latency = now - keydownTimestamp;
+
+  performance.mark('codeye:input-echo');
+
+  if (latency > 50) {
+    console.warn(`[codeye:perf] Input latency ${latency.toFixed(1)}ms exceeds 50ms threshold`);
+  }
+
+  return latency;
+}
+
+export function getMemoryUsageMB(): number | null {
+  try {
+    const mem = (performance as unknown as { memory?: { usedJSHeapSize: number } }).memory;
+    if (mem) {
+      return Math.round(mem.usedJSHeapSize / 1024 / 1024);
+    }
+  } catch {
+    // not available
+  }
+  return null;
+}
+
+export function getPerfSummary(): {
+  ttftP50: number | null;
+  ttftP95: number | null;
+  avgChunks: number;
+  sampleCount: number;
+} {
+  const samples = getPerfBaselineSamples();
+  const ttftValues = samples
+    .map((s) => s.ttftMs)
+    .filter((v): v is number => v !== null)
+    .sort((a, b) => a - b);
+
+  if (ttftValues.length === 0) {
+    return { ttftP50: null, ttftP95: null, avgChunks: 0, sampleCount: 0 };
+  }
+
+  const p50Idx = Math.floor(ttftValues.length * 0.5);
+  const p95Idx = Math.floor(ttftValues.length * 0.95);
+  const totalChunks = samples.reduce((sum, s) => sum + s.chunkCount, 0);
+
+  return {
+    ttftP50: ttftValues[p50Idx],
+    ttftP95: ttftValues[p95Idx],
+    avgChunks: Math.round(totalChunks / samples.length),
+    sampleCount: samples.length,
+  };
 }

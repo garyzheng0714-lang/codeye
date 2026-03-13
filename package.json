@@ -18,10 +18,12 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
+    "@tanstack/react-virtual": "^3.13.22",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-markdown": "^10.0.0",
     "remark-gfm": "^4.0.0",
+    "shiki": "^4.0.2",
     "ws": "^8.19.0",
     "zod": "^4.3.6",
     "zustand": "^5.0.0"
@@ -31,7 +33,6 @@
     "@playwright/test": "^1.58.2",
     "@tailwindcss/vite": "^4.0.0",
     "@testing-library/jest-dom": "^6.9.1",
-    "@testing-library/react": "^16.3.2",
     "@types/node": "^24.10.1",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",

@@ -1,12 +1,30 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef, memo } from 'react';
+import { highlightCode } from '../../services/shikiHighlighter';
 
 interface Props {
   code: string;
   language: string;
 }
 
-export default function CodeBlock({ code, language }: Props) {
+export default memo(function CodeBlock({ code, language }: Props) {
   const [copied, setCopied] = useState(false);
+  const [highlightedHtml, setHighlightedHtml] = useState<string | null>(null);
+  const codeRef = useRef(code);
+  const langRef = useRef(language);
+
+  useEffect(() => {
+    codeRef.current = code;
+    langRef.current = language;
+    let cancelled = false;
+
+    highlightCode(code, language).then((html) => {
+      if (!cancelled && codeRef.current === code && langRef.current === language) {
+        setHighlightedHtml(html);
+      }
+    });
+
+    return () => { cancelled = true; };
+  }, [code, language]);
 
   const handleCopy = async () => {
     try {
@@ -41,9 +59,16 @@ export default function CodeBlock({ code, language }: Props) {
           )}
         </button>
       </div>
-      <pre className="code-block-pre">
-        <code>{code}</code>
-      </pre>
+      {highlightedHtml ? (
+        <div
+          className="code-block-shiki"
+          dangerouslySetInnerHTML={{ __html: highlightedHtml }}
+        />
+      ) : (
+        <pre className="code-block-pre">
+          <code>{code}</code>
+        </pre>
+      )}
     </div>
   );
-}
+});

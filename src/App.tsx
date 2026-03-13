@@ -4,18 +4,24 @@ import ActivityBar from './components/Layout/ActivityBar';
 import Sidebar from './components/Layout/Sidebar';
 import SidebarBoundaryToggle from './components/Layout/SidebarBoundaryToggle';
 import ChatPanel from './components/Chat/ChatPanel';
+import ConnectionStatus from './components/Chat/ConnectionStatus';
+import ErrorBoundary from './components/ErrorBoundary';
 import { useClaudeChat } from './hooks/useClaudeChat';
 import { useSessionStore } from './stores/sessionStore';
 import { useChatStore } from './stores/chatStore';
 import { useUIStore } from './stores/uiStore';
 import { saveCurrentSession } from './utils/session';
 import { hydrateStoresFromPersistence, startSessionAutoPersistence } from './storage/bootstrap';
+import { applyTheme, getStoredTheme } from './services/themeManager';
+import { initI18n } from './i18n';
 
 export default function App() {
   useClaudeChat();
   const sidebarCollapsed = useUIStore((s) => s.sidebarCollapsed);
 
   useEffect(() => {
+    initI18n();
+    applyTheme(getStoredTheme());
     hydrateStoresFromPersistence();
     return startSessionAutoPersistence();
   }, []);
@@ -43,16 +49,21 @@ export default function App() {
   }, []);
 
   return (
-    <div className="app">
-      <TitleBar />
-      <div className={`app-body ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
-        <ActivityBar />
-        <Sidebar />
-        {!sidebarCollapsed && <SidebarBoundaryToggle />}
-        <main className="app-main">
-          <ChatPanel />
-        </main>
+    <ErrorBoundary>
+      <div className="app">
+        <TitleBar />
+        <ConnectionStatus />
+        <div className={`app-body ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
+          <ActivityBar />
+          <Sidebar />
+          {!sidebarCollapsed && <SidebarBoundaryToggle />}
+          <main className="app-main">
+            <ErrorBoundary>
+              <ChatPanel />
+            </ErrorBoundary>
+          </main>
+        </div>
       </div>
-    </div>
+    </ErrorBoundary>
   );
 }

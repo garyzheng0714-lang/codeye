@@ -7,10 +7,25 @@
 
 ## 当前阶段
 
-**Phase 0 (v0.3.x)** — 基础层搭建中。下一步 Phase 1 (v0.4)。
+**Phase 0-6 + Phase 8 核心功能已集成到 UI**。Phase 7 (远程桥接) 按计划延后。
 
-执行任何功能开发前，先确认该功能属于哪个 Phase，不要跨 Phase 做事。
-如果用户要求的功能不在当前 Phase，先说明并确认优先级。
+### 已集成到 UI 的功能 (2026-03-13)
+- Phase 0: StreamEvent 协议、StorageAdapter、性能基线、SecretStore
+- Phase 1: 会话持久化 (bootstrap.ts)、Shiki 语法高亮、费用追踪 (SessionStats)、Settings 4Tab、ErrorBoundary
+- Phase 2: Turn 分组、DiffViewer (Edit 工具)、消息搜索 (Cmd+F)、上下文引用 (#)、StreamSessionManager、乐观更新
+- Phase 3: Git 操作菜单 (commit/push/PR)、暗色主题系统、会话 Fork
+- Phase 4: React.memo 优化 (6 组件)、虚拟滚动 (@tanstack/react-virtual, >40条启用)、StreamBatcher 60fps、WS 指数退避重连+心跳
+- Phase 6: i18n (en/zh-CN) + 语言切换
+- Phase 8: ToolApproval UI、Activity Stream (过滤: All/File/Tool/Git/Error)、Skills 市场 (4 内置 Skill)、Hooks/MCP 管理 (CRUD + 导入导出)
+
+### 注意事项
+- `settingsBtn` locator 必须用 `getByRole('button', { name: 'Open settings' })` 而不是 `.activity-bar-bottom .activity-btn`（底部现有 Activity + Settings 两个按钮）
+- `settingsSelect` locator 使用 `.first()` 因为 GeneralTab 有多个 select (Theme + Language)
+- Settings 面板有 6 个 Tab: General, Model, Shortcuts, About, Hooks, Skills
+- uiStore 的 SidebarPanel 类型已扩展为 `'sessions' | 'settings' | 'activity'`
+- 虚拟滚动阈值: turns > 40 时启用，estimateSize=120, overscan=5
+- StreamBatcher: 16ms 基础间隔，50ms 繁忙间隔，32KB 立即 flush
+- folder-header 已从 `<button>` 改为 `<div role="button">` 避免嵌套按钮 HTML 错误
 
 ---
 
@@ -169,6 +184,65 @@ v0.{Phase}.{patch}[-alpha.N | -beta.N]
 | 多 Provider | ClaudeCodeUI (`modelConstants.js`) |
 | npm 分发 | ClaudeCodeUI (`npx @siteboon/claude-code-ui`) |
 | 会话 Fork | YepAnywhere |
+
+---
+
+## 实现注意事项
+
+### Phase 0: 基础层
+- **StreamEvent 协议**: 服务端 `server/streamEvent.ts` → `wrapEvent()`, 客户端 `src/types/streamEvent.ts` → `parseStreamEvent()` + legacy 升级
+- **StorageAdapter**: `src/storage/adapter.ts` 接口 + Web/Memory 实现
+- **性能基线**: `src/observability/perfBaseline.ts` — TTFT/FPS/内存/输入延迟打点
+- **SecretStore**: `src/security/secretStore.ts` — Web base64 编码 + Electron safeStorage 自动切换
+
+### Phase 1: 基础补全
+- **Shiki 语法高亮**: 懒加载 WASM 单例 (`services/shikiHighlighter.ts`)，17 语言预加载
+- **费用追踪**: PRICE_TABLE + 四维聚合 + messageId:requestId 去重, unknown model 返回 null + warn
+- **设置面板**: 4 Tab (General/Model/Shortcuts/About)
+- **ErrorBoundary**: 两层隔离 (App + ChatPanel)
+
+### Phase 2: 对话体验
+- **Turn 分组**: `utils/turnGrouping.ts` 纯函数 + `TurnGroup.tsx` 组件
+- **StreamSessionManager**: `services/streamSessionManager.ts` — globalThis 单例, idle GC 330s, AbortController
+- **DiffViewer**: `components/Chat/DiffViewer.tsx` — 统一/并排模式
+- **MessageSearch**: Cmd+F 搜索 + 高亮跳转
+- **上下文引用**: `services/contextReferences.ts` — #file/#codebase/#git_diff 解析
+
+### Phase 3: Git + 高级功能
+- **Git 集成**: `services/gitIntegration.ts` — 分支建议/冲突解决/Worktree/Checkpoint ref
+- **自定义主题**: `services/themeManager.ts` — JSON 主题导入导出 + 自定义主题注册
+- **自定义斜杠命令**: `data/slashCommands.ts` — localStorage 持久化
+- **Hooks/MCP 管理**: `services/hooksManager.ts` — Hook CRUD + MCP Server CRUD + 配置导入导出
+- **ToolApproval**: `components/Chat/ToolApproval.tsx` — 审批/拒绝 + 参数查看
+
+### Phase 4: 性能优化
+- **StreamBatcher**: `services/streamBatcher.ts` — 16ms 基础/50ms 忙碌/32KB 立即 flush
+- **WebSocket 增强**: `services/websocket.ts` — 指数退避重连 (1s→30s) + 30s 心跳 + 连接监听
+- **审计日志**: `services/auditLog.ts` — 工具执行记录, 5s 批量刷盘, 1000 条上限
+
+### Phase 5: Electron 桌面版
+- **Electron 主进程**: `electron/main.ts` — 全局快捷键 + 原生菜单 + 通知
+- **IPC Handlers**: claude (model/effort) + sessions + projects (JSONL 导入) + secrets (safeStorage)
+- **双模适配层**: `services/apiAdapter.ts` — 统一 ClaudeAdapter/ProjectAdapter, 运行时自动检测
+- **文件拖拽**: `services/fileDragDrop.ts` — DnD 事件处理 + 文件类型猜测
+
+### Phase 6: 分发与国际化
+- **i18n**: `src/i18n/` — EN/ZH-CN 双语, `t()` 函数 + param 插值 + `useI18n` hook
+- **npm 包结构**: package.json 已配置，`npx codeye` 入口待绑定
+
+### Phase 7: 远程桥接 (服务层)
+- **Provider 抽象**: `services/providers/` — AIProvider 接口 + ClaudeProvider + ProviderRegistry
+- **注**: 远程连接 (SSH/WS relay) 需 Threat Model 完成后才能实现，当前仅完成本地 Provider 层
+
+### Phase 8: 差异化功能
+- **会话 Fork**: `sessionStore.forkSession()` — 从任意消息点分叉
+- **分层收件箱**: `services/sessionInbox.ts` — 4 级分类 (needs_attention/active/recent/archived)
+- **全局活动流**: `services/activityStream.ts` — 跨会话事件推送 + 按会话分组
+- **Skills 市场**: `services/skillsManager.ts` — 安装/卸载 + 4 个内置 skill + prompt 模板
+- **Multi-Run**: `services/multiRun.ts` — 多模型并行执行 + 结果对比
+
+### 数据迁移
+- **迁移引擎**: `src/migrations/migrationRunner.ts` — 链式迁移 + 自动备份 + 版本检测
 
 ---
 

@@ -1,22 +1,26 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useMemo } from 'react';
 import { useChatStore } from '../../stores/chatStore';
 import { useSessionStore } from '../../stores/sessionStore';
 import { sendClaudeQuery, stopClaude } from '../../hooks/useClaudeChat';
 import { saveCurrentSession } from '../../utils/session';
 import SlashCommandPalette from './SlashCommandPalette';
-import ModelSelector from './ModelSelector';
-import EffortSelector from './EffortSelector';
+import ModelConfigSelector from './ModelConfigSelector';
+import SessionStats from './SessionStats';
 import type { SlashCommand } from '../../data/slashCommands';
 import type { ModelId, EffortLevel } from '../../types';
 import { startStreamTrace } from '../../observability/perfBaseline';
+import { parseContextReferences, CONTEXT_SUGGESTIONS, type ContextReference } from '../../services/contextReferences';
 
 export default function InputArea() {
   const [input, setInput] = useState('');
   const [showPalette, setShowPalette] = useState(false);
+  const [showContextSuggestions, setShowContextSuggestions] = useState(false);
   const [slashQuery, setSlashQuery] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const { isStreaming, addUserMessage, startAssistantMessage, mode, setMode, setModel, setEffort, clearMessages, cost, inputTokens, outputTokens } = useChatStore();
+  const { isStreaming, addUserMessage, startAssistantMessage, mode, setMode, setModel, setEffort, clearMessages } = useChatStore();
   const { activeSessionId, createSession } = useSessionStore();
+
+  const contextRefs = useMemo(() => parseContextReferences(input), [input]);
 
   const handleSend = useCallback(() => {
     const dispatchStart = performance.now();
@@ -163,10 +167,17 @@ export default function InputArea() {
       const query = value.slice(1);
       setSlashQuery(query);
       setShowPalette(true);
+      setShowContextSuggestions(false);
     } else {
       setShowPalette(false);
       setSlashQuery('');
     }
+
+    // Detect # for context references
+    const cursorPos = e.target.selectionStart ?? value.length;
+    const beforeCursor = value.slice(0, cursorPos);
+    const hashMatch = beforeCursor.match(/#(\w*)$/);
+    setShowContextSuggestions(!!hashMatch && !value.startsWith('/'));
 
     const el = e.target;
     el.style.height = 'auto';
@@ -183,6 +194,17 @@ export default function InputArea() {
     plan: 'Describe what to plan...   Enter to send · / for commands',
   };
 
+  const handleContextSelect = (suggestion: typeof CONTEXT_SUGGESTIONS[number]) => {
+    const cursorPos = textareaRef.current?.selectionStart ?? input.length;
+    const beforeCursor = input.slice(0, cursorPos);
+    const afterCursor = input.slice(cursorPos);
+    const hashIdx = beforeCursor.lastIndexOf('#');
+    const newInput = beforeCursor.slice(0, hashIdx) + suggestion.trigger + ' ' + afterCursor;
+    setInput(newInput);
+    setShowContextSuggestions(false);
+    textareaRef.current?.focus();
+  };
+
   return (
     <div className="input-area">
       <div className="input-container-wrapper">
@@ -192,6 +214,29 @@ export default function InputArea() {
           onSelect={handleCommandSelect}
           onClose={() => setShowPalette(false)}
         />
+        {showContextSuggestions && (
+          <div className="context-suggestions">
+            {CONTEXT_SUGGESTIONS.map((s) => (
+              <button
+                key={s.type}
+                className="context-suggestion-item"
+                onClick={() => handleContextSelect(s)}
+              >
+                <span className="context-suggestion-trigger">{s.trigger}</span>
+                <span className="context-suggestion-desc">{s.description}</span>
+              </button>
+            ))}
+          </div>
+        )}
+        {contextRefs.length > 0 && (
+          <div className="context-pills">
+            {contextRefs.map((ref, i) => (
+              <span key={`${ref.type}-${ref.value}-${i}`} className="context-pill">
+                {ref.displayLabel}
+              </span>
+            ))}
+          </div>
+        )}
         <div className="input-container">
           <textarea
             ref={textareaRef}
@@ -225,26 +270,10 @@ export default function InputArea() {
           </div>
         </div>
         <div className="input-footer">
-          <span className="input-footer-item">
-            <span className={`status-dot ${isStreaming ? 'streaming' : 'idle'}`} />
-            Codeye
-          </span>
+          <div className="input-footer-left" />
           <div className="input-footer-right">
-            <EffortSelector />
-            <ModelSelector />
-            <span className="input-footer-item">
-              <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                <path d="M5 8V2M3 4l2-2 2 2" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              {inputTokens.toLocaleString()}
-            </span>
-            <span className="input-footer-item">
-              <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                <path d="M5 2v6M3 6l2 2 2-2" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              {outputTokens.toLocaleString()}
-            </span>
-            <span className="input-footer-item">${cost.toFixed(4)}</span>
+            <ModelConfigSelector />
+            <SessionStats />
           </div>
         </div>
       </div>

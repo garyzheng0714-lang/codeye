@@ -5,6 +5,30 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-5);
+  position: relative;
+}
+
+.turn-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.turn-collapse-btn {
+  align-self: center;
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.turn-collapse-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-secondary);
 }
 
 .message-row {
@@ -265,4 +289,36 @@
   vertical-align: text-bottom;
   margin-left: 2px;
   box-shadow: 0 0 8px var(--accent-glow);
+}
+
+/* ============================================
+   Dark Theme Overrides
+   ============================================ */
+[data-theme="dark"] .user-bubble {
+  background: linear-gradient(135deg, rgba(142, 71, 255, 0.3), rgba(113, 56, 204, 0.2));
+  color: var(--text-primary);
+  border: 1px solid rgba(142, 71, 255, 0.25);
+}
+
+[data-theme="dark"] .ai-message-actions {
+  background: var(--bg-elevated);
+  border-color: rgba(142, 71, 255, 0.12);
+  box-shadow: var(--shadow-md);
+}
+
+[data-theme="dark"] .inline-code {
+  background: rgba(142, 71, 255, 0.12);
+  border-color: rgba(142, 71, 255, 0.2);
+}
+
+[data-theme="dark"] .ai-message-content blockquote {
+  background: rgba(142, 71, 255, 0.06);
+}
+
+[data-theme="dark"] .ai-message-content th {
+  background: rgba(142, 71, 255, 0.08);
+}
+
+[data-theme="dark"] .ai-message-content tr:nth-child(even) td {
+  background: rgba(142, 71, 255, 0.04);
 }

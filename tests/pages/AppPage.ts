@@ -5,12 +5,7 @@ export class AppPage {
   readonly welcomeTitle: Locator;
   readonly welcomeSubtitle: Locator;
   readonly hintCards: Locator;
-  readonly titleBarLogo: Locator;
   readonly titleBarActions: Locator;
-  readonly titleGlassCluster: Locator;
-  readonly titleChips: Locator;
-  readonly contextChip: Locator;
-  readonly agentChip: Locator;
   readonly gitMenuTrigger: Locator;
   readonly gitDropdown: Locator;
   readonly gitMenuItems: Locator;
@@ -18,37 +13,32 @@ export class AppPage {
   readonly sidebar: Locator;
   readonly appBody: Locator;
   readonly boundaryToggle: Locator;
+  readonly modelConfigTrigger: Locator;
+  readonly modelConfigDropdown: Locator;
+  readonly sessionStatsTrigger: Locator;
+  readonly sessionStatsPanel: Locator;
 
   constructor(page: Page) {
     this.page = page;
     this.welcomeTitle = page.locator('.welcome-title');
     this.welcomeSubtitle = page.locator('.welcome-subtitle');
     this.hintCards = page.locator('.hint-card');
-    this.titleBarLogo = page.locator('.title-bar-logo');
     this.titleBarActions = page.locator('.title-bar-actions');
-    this.titleGlassCluster = page.locator('.title-glass-cluster');
-    this.titleChips = page.locator('.title-chip');
-    this.contextChip = page.locator('.context-chip');
-    this.agentChip = page.locator('.agent-chip');
-    this.gitMenuTrigger = page.locator('.git-pill-trigger');
+    this.gitMenuTrigger = page.locator('.git-split-chevron');
     this.gitDropdown = page.locator('.git-dropdown');
     this.gitMenuItems = page.locator('.git-menu-item');
     this.activityBar = page.locator('.activity-bar');
     this.sidebar = page.locator('.sidebar');
     this.appBody = page.locator('.app-body');
     this.boundaryToggle = page.locator('.sidebar-boundary-toggle');
+    this.modelConfigTrigger = page.locator('.config-selector-trigger');
+    this.modelConfigDropdown = page.locator('.config-selector-dropdown');
+    this.sessionStatsTrigger = page.locator('.session-stats-trigger');
+    this.sessionStatsPanel = page.locator('.session-stats-panel');
   }
 
   async goto() {
     await this.page.goto('/');
-  }
-
-  activeMode() {
-    return this.page.locator('.context-chip .title-chip-text');
-  }
-
-  modeBadge() {
-    return this.page.locator('.mode-badge');
   }
 
   async openGitMenu() {

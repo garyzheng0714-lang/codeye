@@ -14,6 +14,11 @@
 @import "./components/code-block.css";
 @import "./components/slash-palette.css";
 @import "./components/input-area.css";
-@import "./components/model-selector.css";
-@import "./components/effort-selector.css";
+@import "./components/config-selector.css";
+@import "./components/session-stats.css";
+@import "./components/activity-stream.css";
+@import "./components/error-boundary.css";
+@import "./components/diff-viewer.css";
+@import "./components/message-search.css";
+@import "./components/tool-approval.css";
 @import "./responsive.css";

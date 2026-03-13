@@ -9,9 +9,16 @@ export class ChatPage {
   readonly slashPalette: Locator;
   readonly slashItems: Locator;
   readonly slashCategories: Locator;
-  readonly modelSelector: Locator;
-  readonly modelDropdown: Locator;
-  readonly modelOptions: Locator;
+  readonly configSelector: Locator;
+  readonly configDropdown: Locator;
+  readonly configOptions: Locator;
+  readonly configSections: Locator;
+  readonly effortLabel: Locator;
+  readonly messageSearchBar: Locator;
+  readonly messageSearchInput: Locator;
+  readonly messageSearchCount: Locator;
+  readonly messageSearchClose: Locator;
+  readonly messageSearchResults: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -22,9 +29,16 @@ export class ChatPage {
     this.slashPalette = page.locator('.slash-palette');
     this.slashItems = page.locator('.slash-palette-item');
     this.slashCategories = page.locator('.slash-palette-category');
-    this.modelSelector = page.locator('.model-selector');
-    this.modelDropdown = page.locator('.model-selector-dropdown');
-    this.modelOptions = page.locator('.model-option');
+    this.configSelector = page.locator('.config-selector');
+    this.configDropdown = page.locator('.config-selector-dropdown');
+    this.configOptions = page.locator('.config-option');
+    this.configSections = page.locator('.config-section');
+    this.effortLabel = page.locator('.config-selector-effort');
+    this.messageSearchBar = page.locator('.message-search');
+    this.messageSearchInput = page.locator('.message-search-input');
+    this.messageSearchCount = page.locator('.message-search-count');
+    this.messageSearchClose = page.locator('.message-search-close');
+    this.messageSearchResults = page.locator('.message-search-results');
   }
 
   async focusInput() {
@@ -56,16 +70,39 @@ export class ChatPage {
     return this.page.locator('.slash-palette-item.active');
   }
 
-  async openModelSelector() {
-    await this.page.locator('.model-selector-trigger').click();
+  async openConfigSelector() {
+    await this.page.locator('.config-selector-trigger').click();
   }
 
   async selectModel(label: string) {
-    await this.openModelSelector();
-    await this.modelOptions.filter({ hasText: label }).click();
+    await this.openConfigSelector();
+    await this.configOptions.filter({ hasText: label }).click();
+    await this.page.keyboard.press('Escape');
   }
 
   currentModelLabel() {
-    return this.page.locator('.model-selector-label');
+    return this.page.locator('.config-selector-model');
+  }
+
+  currentEffortLabel() {
+    return this.page.locator('.config-selector-effort');
+  }
+
+  async selectEffort(label: string) {
+    await this.openConfigSelector();
+    // Effort options are in the second config-section (Thinking)
+    const thinkingSection = this.configSections.nth(1);
+    await thinkingSection.locator('.config-option', { hasText: label }).click();
+    await this.page.keyboard.press('Escape');
+  }
+
+  async openMessageSearch() {
+    await this.page.evaluate(() => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'f', ctrlKey: true, bubbles: true }));
+    });
+  }
+
+  async closeMessageSearch() {
+    await this.messageSearchClose.click();
   }
 }

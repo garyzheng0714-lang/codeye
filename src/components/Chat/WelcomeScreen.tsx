@@ -1,5 +1,6 @@
 import { useChatStore } from '../../stores/chatStore';
 import type { ChatMode } from '../../types';
+import { t } from '../../i18n';
 import CodeyeMark from '../Brand/CodeyeMark';
 import HintCard from './HintCard';
 
@@ -25,7 +26,7 @@ export default function WelcomeScreen() {
         <div className="welcome-logo">
           <CodeyeMark size={72} />
         </div>
-        <h1 className="welcome-title">Codeye</h1>
+        <h1 className="welcome-title">{t('app.name')}</h1>
         <p className="welcome-subtitle">{modeDescriptions[mode]}</p>
         <div className="welcome-hints">
           {hints.map((h) => (
