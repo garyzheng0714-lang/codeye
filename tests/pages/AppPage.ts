@@ -10,7 +10,6 @@ export class AppPage {
   readonly modeButtons: Locator;
   readonly activityBar: Locator;
   readonly sidebar: Locator;
-  readonly statusBar: Locator;
   readonly appBody: Locator;
 
   constructor(page: Page) {
@@ -23,7 +22,6 @@ export class AppPage {
     this.modeButtons = page.locator('.mode-btn');
     this.activityBar = page.locator('.activity-bar');
     this.sidebar = page.locator('.sidebar');
-    this.statusBar = page.locator('.status-bar');
     this.appBody = page.locator('.app-body');
   }
 

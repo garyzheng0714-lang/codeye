@@ -4,6 +4,7 @@ export interface QueryMessage {
   cwd?: string;
   mode?: string;
   model?: string;
+  effort?: string;
   sessionId?: string;
 }
 
@@ -25,4 +26,3 @@ export function isCheckAuthMessage(msg: unknown): msg is { type: 'check-auth' } 
 }
 
 export const SESSION_ID_RE = /^[a-zA-Z0-9_-]{1,128}$/;
-export const ALLOWED_MODES = new Set(['chat', 'code', 'plan']);

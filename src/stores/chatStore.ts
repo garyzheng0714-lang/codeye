@@ -1,12 +1,13 @@
 import { create } from 'zustand';
-import type { ChatMode, DisplayMessage, ToolCallDisplay, ModelId } from '../types';
-import { DEFAULT_MODEL } from '../data/models';
+import type { ChatMode, DisplayMessage, ToolCallDisplay, ModelId, EffortLevel } from '../types';
+import { DEFAULT_MODEL, DEFAULT_EFFORT } from '../data/models';
 
 interface ChatState {
   messages: DisplayMessage[];
   isStreaming: boolean;
   mode: ChatMode;
   model: ModelId;
+  effort: EffortLevel;
   cwd: string;
   sessionId: string | null;
   claudeSessionId: string | null;
@@ -16,6 +17,7 @@ interface ChatState {
 
   setMode: (mode: ChatMode) => void;
   setModel: (model: ModelId) => void;
+  setEffort: (effort: EffortLevel) => void;
   setCwd: (cwd: string) => void;
   setSessionId: (id: string | null) => void;
   setClaudeSessionId: (id: string | null) => void;
@@ -35,6 +37,7 @@ export const useChatStore = create<ChatState>((set) => ({
   isStreaming: false,
   mode: 'code',
   model: DEFAULT_MODEL,
+  effort: DEFAULT_EFFORT,
   cwd: '',
   sessionId: null,
   claudeSessionId: null,
@@ -44,6 +47,7 @@ export const useChatStore = create<ChatState>((set) => ({
 
   setMode: (mode) => set({ mode }),
   setModel: (model) => set({ model }),
+  setEffort: (effort) => set({ effort }),
   setCwd: (cwd) => set({ cwd }),
   setSessionId: (sessionId) => set({ sessionId }),
   setClaudeSessionId: (claudeSessionId) => set({ claudeSessionId }),

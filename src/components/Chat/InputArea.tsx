@@ -5,8 +5,9 @@ import { sendClaudeQuery, stopClaude } from '../../hooks/useClaudeChat';
 import { saveCurrentSession } from '../../utils/session';
 import SlashCommandPalette from './SlashCommandPalette';
 import ModelSelector from './ModelSelector';
+import EffortSelector from './EffortSelector';
 import type { SlashCommand } from '../../data/slashCommands';
-import type { ModelId } from '../../types';
+import type { ModelId, EffortLevel } from '../../types';
 import { startStreamTrace } from '../../observability/perfBaseline';
 
 export default function InputArea() {
@@ -14,7 +15,7 @@ export default function InputArea() {
   const [showPalette, setShowPalette] = useState(false);
   const [slashQuery, setSlashQuery] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const { isStreaming, addUserMessage, startAssistantMessage, mode, setMode, setModel, clearMessages, cost, inputTokens, outputTokens } = useChatStore();
+  const { isStreaming, addUserMessage, startAssistantMessage, mode, setMode, setModel, setEffort, clearMessages, cost, inputTokens, outputTokens } = useChatStore();
   const { activeSessionId, createSession } = useSessionStore();
 
   const handleSend = useCallback(() => {
@@ -47,6 +48,7 @@ export default function InputArea() {
       prompt: text,
       mode,
       model: state.model,
+      effort: state.effort,
       cwd: state.cwd || undefined,
       sessionId: state.claudeSessionId || undefined,
     });
@@ -70,6 +72,21 @@ export default function InputArea() {
       };
       if (modelMap[command.name]) {
         setModel(modelMap[command.name]);
+      }
+      setInput('');
+      textareaRef.current?.focus();
+      return;
+    }
+
+    if (command.category === 'effort') {
+      const effortMap: Record<string, EffortLevel> = {
+        'think-low': 'low',
+        'think-med': 'medium',
+        'think-high': 'high',
+        'think-max': 'max',
+      };
+      if (effortMap[command.name]) {
+        setEffort(effortMap[command.name]);
       }
       setInput('');
       textareaRef.current?.focus();
@@ -117,10 +134,11 @@ export default function InputArea() {
       prompt,
       mode,
       model: state.model,
+      effort: state.effort,
       cwd: state.cwd || undefined,
       sessionId: state.claudeSessionId || undefined,
     });
-  }, [setMode, setModel, clearMessages, createSession, activeSessionId, addUserMessage, startAssistantMessage, mode]);
+  }, [setMode, setModel, setEffort, clearMessages, createSession, activeSessionId, addUserMessage, startAssistantMessage, mode]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (showPalette) {
@@ -212,6 +230,7 @@ export default function InputArea() {
             Codeye
           </span>
           <div className="input-footer-right">
+            <EffortSelector />
             <ModelSelector />
             <span className="input-footer-item">
               <svg width="10" height="10" viewBox="0 0 10 10" fill="none">

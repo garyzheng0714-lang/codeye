@@ -121,8 +121,3 @@ export function persistSessionSnapshot(
 
   adapter.setItem(STORAGE_KEY, serialized);
 }
-
-export function clearPersistedSessions(adapter: StorageAdapter = getDefaultStorageAdapter()): void {
-  adapter.removeItem(STORAGE_KEY);
-  adapter.removeItem(STORAGE_BACKUP_KEY);
-}

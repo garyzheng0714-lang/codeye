@@ -71,7 +71,7 @@ export function useClaudeChat() {
 }
 
 export function sendClaudeQuery(
-  params: { prompt: string; mode?: string; model?: string; cwd?: string; sessionId?: string }
+  params: { prompt: string; mode?: string; model?: string; effort?: string; cwd?: string; sessionId?: string }
 ) {
   if (window.electronAPI) {
     window.electronAPI.claude.query(params);

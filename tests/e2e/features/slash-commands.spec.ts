@@ -30,7 +30,7 @@ test.describe('Slash Command Palette', () => {
   test('selecting a mode command switches mode', async ({ appPage, chatPage }) => {
     await chatPage.selectSlashCommand('chat');
     await expect(chatPage.slashPalette).not.toBeVisible();
-    await expect(appPage.modeBadge()).toContainText('chat');
+    await expect(appPage.activeMode()).toHaveText('Chat');
   });
 
   test('arrow keys navigate items', async ({ chatPage, page }) => {

@@ -1,7 +1,7 @@
 export interface SlashCommand {
   name: string;
   description: string;
-  category: 'mode' | 'model' | 'skill' | 'action';
+  category: 'mode' | 'model' | 'effort' | 'skill' | 'action';
   icon: string;
 }
 
@@ -15,6 +15,12 @@ const slashCommands: SlashCommand[] = [
   { name: 'opus', description: 'Switch to Opus (deepest reasoning)', category: 'model', icon: 'model' },
   { name: 'sonnet', description: 'Switch to Sonnet (best for coding)', category: 'model', icon: 'model' },
   { name: 'haiku', description: 'Switch to Haiku (fastest, lowest cost)', category: 'model', icon: 'model' },
+
+  // Effort / Thinking
+  { name: 'think-low', description: 'Minimal thinking, fastest responses', category: 'effort', icon: 'effort' },
+  { name: 'think-med', description: 'Balanced speed and thinking depth', category: 'effort', icon: 'effort' },
+  { name: 'think-high', description: 'Deep thinking, thorough responses', category: 'effort', icon: 'effort' },
+  { name: 'think-max', description: 'Maximum reasoning depth', category: 'effort', icon: 'effort' },
 
   // Skills
   { name: 'commit', description: 'Create a git commit with staged changes', category: 'skill', icon: 'git' },
@@ -40,6 +46,7 @@ const slashCommands: SlashCommand[] = [
 export const categoryLabels: Record<string, string> = {
   mode: 'Modes',
   model: 'Models',
+  effort: 'Thinking',
   skill: 'Skills',
   action: 'Actions',
 };

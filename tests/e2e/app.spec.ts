@@ -1,8 +1,8 @@
 import { test, expect } from '../fixtures/app';
 
 test.describe('App Launch', () => {
-  test('renders the welcome screen with EasyCode title', async ({ appPage }) => {
-    await expect(appPage.welcomeTitle).toHaveText('EasyCode');
+  test('renders the welcome screen with Codeye title', async ({ appPage }) => {
+    await expect(appPage.welcomeTitle).toHaveText('Codeye');
   });
 
   test('renders title bar with logo and mode switcher', async ({ appPage }) => {
@@ -19,8 +19,8 @@ test.describe('App Launch', () => {
     await expect(appPage.sidebar).toBeVisible();
   });
 
-  test('renders status bar', async ({ appPage }) => {
-    await expect(appPage.statusBar).toBeVisible();
+  test('renders main content area', async ({ appPage }) => {
+    await expect(appPage.page.locator('.app-main')).toBeVisible();
   });
 
   test('renders 4 hint cards on welcome screen', async ({ appPage }) => {

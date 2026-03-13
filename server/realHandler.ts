@@ -10,6 +10,10 @@ const ALLOWED_MODELS = new Set([
   'claude-sonnet-4-6',
   'claude-haiku-4-5',
 ]);
+const ALLOWED_EFFORTS = new Set(['low', 'medium', 'high', 'max']);
+const MODE_TO_PERMISSION: Record<string, string> = {
+  plan: 'plan',
+};
 
 export const clientProcesses = new Map<WebSocket, ChildProcess>();
 
@@ -66,6 +70,14 @@ export function handleRealQuery(ws: WebSocket, msg: QueryMessage) {
 
   if (msg.model && typeof msg.model === 'string' && ALLOWED_MODELS.has(msg.model)) {
     args.push('--model', msg.model);
+  }
+
+  if (msg.effort && typeof msg.effort === 'string' && ALLOWED_EFFORTS.has(msg.effort)) {
+    args.push('--effort', msg.effort);
+  }
+
+  if (msg.mode && typeof msg.mode === 'string' && MODE_TO_PERMISSION[msg.mode]) {
+    args.push('--permission-mode', MODE_TO_PERMISSION[msg.mode]);
   }
 
   if (msg.sessionId && typeof msg.sessionId === 'string' && SESSION_ID_RE.test(msg.sessionId)) {

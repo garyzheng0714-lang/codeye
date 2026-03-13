@@ -22,7 +22,7 @@ const genericBlockSchema = z
   })
   .passthrough();
 
-export const claudeContentBlockSchema = z.union([
+const claudeContentBlockSchema = z.union([
   textBlockSchema,
   toolUseBlockSchema,
   genericBlockSchema,
@@ -47,7 +47,7 @@ export const claudeMessageSchema = z
   })
   .passthrough();
 
-export const wsInboundEventSchema = z.discriminatedUnion('type', [
+const wsInboundEventSchema = z.discriminatedUnion('type', [
   z
     .object({
       type: z.literal('message'),
@@ -76,7 +76,7 @@ export const wsInboundEventSchema = z.discriminatedUnion('type', [
 ]);
 
 export type ClaudeMessage = z.infer<typeof claudeMessageSchema>;
-export type WsInboundEvent = z.infer<typeof wsInboundEventSchema>;
+type WsInboundEvent = z.infer<typeof wsInboundEventSchema>;
 
 export function parseClaudeMessage(raw: unknown): ClaudeMessage | null {
   const parsed = claudeMessageSchema.safeParse(raw);

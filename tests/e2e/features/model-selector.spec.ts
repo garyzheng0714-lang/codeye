@@ -23,10 +23,11 @@ test.describe('Model Selector', () => {
     await expect(chatPage.currentModelLabel()).toHaveText('Haiku');
   });
 
-  test('status bar shows model in selector', async ({ appPage, chatPage }) => {
+  test('model persists after re-selecting', async ({ chatPage }) => {
     await chatPage.selectModel('Opus');
-    const label = appPage.page.locator('.status-bar .model-selector-label');
-    await expect(label).toHaveText('Opus');
+    await expect(chatPage.currentModelLabel()).toHaveText('Opus');
+    await chatPage.selectModel('Haiku');
+    await expect(chatPage.currentModelLabel()).toHaveText('Haiku');
   });
 
   test('Escape closes the dropdown', async ({ chatPage, page }) => {

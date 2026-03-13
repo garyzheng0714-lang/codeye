@@ -1,6 +1,6 @@
 import type { SessionData } from '../types';
 
-export interface SessionGroup {
+interface SessionGroup {
   label: string;
   items: SessionData[];
 }

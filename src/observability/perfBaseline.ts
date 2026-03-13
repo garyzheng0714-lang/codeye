@@ -4,7 +4,7 @@ type TransportType = 'ws' | 'electron';
 const METRICS_STORAGE_KEY = 'codeye.perf-baseline.v1';
 const MAX_METRICS = 200;
 
-export interface PerfBaselineSample {
+interface PerfBaselineSample {
   traceId: string;
   createdAt: number;
   mode: string;
@@ -40,7 +40,7 @@ function saveSample(sample: PerfBaselineSample): void {
   }
 }
 
-export function getPerfBaselineSamples(): PerfBaselineSample[] {
+function getPerfBaselineSamples(): PerfBaselineSample[] {
   try {
     const raw = window.localStorage.getItem(METRICS_STORAGE_KEY);
     if (!raw) return [];
@@ -48,14 +48,6 @@ export function getPerfBaselineSamples(): PerfBaselineSample[] {
     return Array.isArray(parsed) ? parsed : [];
   } catch {
     return [];
-  }
-}
-
-export function clearPerfBaselineSamples(): void {
-  try {
-    window.localStorage.removeItem(METRICS_STORAGE_KEY);
-  } catch {
-    // noop
   }
 }
 
