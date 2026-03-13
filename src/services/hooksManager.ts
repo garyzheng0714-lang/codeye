@@ -29,7 +29,7 @@ export function loadHooks(): HookDefinition[] {
   return readJson<HookDefinition[]>(HOOKS_STORAGE_KEY) ?? [];
 }
 
-export function saveHooks(hooks: HookDefinition[]): void {
+function saveHooks(hooks: HookDefinition[]): void {
   writeJson(HOOKS_STORAGE_KEY, hooks);
 }
 
@@ -56,7 +56,7 @@ export function loadMcpServers(): McpServerConfig[] {
   return readJson<McpServerConfig[]>(MCP_STORAGE_KEY) ?? [];
 }
 
-export function saveMcpServers(servers: McpServerConfig[]): void {
+function saveMcpServers(servers: McpServerConfig[]): void {
   writeJson(MCP_STORAGE_KEY, servers);
 }
 

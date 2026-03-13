@@ -8,8 +8,8 @@ describe('Type exports from types/index', () => {
   });
 
   it('ModelId accepts valid values', () => {
-    const ids: ModelId[] = ['claude-opus-4-6', 'claude-sonnet-4-6', 'claude-haiku-4-5'];
-    expect(ids).toHaveLength(3);
+    const ids: ModelId[] = ['opus', 'sonnet', 'haiku', 'claude-sonnet-4-6'];
+    expect(ids).toHaveLength(4);
   });
 
   it('DisplayMessage structure is correct', () => {
@@ -54,11 +54,13 @@ describe('Type exports from types/index', () => {
 
   it('ModelInfo structure is correct', () => {
     const info: ModelInfo = {
-      id: 'claude-sonnet-4-6',
-      label: 'Sonnet 4.6',
+      id: 'sonnet',
+      cliAlias: 'sonnet',
+      label: 'Sonnet (Latest)',
       shortLabel: 'Sonnet',
       description: 'Best for coding',
       tier: 'standard',
+      supportsEffort: true,
     };
     expect(info.tier).toBe('standard');
   });

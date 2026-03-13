@@ -1,9 +1,9 @@
 const MANAGER_KEY = '__codeye_stream_manager__' as const;
 const IDLE_TIMEOUT_MS = 330_000;
 
-export type StreamStatus = 'idle' | 'streaming' | 'complete' | 'error' | 'aborted';
+type StreamStatus = 'idle' | 'streaming' | 'complete' | 'error' | 'aborted';
 
-export interface StreamSnapshot {
+interface StreamSnapshot {
   id: string;
   status: StreamStatus;
   startedAt: number;

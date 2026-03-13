@@ -3,9 +3,9 @@ import type { QueryMessage } from './validators';
 import { wrapEvent } from './streamEvent';
 
 function getModelDisplayName(model?: string): string {
-  if (model === 'claude-opus-4-6') return 'Claude Opus 4.6';
-  if (model === 'claude-haiku-4-5') return 'Claude Haiku 4.5';
-  return 'Claude Sonnet 4.6';
+  if (model === 'opus' || model === 'claude-opus-4-6') return 'Claude Opus';
+  if (model === 'haiku' || model === 'claude-haiku-4-5') return 'Claude Haiku';
+  return 'Claude Sonnet';
 }
 
 function generateDemoResponse(prompt: string, model?: string): string {

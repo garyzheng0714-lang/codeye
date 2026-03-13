@@ -1,25 +1,3 @@
-export interface GitBranchInfo {
-  name: string;
-  current: boolean;
-  upstream?: string;
-  ahead: number;
-  behind: number;
-}
-
-export interface GitStatus {
-  branch: string;
-  dirty: boolean;
-  staged: number;
-  unstaged: number;
-  untracked: number;
-}
-
-export interface GitWorktreeConfig {
-  sessionId: string;
-  branchName: string;
-  basePath: string;
-}
-
 const BRANCH_NAME_RE = /^[a-zA-Z0-9._/-]{1,100}$/;
 
 export function sanitizeBranchName(raw: string): string {
@@ -49,11 +27,6 @@ export function isValidBranchName(name: string): boolean {
   return BRANCH_NAME_RE.test(name);
 }
 
-export function generateWorktreePath(basePath: string, sessionId: string): string {
-  const short = sessionId.slice(0, 8);
-  return `${basePath}/${short}`;
-}
-
 export function resolveBranchConflict(name: string, existing: string[]): string {
   if (!existing.includes(name)) return name;
 
@@ -64,14 +37,7 @@ export function resolveBranchConflict(name: string, existing: string[]): string 
   return `${name}-${suffix}`;
 }
 
-export interface CheckpointRef {
-  id: string;
-  sessionId: string;
-  turnIndex: number;
-  gitRef: string;
-  message: string;
-  createdAt: number;
-}
+
 
 export function createCheckpointRefName(sessionId: string, turnIndex: number): string {
   const short = sessionId.slice(0, 8);

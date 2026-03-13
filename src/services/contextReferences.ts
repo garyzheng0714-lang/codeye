@@ -1,6 +1,6 @@
-export type ContextType = 'file' | 'folder' | 'url' | 'codebase' | 'git_diff' | 'terminal' | 'code';
+type ContextType = 'file' | 'folder' | 'url' | 'codebase' | 'git_diff' | 'terminal' | 'code';
 
-export interface ContextReference {
+interface ContextReference {
   type: ContextType;
   value: string;
   displayLabel: string;

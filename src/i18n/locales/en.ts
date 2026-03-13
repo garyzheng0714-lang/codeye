@@ -58,7 +58,6 @@ export const en = {
     low: 'Low',
     medium: 'Medium',
     high: 'High',
-    max: 'Max',
   },
   tools: {
     approval: 'Tool Approval Required',

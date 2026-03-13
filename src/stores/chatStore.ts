@@ -1,6 +1,12 @@
 import { create } from 'zustand';
 import type { ChatMode, DisplayMessage, ToolCallDisplay, ModelId, EffortLevel } from '../types';
-import { DEFAULT_MODEL, DEFAULT_EFFORT } from '../data/models';
+import {
+  DEFAULT_MODEL,
+  DEFAULT_EFFORT,
+  getEffectiveEffort,
+  normalizeEffortLevel,
+  normalizeModelId,
+} from '../data/models';
 
 interface ChatState {
   messages: DisplayMessage[];
@@ -46,8 +52,13 @@ export const useChatStore = create<ChatState>((set) => ({
   outputTokens: 0,
 
   setMode: (mode) => set({ mode }),
-  setModel: (model) => set({ model }),
-  setEffort: (effort) => set({ effort }),
+  setModel: (model) => set({ model: normalizeModelId(model) }),
+  setEffort: (effort) =>
+    set((state) => {
+      const normalized = getEffectiveEffort(state.model, effort);
+      if (!normalized) return {};
+      return { effort: normalizeEffortLevel(normalized) };
+    }),
   setCwd: (cwd) => set({ cwd }),
   setSessionId: (sessionId) => set({ sessionId }),
   setClaudeSessionId: (claudeSessionId) => set({ claudeSessionId }),
@@ -161,9 +172,8 @@ export const useChatStore = create<ChatState>((set) => ({
       inputTokens: data.inputTokens,
       outputTokens: data.outputTokens,
       claudeSessionId: data.claudeSessionId ?? null,
-      model: data.model ?? DEFAULT_MODEL,
+      model: normalizeModelId(data.model),
       isStreaming: false,
     }),
 }));
-
 

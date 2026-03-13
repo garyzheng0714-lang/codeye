@@ -12,7 +12,6 @@ const translations: Record<Locale, TranslationKeys> = {
 };
 
 let currentLocale: Locale = DEFAULT_LOCALE;
-const listeners = new Set<(locale: Locale) => void>();
 
 function getStoredLocale(): Locale {
   try {
@@ -27,28 +26,11 @@ export function setLocale(locale: Locale): void {
   try {
     localStorage.setItem(LOCALE_STORAGE_KEY, locale);
   } catch { /* noop */ }
-  for (const listener of listeners) {
-    listener(locale);
-  }
 }
 
 export function getLocale(): Locale {
   return currentLocale;
 }
-
-export function onLocaleChange(callback: (locale: Locale) => void): () => void {
-  listeners.add(callback);
-  return () => { listeners.delete(callback); };
-}
-
-type NestedKeyOf<T> = T extends Record<string, unknown>
-  ? { [K in keyof T & string]: T[K] extends Record<string, unknown>
-      ? `${K}.${NestedKeyOf<T[K]>}`
-      : K
-    }[keyof T & string]
-  : never;
-
-export type TranslationKey = NestedKeyOf<TranslationKeys>;
 
 export function t(key: string, params?: Record<string, string | number>): string {
   const keys = key.split('.');

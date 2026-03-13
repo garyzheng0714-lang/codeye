@@ -1,7 +1,7 @@
 export type BuiltinThemeId = 'light' | 'dark';
 export type ThemeId = BuiltinThemeId | string;
 
-export interface ThemeDefinition {
+interface ThemeDefinition {
   id: ThemeId;
   name: string;
   tokens: Record<string, string>;
@@ -70,17 +70,12 @@ const builtinThemes = new Map<string, ThemeDefinition>([
   ['dark', DARK_THEME],
 ]);
 
-import { readJson, writeJson } from '../utils/jsonStorage';
-
-const customThemes = new Map<string, ThemeDefinition>();
-
 const THEME_STORAGE_KEY = 'codeye.theme';
-const CUSTOM_THEMES_KEY = 'codeye.custom-themes';
 
 export function getStoredTheme(): ThemeId {
   try {
     const stored = window.localStorage.getItem(THEME_STORAGE_KEY);
-    if (stored && (builtinThemes.has(stored) || customThemes.has(stored))) return stored;
+    if (stored && builtinThemes.has(stored)) return stored;
   } catch {
     // ignore
   }
@@ -96,7 +91,7 @@ function setStoredTheme(id: ThemeId): void {
 }
 
 export function applyTheme(id: ThemeId): void {
-  const theme = builtinThemes.get(id) ?? customThemes.get(id);
+  const theme = builtinThemes.get(id);
   if (!theme) return;
 
   const root = document.documentElement;
@@ -108,59 +103,3 @@ export function applyTheme(id: ThemeId): void {
   setStoredTheme(id);
 }
 
-export function registerCustomTheme(theme: ThemeDefinition): void {
-  customThemes.set(theme.id, theme);
-  persistCustomThemes();
-}
-
-export function removeCustomTheme(id: string): void {
-  customThemes.delete(id);
-  persistCustomThemes();
-}
-
-export function loadCustomThemes(): void {
-  const themes = readJson<ThemeDefinition[]>(CUSTOM_THEMES_KEY);
-  if (!themes) return;
-  for (const theme of themes) {
-    if (theme.id && theme.name && theme.tokens) {
-      customThemes.set(theme.id, theme);
-    }
-  }
-}
-
-function persistCustomThemes(): void {
-  writeJson(CUSTOM_THEMES_KEY, Array.from(customThemes.values()));
-}
-
-export function getThemeDefinitions(): ThemeDefinition[] {
-  return [...builtinThemes.values(), ...customThemes.values()];
-}
-
-export function importThemeFromJSON(json: string): ThemeDefinition | null {
-  try {
-    const parsed = JSON.parse(json) as Partial<ThemeDefinition>;
-    if (!parsed.id || !parsed.name || !parsed.tokens) return null;
-    if (typeof parsed.tokens !== 'object') return null;
-
-    const theme: ThemeDefinition = {
-      id: parsed.id,
-      name: parsed.name,
-      tokens: parsed.tokens,
-    };
-
-    registerCustomTheme(theme);
-    return theme;
-  } catch {
-    return null;
-  }
-}
-
-export function exportThemeToJSON(id: ThemeId): string | null {
-  const theme = builtinThemes.get(id) ?? customThemes.get(id);
-  if (!theme) return null;
-  return JSON.stringify(theme, null, 2);
-}
-
-export function isDarkTheme(): boolean {
-  return document.documentElement.getAttribute('data-theme') === 'dark';
-}

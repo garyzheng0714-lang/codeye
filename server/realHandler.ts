@@ -7,14 +7,23 @@ import { wrapEvent } from './streamEvent';
 
 const MAX_PROMPT_LEN = 32_000;
 const ALLOWED_MODELS = new Set([
+  'opus',
+  'sonnet',
+  'haiku',
   'claude-opus-4-6',
   'claude-sonnet-4-6',
   'claude-haiku-4-5',
 ]);
-const ALLOWED_EFFORTS = new Set(['low', 'medium', 'high', 'max']);
+const ALLOWED_EFFORTS = new Set(['low', 'medium', 'high']);
 const MODE_TO_PERMISSION: Record<string, string> = {
   plan: 'plan',
 };
+
+function supportsEffort(model?: string): boolean {
+  if (!model) return true;
+  const normalized = model.toLowerCase();
+  return !(normalized === 'haiku' || normalized.startsWith('claude-haiku-'));
+}
 
 export const clientProcesses = new Map<WebSocket, ChildProcess>();
 
@@ -74,7 +83,12 @@ export function handleRealQuery(ws: WebSocket, msg: QueryMessage) {
     args.push('--model', msg.model);
   }
 
-  if (msg.effort && typeof msg.effort === 'string' && ALLOWED_EFFORTS.has(msg.effort)) {
+  if (
+    msg.effort &&
+    typeof msg.effort === 'string' &&
+    ALLOWED_EFFORTS.has(msg.effort) &&
+    supportsEffort(msg.model)
+  ) {
     args.push('--effort', msg.effort);
   }
 

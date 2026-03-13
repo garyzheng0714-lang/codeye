@@ -12,7 +12,7 @@ import {
   Zap,
 } from 'lucide-react';
 
-export type ToolStatus = 'pending' | 'running' | 'success' | 'error';
+
 
 export function getToolStatus(tool: { name: string; output?: string }): ToolStatus {
   if (tool.output === undefined) return 'running';
@@ -35,12 +35,6 @@ const semanticNames: Record<string, string> = {
 
 export function getSemanticName(name: string): string {
   return semanticNames[name] || name;
-}
-
-export function shortenPath(filePath: string): string {
-  const parts = filePath.split('/');
-  if (parts.length <= 3) return filePath;
-  return '…/' + parts.slice(-2).join('/');
 }
 
 /** Per-tool accent color (used when status is success) */

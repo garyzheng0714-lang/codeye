@@ -12,17 +12,12 @@ test.describe('Effort/Thinking Level Selector', () => {
     await expect(chatPage.configDropdown).toContainText('Low');
     await expect(chatPage.configDropdown).toContainText('Medium');
     await expect(chatPage.configDropdown).toContainText('High');
-    await expect(chatPage.configDropdown).toContainText('Max');
+    await expect(chatPage.configDropdown).not.toContainText('Max');
   });
 
   test('selecting Low effort updates trigger label', async ({ chatPage }) => {
     await chatPage.selectEffort('Low');
     await expect(chatPage.currentEffortLabel()).toHaveText('Low');
-  });
-
-  test('selecting Max effort updates trigger label', async ({ chatPage }) => {
-    await chatPage.selectEffort('Max');
-    await expect(chatPage.currentEffortLabel()).toHaveText('Max');
   });
 
   test('selecting Medium effort updates trigger label', async ({ chatPage }) => {
@@ -31,10 +26,10 @@ test.describe('Effort/Thinking Level Selector', () => {
   });
 
   test('effort persists after changing model', async ({ chatPage }) => {
-    await chatPage.selectEffort('Max');
-    await expect(chatPage.currentEffortLabel()).toHaveText('Max');
+    await chatPage.selectEffort('High');
+    await expect(chatPage.currentEffortLabel()).toHaveText('High');
     await chatPage.selectModel('Opus');
-    await expect(chatPage.currentEffortLabel()).toHaveText('Max');
+    await expect(chatPage.currentEffortLabel()).toHaveText('High');
     await expect(chatPage.currentModelLabel()).toHaveText('Opus');
   });
 
@@ -43,9 +38,16 @@ test.describe('Effort/Thinking Level Selector', () => {
     await expect(chatPage.currentEffortLabel()).toHaveText('Low');
   });
 
-  test('slash command /think-max switches effort', async ({ chatPage }) => {
-    await chatPage.selectSlashCommand('think-max');
-    await expect(chatPage.currentEffortLabel()).toHaveText('Max');
+  test('slash command /think-high switches effort', async ({ chatPage }) => {
+    await chatPage.selectSlashCommand('think-high');
+    await expect(chatPage.currentEffortLabel()).toHaveText('High');
+  });
+
+  test('haiku disables thinking controls', async ({ chatPage }) => {
+    await chatPage.selectModel('Haiku');
+    await expect(chatPage.currentEffortLabel()).toHaveText('N/A');
+    await chatPage.openConfigSelector();
+    await expect(chatPage.configDropdown).toContainText('Thinking controls are not available for this model.');
   });
 
   test('dropdown has two config sections (Model + Thinking)', async ({ chatPage }) => {

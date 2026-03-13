@@ -8,17 +8,35 @@ interface ModelPricing {
 }
 
 const PRICE_TABLE: Record<string, ModelPricing> = {
+  opus: {
+    inputPerMToken: 15,
+    outputPerMToken: 75,
+    cacheWritePerMToken: 18.75,
+    cacheReadPerMToken: 1.5,
+  },
   'claude-opus-4-6': {
     inputPerMToken: 15,
     outputPerMToken: 75,
     cacheWritePerMToken: 18.75,
     cacheReadPerMToken: 1.5,
   },
+  sonnet: {
+    inputPerMToken: 3,
+    outputPerMToken: 15,
+    cacheWritePerMToken: 3.75,
+    cacheReadPerMToken: 0.3,
+  },
   'claude-sonnet-4-6': {
     inputPerMToken: 3,
     outputPerMToken: 15,
     cacheWritePerMToken: 3.75,
     cacheReadPerMToken: 0.3,
+  },
+  haiku: {
+    inputPerMToken: 0.8,
+    outputPerMToken: 4,
+    cacheWritePerMToken: 1,
+    cacheReadPerMToken: 0.08,
   },
   'claude-haiku-4-5': {
     inputPerMToken: 0.8,
@@ -63,7 +81,7 @@ export function calculateCost(model: string, usage: TokenUsage): number | null {
   );
 }
 
-export interface SessionCostSummary {
+interface SessionCostSummary {
   totalCostUsd: number;
   totalInputTokens: number;
   totalOutputTokens: number;

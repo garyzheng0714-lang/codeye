@@ -92,9 +92,9 @@ export default function InputArea() {
 
     if (command.category === 'model') {
       const modelMap: Record<string, ModelId> = {
-        opus: 'claude-opus-4-6',
-        sonnet: 'claude-sonnet-4-6',
-        haiku: 'claude-haiku-4-5',
+        opus: 'opus',
+        sonnet: 'sonnet',
+        haiku: 'haiku',
       };
       if (modelMap[command.name]) {
         setModel(modelMap[command.name]);
@@ -111,7 +111,6 @@ export default function InputArea() {
         'think-low': 'low',
         'think-med': 'medium',
         'think-high': 'high',
-        'think-max': 'max',
       };
       if (effortMap[command.name]) {
         setEffort(effortMap[command.name]);

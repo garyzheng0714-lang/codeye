@@ -20,7 +20,6 @@ const slashCommands: SlashCommand[] = [
   { name: 'think-low', description: 'Minimal thinking, fastest responses', category: 'effort', icon: 'effort' },
   { name: 'think-med', description: 'Balanced speed and thinking depth', category: 'effort', icon: 'effort' },
   { name: 'think-high', description: 'Deep thinking, thorough responses', category: 'effort', icon: 'effort' },
-  { name: 'think-max', description: 'Maximum reasoning depth', category: 'effort', icon: 'effort' },
 
   // Skills
   { name: 'commit', description: 'Create a git commit with staged changes', category: 'skill', icon: 'git' },
@@ -73,12 +72,6 @@ function loadCustomCommands(): SlashCommand[] {
   cachedCustomCommands = Array.isArray(parsed) ? parsed : [];
   return cachedCustomCommands;
 }
-
-export function invalidateSlashCommandsCache(): void {
-  cachedCustomCommands = null;
-  cachedAllCommands = null;
-}
-
 
 function getAllCommands(): SlashCommand[] {
   if (!cachedAllCommands) {

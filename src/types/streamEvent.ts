@@ -42,8 +42,7 @@ const streamEventSchema = z.discriminatedUnion('type', [
   }),
 ]);
 
-export type StreamEvent = z.infer<typeof streamEventSchema>;
-export type StreamEventType = StreamEvent['type'];
+type StreamEvent = z.infer<typeof streamEventSchema>;
 
 export function parseStreamEvent(raw: unknown): StreamEvent | null {
   if (typeof raw !== 'object' || raw === null) return null;

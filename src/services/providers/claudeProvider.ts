@@ -9,22 +9,22 @@ import { getClaudeAdapter } from '../apiAdapter';
 
 const CLAUDE_MODELS: ModelInfo[] = [
   {
-    id: 'claude-opus-4-6',
-    name: 'Claude Opus 4.6',
+    id: 'opus',
+    name: 'Claude Opus (Latest)',
     contextWindow: 200_000,
     maxOutput: 32_000,
     pricing: { inputPer1M: 15, outputPer1M: 75 },
   },
   {
-    id: 'claude-sonnet-4-6',
-    name: 'Claude Sonnet 4.6',
+    id: 'sonnet',
+    name: 'Claude Sonnet (Latest)',
     contextWindow: 200_000,
     maxOutput: 16_000,
     pricing: { inputPer1M: 3, outputPer1M: 15 },
   },
   {
-    id: 'claude-haiku-4-5',
-    name: 'Claude Haiku 4.5',
+    id: 'haiku',
+    name: 'Claude Haiku (Latest)',
     contextWindow: 200_000,
     maxOutput: 8_192,
     pricing: { inputPer1M: 0.8, outputPer1M: 4 },

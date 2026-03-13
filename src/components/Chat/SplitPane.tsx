@@ -4,6 +4,7 @@ import remarkGfm from 'remark-gfm';
 import { parseClaudeMessage } from '../../types/protocol';
 import { parseStreamEvent } from '../../types/streamEvent';
 import { useChatStore } from '../../stores/chatStore';
+import { getEffectiveEffort, normalizeModelId, toCliModelId } from '../../data/models';
 
 const WS_URL = 'ws://localhost:5174';
 const PANE_ID = 'secondary';
@@ -191,10 +192,11 @@ export default function SplitPane({ onClose }: { onClose: () => void }) {
     setIsStreaming(true);
 
     const chatState = useChatStore.getState();
+    const normalizedModel = normalizeModelId(chatState.model);
     const params = {
       prompt: text,
-      model: chatState.model,
-      effort: chatState.effort,
+      model: toCliModelId(normalizedModel),
+      effort: getEffectiveEffort(normalizedModel, chatState.effort),
       cwd: chatState.cwd || undefined,
     };
 

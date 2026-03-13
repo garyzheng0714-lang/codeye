@@ -1,4 +1,4 @@
-export type MigrationFn = (data: Record<string, unknown>) => Record<string, unknown>;
+type MigrationFn = (data: Record<string, unknown>) => Record<string, unknown>;
 
 interface MigrationEntry {
   from: number;
@@ -47,22 +47,3 @@ export function getSchemaVersion(data: unknown): number {
   return 1;
 }
 
-export function createBackup(storageKey: string, version: number): void {
-  try {
-    const raw = localStorage.getItem(storageKey);
-    if (raw) {
-      localStorage.setItem(`${storageKey}_backup_v${version}`, raw);
-    }
-  } catch { /* noop */ }
-}
-
-export function restoreBackup(storageKey: string, version: number): boolean {
-  try {
-    const backup = localStorage.getItem(`${storageKey}_backup_v${version}`);
-    if (backup) {
-      localStorage.setItem(storageKey, backup);
-      return true;
-    }
-  } catch { /* noop */ }
-  return false;
-}

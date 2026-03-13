@@ -1,6 +1,12 @@
 import { MODELS } from '../../data/models';
 import { PRICE_TABLE_VERSION } from '../../services/costTracking';
 
+const MODEL_PRICING: Record<string, { input: string; output: string }> = {
+  opus: { input: '$15', output: '$75' },
+  sonnet: { input: '$3', output: '$15' },
+  haiku: { input: '$0.80', output: '$4' },
+};
+
 export default function ModelTab() {
   return (
     <>
@@ -19,8 +25,8 @@ export default function ModelTab() {
             {MODELS.map((m) => (
               <tr key={m.id}>
                 <td>{m.shortLabel}</td>
-                <td>{m.id === 'claude-opus-4-6' ? '$15' : m.id === 'claude-sonnet-4-6' ? '$3' : '$0.80'}/MTok</td>
-                <td>{m.id === 'claude-opus-4-6' ? '$75' : m.id === 'claude-sonnet-4-6' ? '$15' : '$4'}/MTok</td>
+                <td>{MODEL_PRICING[m.cliAlias].input}/MTok</td>
+                <td>{MODEL_PRICING[m.cliAlias].output}/MTok</td>
               </tr>
             ))}
           </tbody>

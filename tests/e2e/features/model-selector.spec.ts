@@ -9,8 +9,8 @@ test.describe('Model Config Selector', () => {
   test('clicking trigger opens dropdown with model and effort options', async ({ chatPage }) => {
     await chatPage.openConfigSelector();
     await expect(chatPage.configDropdown).toBeVisible();
-    // 3 models + 4 effort levels = 7 options
-    await expect(chatPage.configOptions).toHaveCount(7);
+    // 3 models + 3 effort levels = 6 options
+    await expect(chatPage.configOptions).toHaveCount(6);
   });
 
   test('selecting Opus updates trigger label', async ({ chatPage }) => {

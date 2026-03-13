@@ -16,7 +16,7 @@ async function createHighlighter(): Promise<Highlighter> {
   });
 }
 
-export function getHighlighter(): Promise<Highlighter> {
+function getHighlighter(): Promise<Highlighter> {
   if (!highlighterPromise) {
     highlighterPromise = createHighlighter();
   }

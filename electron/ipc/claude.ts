@@ -7,8 +7,21 @@ import os from 'os';
 const MAX_PROMPT_LEN = 32_000;
 const SESSION_ID_RE = /^[a-zA-Z0-9_-]{1,128}$/;
 const ALLOWED_MODES = new Set(['chat', 'code', 'plan']);
-const ALLOWED_MODELS = new Set(['claude-opus-4-6', 'claude-sonnet-4-6', 'claude-haiku-4-5']);
-const ALLOWED_EFFORTS = new Set(['low', 'medium', 'high', 'max']);
+const ALLOWED_MODELS = new Set([
+  'opus',
+  'sonnet',
+  'haiku',
+  'claude-opus-4-6',
+  'claude-sonnet-4-6',
+  'claude-haiku-4-5',
+]);
+const ALLOWED_EFFORTS = new Set(['low', 'medium', 'high']);
+
+function supportsEffort(model?: string): boolean {
+  if (!model) return true;
+  const normalized = model.toLowerCase();
+  return !(normalized === 'haiku' || normalized.startsWith('claude-haiku-'));
+}
 
 // Per-pane process management: 'primary' uses legacy events, others use pane-specific events
 const activeProcesses = new Map<string, ChildProcess>();
@@ -108,7 +121,12 @@ export function registerClaudeHandlers(ipcMain: IpcMain) {
       args.push('--model', model);
     }
 
-    if (effort && typeof effort === 'string' && ALLOWED_EFFORTS.has(effort)) {
+    if (
+      effort &&
+      typeof effort === 'string' &&
+      ALLOWED_EFFORTS.has(effort) &&
+      supportsEffort(model)
+    ) {
       args.push('--effort', effort);
     }
 

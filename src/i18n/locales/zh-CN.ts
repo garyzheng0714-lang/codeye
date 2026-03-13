@@ -60,7 +60,6 @@ export const zhCN: TranslationKeys = {
     low: '低',
     medium: '中',
     high: '高',
-    max: '最大',
   },
   tools: {
     approval: '工具调用需要审批',

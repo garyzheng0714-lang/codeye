@@ -7,17 +7,12 @@ import type {
   SessionFolder,
 } from '../types';
 import { useChatStore } from './chatStore';
+import { normalizeModelId } from '../data/models';
 
 const DEFAULT_FOLDER_NAME = 'Quick Chats';
-const SUPPORTED_MODELS = new Set<ModelId>([
-  'claude-opus-4-6',
-  'claude-sonnet-4-6',
-  'claude-haiku-4-5',
-]);
-
-function normalizeModelId(model?: string): ModelId | undefined {
+function normalizeImportedModelId(model?: string): ModelId | undefined {
   if (!model) return undefined;
-  return SUPPORTED_MODELS.has(model as ModelId) ? (model as ModelId) : undefined;
+  return normalizeModelId(model);
 }
 
 function now() {
@@ -226,7 +221,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
           name: imported.name,
           cwd: imported.cwd,
           claudeSessionId: imported.claudeSessionId,
-          model: normalizeModelId(imported.model),
+          model: normalizeImportedModelId(imported.model),
           messages: imported.messages,
           cost: existingIndex >= 0 ? sessions[existingIndex].cost : 0,
           inputTokens: imported.inputTokens,

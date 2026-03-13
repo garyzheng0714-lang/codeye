@@ -20,7 +20,7 @@ export function loadInstalledSkills(): Skill[] {
   return readJson<Skill[]>(SKILLS_STORAGE_KEY) ?? [];
 }
 
-export function saveInstalledSkills(skills: Skill[]): void {
+function saveInstalledSkills(skills: Skill[]): void {
   writeJson(SKILLS_STORAGE_KEY, skills);
 }
 
@@ -41,18 +41,6 @@ export function installSkill(skill: Omit<Skill, 'installed'>): Skill {
 
 export function uninstallSkill(id: string): void {
   saveInstalledSkills(loadInstalledSkills().filter((s) => s.id !== id));
-}
-
-export function getSkill(id: string): Skill | undefined {
-  return loadInstalledSkills().find((s) => s.id === id);
-}
-
-export function executeSkillPrompt(skill: Skill, userInput: string): string {
-  if (!skill.promptTemplate) return userInput;
-
-  return skill.promptTemplate
-    .replace(/\{\{input\}\}/g, userInput)
-    .replace(/\{\{name\}\}/g, skill.name);
 }
 
 export const BUILTIN_SKILLS: Omit<Skill, 'installed'>[] = [

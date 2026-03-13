@@ -6,6 +6,7 @@ import { parseClaudeMessage } from '../types/protocol';
 import { parseStreamEvent } from '../types/streamEvent';
 import { finishStreamTrace, markStreamChunk } from '../observability/perfBaseline';
 import { StreamBatcher } from '../services/streamBatcher';
+import { getEffectiveEffort, normalizeModelId, toCliModelId } from '../data/models';
 
 function getActions(): StoreActions {
   const s = useChatStore.getState();
@@ -142,13 +143,18 @@ export function useClaudeChat() {
 export function sendClaudeQuery(
   params: { prompt: string; mode?: string; model?: string; effort?: string; cwd?: string; sessionId?: string }
 ) {
-  console.log('[sendClaudeQuery]', { hasElectronAPI: !!window.electronAPI, params });
+  const normalizedModel = normalizeModelId(params.model);
+  const model = toCliModelId(normalizedModel);
+  const effort = getEffectiveEffort(normalizedModel, params.effort);
+  const sanitizedParams = { ...params, model, effort };
+
+  console.log('[sendClaudeQuery]', { hasElectronAPI: !!window.electronAPI, params: sanitizedParams });
   if (window.electronAPI) {
     console.log('[sendClaudeQuery] calling electronAPI.claude.query');
-    window.electronAPI.claude.query(params);
+    window.electronAPI.claude.query(sanitizedParams);
     return;
   }
-  sendMessage({ type: 'query', ...params });
+  sendMessage({ type: 'query', ...sanitizedParams });
 }
 
 export function stopClaude() {
