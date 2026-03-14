@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useChatStore } from '../../stores/chatStore';
+import { useSessionStore } from '../../stores/sessionStore';
 import { normalizeModelId, toCliModelId } from '../../data/models';
 
 const CONTEXT_WINDOWS: Record<'opus' | 'sonnet' | 'haiku', number> = {
@@ -14,6 +15,81 @@ function formatCompactTokens(value: number): string {
   return `${value}`;
 }
 
+function formatCost(value: number): string {
+  if (value >= 1) return `$${value.toFixed(2)}`;
+  if (value >= 0.01) return `$${value.toFixed(3)}`;
+  return `$${value.toFixed(4)}`;
+}
+
+const RING_R = 8;
+const RING_C = 2 * Math.PI * RING_R;
+
+function ContextRing({ usedPercent, cost }: { usedPercent: number; cost: number }) {
+  const clamped = Math.min(Math.max(usedPercent, 0), 100);
+  const offset = RING_C * (1 - clamped / 100);
+
+  const color =
+    clamped >= 80 ? 'var(--danger)' :
+    clamped >= 50 ? 'var(--warning)' :
+    'var(--accent)';
+
+  return (
+    <span className="context-ring-group">
+      <svg className="context-ring" width="22" height="22" viewBox="0 0 22 22">
+        <circle
+          cx="11" cy="11" r={RING_R}
+          fill="none"
+          stroke="var(--border-subtle)"
+          strokeWidth="2.5"
+        />
+        <circle
+          className="context-ring-fill"
+          cx="11" cy="11" r={RING_R}
+          fill="none"
+          stroke={color}
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeDasharray={RING_C}
+          strokeDashoffset={offset}
+          transform="rotate(-90 11 11)"
+        />
+      </svg>
+      <span className="context-ring-cost">{formatCost(cost)}</span>
+    </span>
+  );
+}
+
+function useUsageSummary() {
+  const sessions = useSessionStore((s) => s.sessions);
+  const currentCost = useChatStore((s) => s.cost);
+
+  return useMemo(() => {
+    const nowMs = Date.now();
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const weekStart = new Date(todayStart);
+    weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+
+    let dayCost = 0;
+    let weekCost = 0;
+
+    for (const session of sessions) {
+      if (session.updatedAt >= todayStart.getTime()) {
+        dayCost += session.cost;
+      }
+      if (session.updatedAt >= weekStart.getTime()) {
+        weekCost += session.cost;
+      }
+    }
+
+    // Add current unsaved session cost
+    dayCost += currentCost;
+    weekCost += currentCost;
+
+    return { dayCost, weekCost, asOf: nowMs };
+  }, [sessions, currentCost]);
+}
+
 export default function SessionStats() {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -23,13 +99,15 @@ export default function SessionStats() {
   const outputTokens = useChatStore((s) => s.outputTokens);
   const pendingCount = useChatStore((s) => s.pendingMessages.length);
 
-  const hasActivity = cost > 0 || inputTokens > 0 || outputTokens > 0;
   const usedTokens = inputTokens + outputTokens;
   const modelAlias = toCliModelId(normalizeModelId(model));
   const contextWindow = CONTEXT_WINDOWS[modelAlias];
   const remainingTokens = Math.max(contextWindow - usedTokens, 0);
-  const remainingPercent = Math.max(0, Math.round((remainingTokens / contextWindow) * 100));
-  const lowContext = remainingPercent <= 20;
+  const usedPercent = Math.round((usedTokens / contextWindow) * 100);
+  const lowContext = usedPercent >= 80;
+
+  const tooltipText = `${formatCompactTokens(usedTokens)} / ${formatCompactTokens(contextWindow)}`;
+  const { dayCost, weekCost } = useUsageSummary();
 
   useEffect(() => {
     if (!open) return;
@@ -52,57 +130,46 @@ export default function SessionStats() {
   return (
     <div className="session-stats" ref={containerRef}>
       <button
-        className={`session-stats-trigger ${hasActivity ? 'has-activity' : ''}`}
+        className="session-stats-trigger has-activity"
         onClick={() => setOpen(!open)}
-        title="Session stats"
         type="button"
       >
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-          <rect x="1.5" y="7" width="2.5" height="5" rx="0.75" fill="currentColor" opacity="0.5" />
-          <rect x="5.75" y="4" width="2.5" height="8" rx="0.75" fill="currentColor" opacity="0.7" />
-          <rect x="10" y="1.5" width="2.5" height="10.5" rx="0.75" fill="currentColor" />
-        </svg>
-        {hasActivity && <span className="session-stats-cost">${cost.toFixed(4)}</span>}
-        <span className={`session-stats-context ${lowContext ? 'low' : ''}`}>
-          {formatCompactTokens(remainingTokens)} ctx
+        <span className="context-ring-wrapper">
+          <ContextRing usedPercent={usedPercent} cost={cost} />
+          <span className="context-ring-tooltip">{tooltipText}</span>
         </span>
         {pendingCount > 0 && <span className="session-stats-queue">+{pendingCount}</span>}
       </button>
       {open && (
         <div className="session-stats-panel">
+          <div className="session-stats-section-title">This session</div>
           <div className="session-stats-row">
-            <span className="session-stats-label">
-              <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                <path d="M5 8V2M3 4l2-2 2 2" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              Input
-            </span>
+            <span className="session-stats-label">Input</span>
             <span className="session-stats-value">{inputTokens.toLocaleString()}</span>
           </div>
           <div className="session-stats-row">
-            <span className="session-stats-label">
-              <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                <path d="M5 2v6M3 6l2 2 2-2" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              Output
-            </span>
+            <span className="session-stats-label">Output</span>
             <span className="session-stats-value">{outputTokens.toLocaleString()}</span>
           </div>
-          <div className="session-stats-divider" />
           <div className="session-stats-row">
-            <span className="session-stats-label">Context left</span>
+            <span className="session-stats-label">Context</span>
             <span className={`session-stats-value ${lowContext ? 'low' : ''}`}>
-              {remainingTokens.toLocaleString()} ({remainingPercent}%)
+              {formatCompactTokens(remainingTokens)} left ({100 - usedPercent}%)
             </span>
           </div>
           <div className="session-stats-row">
-            <span className="session-stats-label">Queue</span>
-            <span className="session-stats-value">{pendingCount}</span>
+            <span className="session-stats-label">Cost</span>
+            <span className="session-stats-value accent">{formatCost(cost)}</span>
           </div>
           <div className="session-stats-divider" />
-          <div className="session-stats-row total">
-            <span className="session-stats-label">Cost</span>
-            <span className="session-stats-value">${cost.toFixed(4)}</span>
+          <div className="session-stats-section-title">Usage</div>
+          <div className="session-stats-row">
+            <span className="session-stats-label">Today</span>
+            <span className="session-stats-value">{formatCost(dayCost)}</span>
+          </div>
+          <div className="session-stats-row">
+            <span className="session-stats-label">This week</span>
+            <span className="session-stats-value">{formatCost(weekCost)}</span>
           </div>
         </div>
       )}

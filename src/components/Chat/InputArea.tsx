@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { ArrowUp, Square, X, MoreHorizontal } from 'lucide-react';
 import { stopClaude } from '../../hooks/useClaudeChat';
 import { useInputComposer } from '../../hooks/useInputComposer';
 import SlashCommandPalette from './SlashCommandPalette';
@@ -135,9 +136,7 @@ export default function InputArea() {
                   title="Remove queued message"
                   type="button"
                 >
-                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                    <path d="M3 3L9 9M9 3L3 9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-                  </svg>
+                  <X size={12} strokeWidth={2} />
                 </button>
                 <button
                   className="queue-action-btn"
@@ -145,26 +144,22 @@ export default function InputArea() {
                   title="Queue options"
                   type="button"
                 >
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                    <circle cx="3" cy="7" r="1.1" fill="currentColor" />
-                    <circle cx="7" cy="7" r="1.1" fill="currentColor" />
-                    <circle cx="11" cy="7" r="1.1" fill="currentColor" />
-                  </svg>
+                  <MoreHorizontal size={14} strokeWidth={2} />
                 </button>
                 {queueMenuIndex === index && (
                   <div className="queue-item-menu">
                     <button className="queue-item-menu-btn" onClick={() => handleQueueEdit(index)} type="button">
-                      编辑消息
+                      Edit
                     </button>
                     <button className="queue-item-menu-btn" onClick={handleQueueClose} type="button">
-                      关闭排队
+                      Clear queue
                     </button>
                   </div>
                 )}
               </div>
             ))}
             {isStreaming && (
-              <div className="queue-indicator-note">当前正在回复中，你可以继续输入，按 Enter 会进入排队。</div>
+              <div className="queue-indicator-note">Streaming — new messages will queue.</div>
             )}
           </div>
         )}
@@ -180,9 +175,7 @@ export default function InputArea() {
                   title="Remove (Esc)"
                   type="button"
                 >
-                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                    <path d="M2.5 2.5l5 5M7.5 2.5l-5 5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-                  </svg>
+                  <X size={10} strokeWidth={2.5} />
                 </button>
               </span>
             )}
@@ -201,9 +194,7 @@ export default function InputArea() {
                   title="Remove attachment"
                   type="button"
                 >
-                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                    <path d="M2.5 2.5l5 5M7.5 2.5l-5 5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-                  </svg>
+                  <X size={10} strokeWidth={2.5} />
                 </button>
               </span>
             ))}
@@ -231,9 +222,7 @@ export default function InputArea() {
           <div className="input-actions">
             {isStreaming ? (
               <button className="stop-btn" onClick={stopClaude} title="Stop" type="button">
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                  <rect x="3" y="3" width="8" height="8" rx="1.5" fill="currentColor" />
-                </svg>
+                <Square size={12} strokeWidth={0} fill="currentColor" />
               </button>
             ) : (
               <button
@@ -243,9 +232,7 @@ export default function InputArea() {
                 title="Send (Enter)"
                 type="button"
               >
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <path d="M3 13L13 8L3 3v4l6 1-6 1v4z" fill="currentColor" />
-                </svg>
+                <ArrowUp size={16} strokeWidth={2.2} />
               </button>
             )}
           </div>

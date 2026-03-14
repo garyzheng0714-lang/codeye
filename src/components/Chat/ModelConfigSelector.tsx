@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { ChevronDown } from 'lucide-react';
 import { useChatStore } from '../../stores/chatStore';
 import {
   MODELS,
@@ -59,9 +60,7 @@ export default function ModelConfigSelector() {
         <span className="config-selector-model">{currentModel.shortLabel}</span>
         <span className="config-selector-sep">·</span>
         <span className="config-selector-effort">{supportsEffort ? currentEffort.shortLabel : 'N/A'}</span>
-        <svg className={`config-selector-chevron ${open ? 'open' : ''}`} width="10" height="10" viewBox="0 0 10 10" fill="none">
-          <path d="M2.5 3.5L5 6l2.5-2.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
+        <ChevronDown size={11} strokeWidth={2} className={`config-selector-chevron ${open ? 'open' : ''}`} />
       </button>
       {open && (
         <div className="config-selector-dropdown">

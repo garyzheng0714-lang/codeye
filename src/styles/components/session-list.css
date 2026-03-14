@@ -1,7 +1,7 @@
 .session-list {
   display: flex;
   flex-direction: column;
-  padding: 0 4px;
+  padding: 0 6px;
 }
 
 /* ── Folder section ── */
@@ -9,26 +9,32 @@
 .folder-section {
   background: transparent;
   overflow: hidden;
-  margin-bottom: 2px;
 }
+
+/* ── Folder header — project entry ── */
 
 .folder-header {
   width: 100%;
   border: none;
   background: transparent;
-  padding: 5px 6px;
+  padding: 6px 8px;
+  margin-top: 2px;
   display: flex;
   align-items: center;
   gap: 4px;
   cursor: pointer;
   text-align: left;
   border-radius: var(--radius-sm);
-  transition: background var(--transition-fast);
   user-select: none;
+  transition: background var(--transition-fast);
+}
+
+.folder-section:first-child .folder-header {
+  margin-top: 0;
 }
 
 .folder-header:hover {
-  background: var(--bg-hover);
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .folder-header:focus-visible {
@@ -41,14 +47,14 @@
   flex: 1;
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
 }
 
 .folder-chevron {
-  color: var(--text-muted);
+  color: var(--text-disabled);
   flex-shrink: 0;
-  width: 11px;
-  height: 11px;
+  width: 12px;
+  height: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -60,33 +66,40 @@
   transform: rotate(0deg);
 }
 
+.folder-icon {
+  color: var(--text-disabled);
+  flex-shrink: 0;
+  transition: color var(--transition-fast);
+}
+
+.folder-section.active .folder-icon {
+  color: var(--accent);
+}
+
 .folder-name {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  letter-spacing: -0.01em;
 }
 
 .folder-section.active .folder-name {
-  color: var(--accent);
+  color: var(--text-primary);
 }
 
 .folder-header-actions {
   display: flex;
   align-items: center;
-  gap: 3px;
+  gap: 2px;
   flex-shrink: 0;
 }
 
 .folder-count {
-  font-size: 11px;
+  font-size: 10px;
   color: var(--text-disabled);
-  min-width: 14px;
-  text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
@@ -102,17 +115,14 @@
   justify-content: center;
   cursor: pointer;
   opacity: 0;
-  transform: scale(0.75);
   transition:
     opacity var(--transition-fast),
     background var(--transition-fast),
-    color var(--transition-fast),
-    transform 180ms cubic-bezier(0.34, 1.56, 0.64, 1);
+    color var(--transition-fast);
 }
 
 .folder-header:hover .folder-new-session {
   opacity: 1;
-  transform: scale(1);
 }
 
 .folder-new-session:hover {
@@ -122,7 +132,6 @@
 
 .folder-new-session:focus-visible {
   opacity: 1;
-  transform: scale(1);
   outline: 2px solid var(--accent);
   outline-offset: -2px;
 }
@@ -159,7 +168,7 @@
 .folder-session-list {
   min-height: 0;
   overflow: hidden;
-  padding-bottom: 4px;
+  padding: 2px 0 4px;
 }
 
 /* ── Session items ── */
@@ -167,31 +176,22 @@
 .session-item {
   position: relative;
   display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  padding: 7px 10px 7px 22px;
+  align-items: center;
+  padding: 5px 8px 5px 22px;
+  margin: 1px 4px;
   cursor: pointer;
   border-radius: var(--radius-sm);
-  transition:
-    background var(--transition-fast),
-    transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
-  min-height: 44px;
+  transition: background 150ms ease;
+  min-height: 30px;
 }
 
-/* Staggered entrance when folder opens */
 .folder-session-shell.open .session-item {
-  animation: sessionSlideIn 260ms cubic-bezier(0.16, 1, 0.3, 1) both;
-  animation-delay: calc(var(--session-idx, 0) * 20ms);
+  animation: sessionSlideIn 200ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(var(--session-idx, 0) * 16ms);
 }
 
 .session-item:hover {
-  background: var(--bg-hover);
-  transform: translateX(2px);
-}
-
-.session-item.active:hover {
-  background: var(--bg-active);
-  transform: translateX(2px);
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .session-item:focus-visible {
@@ -200,24 +200,14 @@
 }
 
 .session-item.active {
-  background: var(--accent-muted);
+  background: rgba(255, 255, 255, 0.08);
 }
 
-/* active left bar with glow */
-.session-item.active::before {
-  content: '';
-  position: absolute;
-  left: 7px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 3px;
-  height: 20px;
-  background: var(--accent);
-  border-radius: var(--radius-full);
-  box-shadow: 0 0 10px var(--accent-glow);
+.session-item.active:hover {
+  background: rgba(255, 255, 255, 0.10);
 }
 
-/* ── Session item rows ── */
+/* ── Session content — name only ── */
 
 .session-item-row {
   display: flex;
@@ -225,6 +215,16 @@
   gap: 6px;
   width: 100%;
   min-width: 0;
+}
+
+.session-icon {
+  color: var(--text-disabled);
+  flex-shrink: 0;
+  transition: color var(--transition-fast);
+}
+
+.session-item.active .session-icon {
+  color: var(--text-muted);
 }
 
 .session-name {
@@ -236,6 +236,11 @@
   color: var(--text-secondary);
   flex: 1;
   min-width: 0;
+  transition: color var(--transition-fast);
+}
+
+.session-item:hover .session-name {
+  color: var(--text-primary);
 }
 
 .session-item.active .session-name {
@@ -244,30 +249,29 @@
 }
 
 .session-time {
-  font-size: 11px;
+  font-size: 10px;
   color: var(--text-disabled);
   flex-shrink: 0;
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
 }
 
+.session-item:hover .session-time {
+  opacity: 1;
+}
+
+/* preview hidden — it's noise at sidebar width */
 .session-preview {
-  margin: 0;
-  margin-top: 2px;
-  font-size: 11px;
-  color: var(--text-muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  line-height: 1.4;
-  opacity: 0.8;
+  display: none;
 }
 
 /* ── Session actions (hover overlay) ── */
 
 .session-actions {
   position: absolute;
-  right: 8px;
+  right: 6px;
   top: 50%;
   transform: translateY(-50%);
   display: flex;
@@ -283,7 +287,6 @@
   pointer-events: auto;
 }
 
-/* fade out time when hovering to make room for action */
 .session-item:hover .session-time {
   opacity: 0;
 }
@@ -358,7 +361,7 @@
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-lg), 0 0 0 1px rgba(0, 0, 0, 0.3);
-  min-width: 164px;
+  min-width: 148px;
   padding: 4px;
   animation: contextMenuEnter 150ms cubic-bezier(0.16, 1, 0.3, 1) both;
   transform-origin: top left;
@@ -402,7 +405,7 @@
 /* ── Folder empty ── */
 
 .folder-empty {
-  padding: 4px 10px 8px 22px;
+  padding: 8px 12px;
   color: var(--text-disabled);
   font-size: 12px;
 }
@@ -429,16 +432,14 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 40px 20px;
+  padding: 48px 20px;
   gap: 8px;
   text-align: center;
 }
 
 .empty-state-icon {
-  width: 36px;
-  height: 36px;
   color: var(--text-disabled);
-  opacity: 0.6;
+  opacity: 0.5;
   margin-bottom: 4px;
 }
 

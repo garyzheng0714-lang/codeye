@@ -1,6 +1,7 @@
 import { useCallback, memo, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { Copy, Check, GitFork, Eye } from 'lucide-react';
 import type { DisplayMessage, ToolCallDisplay } from '../../types';
 import { useChatStore } from '../../stores/chatStore';
 import { useSessionStore } from '../../stores/sessionStore';
@@ -140,10 +141,7 @@ export default memo(function AIMessage({ message }: { message: DisplayMessage })
           <div className="ai-steps-block">
             <div className="steps-header">
               <span className="steps-header-label">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 4.5C7.5 4.5 3.5 8.5 2 12c1.5 3.5 5.5 7.5 10 7.5s8.5-4 10-7.5c-1.5-3.5-5.5-7.5-10-7.5z" />
-                  <circle cx="12" cy="12" r="3" />
-                </svg>
+                <Eye size={13} strokeWidth={1.8} />
                 STEPS TAKEN
               </span>
               <span className={`steps-status steps-status--${stepsStatus}`}>
@@ -203,23 +201,13 @@ export default memo(function AIMessage({ message }: { message: DisplayMessage })
             <div className="ai-message-actions">
               <button className="ai-action-btn" onClick={handleCopy} title={copied ? 'Copied!' : 'Copy'}>
                 {copied ? (
-                  <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-                    <path d="M2.5 6.5l3 3 5-5" stroke="var(--success)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
+                  <Check size={13} strokeWidth={2} style={{ color: 'var(--success)' }} />
                 ) : (
-                  <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-                    <rect x="3.5" y="3.5" width="7.5" height="7.5" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
-                    <path d="M2 9.5V2.5a1 1 0 011-1h7" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-                  </svg>
+                  <Copy size={13} strokeWidth={1.8} />
                 )}
               </button>
               <button className="ai-action-btn" onClick={handleFork} title="Fork from here">
-                <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-                  <circle cx="6.5" cy="2.5" r="1.5" stroke="currentColor" strokeWidth="1.2" />
-                  <circle cx="3.5" cy="10.5" r="1.5" stroke="currentColor" strokeWidth="1.2" />
-                  <circle cx="9.5" cy="10.5" r="1.5" stroke="currentColor" strokeWidth="1.2" />
-                  <path d="M6.5 4v2.5c0 1-1 1.8-3 2.5m3-5v2.5c0 1 1 1.8 3 2.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-                </svg>
+                <GitFork size={13} strokeWidth={1.8} />
               </button>
             </div>
           </div>

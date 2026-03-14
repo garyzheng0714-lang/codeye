@@ -8,6 +8,10 @@
   position: relative;
 }
 
+.message-list > .message-list-spacer {
+  flex: 1 0 0px;
+}
+
 .turn-group {
   display: flex;
   flex-direction: column;

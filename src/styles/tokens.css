@@ -3,14 +3,14 @@
    Premium dark greys + vibrant purple accent (sparingly)
    ============================================ */
 :root {
-  /* Background (deep, neutral dark — minimal purple tint) */
-  --bg-base:      #0e0e10;
-  --bg-primary:   #141416;
-  --bg-secondary: #1a1a1e;
-  --bg-tertiary:  #222226;
-  --bg-elevated:  #18181c;
-  --bg-hover:     #252528;
-  --bg-active:    #2c2c30;
+  /* Background — A: sidebar lighter, content deeper */
+  --bg-base:      #101012;
+  --bg-primary:   #18181d;
+  --bg-secondary: #1e1e24;
+  --bg-tertiary:  #262630;
+  --bg-elevated:  #1c1c22;
+  --bg-hover:     #2a2a32;
+  --bg-active:    #323238;
   --bg-accent:    rgba(168, 85, 247, 0.06);
 
   /* Surfaces (glass overlays for tool blocks) */
@@ -35,8 +35,8 @@
   --accent-glow:   rgba(168, 85, 247, 0.18);
 
   /* Borders */
-  --border-strong:  #333336;
-  --border-subtle:  #232326;
+  --border-strong:  #38383e;
+  --border-subtle:  #262629;
   --border-accent:  rgba(168, 85, 247, 0.25);
 
   /* Semantic */
@@ -55,8 +55,8 @@
   --radius-full: 9999px;
 
   /* Typography */
-  --font-display: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-body:    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-display: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-body:    'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono:    'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
 
   --text-xs:   11px;
@@ -94,7 +94,7 @@
   /* Layout */
   --activity-bar-w: 48px;
   --sidebar-w: 280px;
-  --titlebar-h: 52px;
+  --titlebar-h: 42px;
 
   color-scheme: dark;
 }

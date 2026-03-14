@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
+import { Search, FolderPlus, Package } from 'lucide-react';
 import { useUIStore } from '../../stores/uiStore';
 import { useSessionStore } from '../../stores/sessionStore';
 import { useChatStore } from '../../stores/chatStore';
@@ -111,24 +112,18 @@ export default function Sidebar() {
     <div className="sidebar">
       <div className="sidebar-header">
         <div className="sidebar-search">
-          <svg className="sidebar-search-icon" width="14" height="14" viewBox="0 0 14 14" fill="none">
-            <circle cx="6" cy="6" r="4.5" stroke="currentColor" strokeWidth="1.5" />
-            <path d="M9.5 9.5L13 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-          </svg>
+          <Search size={14} strokeWidth={1.8} className="sidebar-search-icon" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search folders or sessions..."
+            placeholder="Search..."
             aria-label="Search sessions"
           />
         </div>
         {activePanel === 'sessions' && (
           <div className="sidebar-actions">
             <button className="sidebar-action-btn" onClick={handleAddFolder} title="Add Folder">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M2.5 5.5h3l1.4-1.8H13a1 1 0 0 1 1 1V11a2 2 0 0 1-2 2H4A2 2 0 0 1 2 11V6.5a1 1 0 0 1 .5-1z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
-                <path d="M8 5.8v4.4M5.8 8h4.4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-              </svg>
+              <FolderPlus size={15} strokeWidth={1.8} />
             </button>
           </div>
         )}
@@ -148,9 +143,7 @@ export default function Sidebar() {
       </div>
       {activeFolder?.path && (
         <div className="sidebar-footer">
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-            <path d="M1.5 3.5L6 1l4.5 2.5v5L6 11l-4.5-2.5v-5z" stroke="currentColor" strokeWidth="1" />
-          </svg>
+          <Package size={11} strokeWidth={1.8} />
           <span className="sidebar-footer-path">{activeFolder.path}</span>
         </div>
       )}

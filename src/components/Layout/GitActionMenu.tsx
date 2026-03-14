@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { GitCommitHorizontal, ArrowUpFromLine, GitPullRequest, ChevronDown, ArrowRight } from 'lucide-react';
 import { sendClaudeQuery } from '../../hooks/useClaudeChat';
 import { useChatStore } from '../../stores/chatStore';
 import { useSessionStore } from '../../stores/sessionStore';
@@ -31,34 +32,11 @@ const gitActions: GitAction[] = [
   },
 ];
 
-function GitActionIcon({ action }: { action: GitAction['key'] }) {
-  if (action === 'commit') {
-    return (
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
-        <rect x="3" y="4" width="12" height="10" rx="3" stroke="currentColor" strokeWidth="1.4" />
-        <path d="M6.5 9H11.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-      </svg>
-    );
-  }
-
-  if (action === 'push') {
-    return (
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
-        <path d="M9 13V4.5M9 4.5L5.8 7.7M9 4.5L12.2 7.7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M4 13.5H14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-      </svg>
-    );
-  }
-
-  return (
-    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
-      <circle cx="5" cy="5" r="1.7" stroke="currentColor" strokeWidth="1.4" />
-      <circle cx="13" cy="4.5" r="1.7" stroke="currentColor" strokeWidth="1.4" />
-      <circle cx="13" cy="13" r="1.7" stroke="currentColor" strokeWidth="1.4" />
-      <path d="M6.4 5.4L11.2 4.7M6.1 6.3L11.7 11.7" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-    </svg>
-  );
-}
+const actionIcons = {
+  commit: GitCommitHorizontal,
+  push: ArrowUpFromLine,
+  pr: GitPullRequest,
+};
 
 export default function GitActionMenu() {
   const [open, setOpen] = useState(false);
@@ -141,9 +119,7 @@ export default function GitActionMenu() {
           onClick={() => setOpen((prev) => !prev)}
           title="More git actions"
         >
-          <svg className={`git-pill-chevron ${open ? 'open' : ''}`} width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
-            <path d="M2.5 3.5L5 6.5L7.5 3.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
+          <ChevronDown size={11} strokeWidth={2} className={`git-pill-chevron ${open ? 'open' : ''}`} />
         </button>
       </div>
 
@@ -154,27 +130,28 @@ export default function GitActionMenu() {
         </div>
 
         <div className="git-menu-list">
-          {gitActions.map((action) => (
-            <button
-              key={action.key}
-              type="button"
-              className="git-menu-item"
-              role="menuitem"
-              onClick={() => runAction(action)}
-              disabled={isStreaming}
-            >
-              <span className="git-menu-icon">
-                <GitActionIcon action={action.key} />
-              </span>
-              <span className="git-menu-copy">
-                <span className="git-menu-title">{action.title}</span>
-                <span className="git-menu-description">{action.description}</span>
-              </span>
-              <svg className="git-menu-arrow" width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                <path d="M4.5 3.5L9.5 7L4.5 10.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </button>
-          ))}
+          {gitActions.map((action) => {
+            const Icon = actionIcons[action.key];
+            return (
+              <button
+                key={action.key}
+                type="button"
+                className="git-menu-item"
+                role="menuitem"
+                onClick={() => runAction(action)}
+                disabled={isStreaming}
+              >
+                <span className="git-menu-icon">
+                  <Icon size={16} strokeWidth={1.8} />
+                </span>
+                <span className="git-menu-copy">
+                  <span className="git-menu-title">{action.title}</span>
+                  <span className="git-menu-description">{action.description}</span>
+                </span>
+                <ArrowRight size={13} strokeWidth={1.8} className="git-menu-arrow" />
+              </button>
+            );
+          })}
         </div>
       </div>
     </div>

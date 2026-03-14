@@ -5,6 +5,7 @@ import {
   useRef,
   useState,
 } from 'react';
+import { ChevronDown, Plus, X, FolderPlus, Search as SearchIcon, Pencil, Trash2, Folder, MessageCircle } from 'lucide-react';
 import { useSessionStore } from '../../stores/sessionStore';
 import { useChatStore } from '../../stores/chatStore';
 import { stopClaude } from '../../hooks/useClaudeChat';
@@ -270,10 +271,7 @@ export default function SessionList({
   if (folders.length === 0) {
     return (
       <div className="empty-state">
-        <svg className="empty-state-icon" viewBox="0 0 48 48" fill="none">
-          <path d="M6 14.5a3.5 3.5 0 0 1 3.5-3.5h9l3 3.5H38.5A3.5 3.5 0 0 1 42 18v16.5A3.5 3.5 0 0 1 38.5 38h-29A3.5 3.5 0 0 1 6 34.5z" stroke="currentColor" strokeWidth="2" />
-          <path d="M15 24h18M24 15v18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-        </svg>
+        <FolderPlus size={32} strokeWidth={1.2} className="empty-state-icon" />
         <p>No folders yet</p>
         <p>Add a workspace folder to get started</p>
       </div>
@@ -283,10 +281,7 @@ export default function SessionList({
   if (folderSections.length === 0) {
     return (
       <div className="empty-state">
-        <svg className="empty-state-icon" viewBox="0 0 48 48" fill="none">
-          <circle cx="20" cy="20" r="11" stroke="currentColor" strokeWidth="2" />
-          <path d="M28 28l10 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-        </svg>
+        <SearchIcon size={32} strokeWidth={1.2} className="empty-state-icon" />
         <p>No results</p>
         <p>Try a different keyword</p>
       </div>
@@ -320,10 +315,9 @@ export default function SessionList({
               >
                 <div className="folder-header-main">
                   <span className={`folder-chevron ${isExpanded ? 'open' : ''}`} aria-hidden="true">
-                    <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
-                      <path d="M3.5 4L5.5 6.5L7.5 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
+                    <ChevronDown size={12} strokeWidth={2} />
                   </span>
+                  <Folder size={14} strokeWidth={1.8} className="folder-icon" />
                   <span className="folder-name">{folder.name}</span>
                   {(isSyncing || (!folder.hasSyncedClaudeHistory && folder.kind === 'local')) && (
                     <span className={`folder-sync-dot ${isSyncing ? 'syncing' : 'idle'}`} />
@@ -347,9 +341,7 @@ export default function SessionList({
                     }}
                     title="New session"
                   >
-                    <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-                      <path d="M6.5 2.5v8M2.5 6.5h8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-                    </svg>
+                    <Plus size={13} strokeWidth={2} />
                   </button>
                 </div>
               </div>
@@ -392,6 +384,7 @@ export default function SessionList({
                           ) : (
                             <>
                               <div className="session-item-row">
+                                <MessageCircle size={13} strokeWidth={1.6} className="session-icon" />
                                 <span className="session-name">{session.name}</span>
                                 <span className="session-time">{formatRelativeTime(session.updatedAt)}</span>
                               </div>
@@ -405,9 +398,7 @@ export default function SessionList({
                                   }}
                                   title="Delete"
                                 >
-                                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                                    <path d="M3.5 3.5l7 7M10.5 3.5l-7 7" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-                                  </svg>
+                                  <X size={13} strokeWidth={1.8} />
                                 </button>
                                 <button
                                   className="session-confirm-delete"
@@ -452,9 +443,7 @@ export default function SessionList({
               setContextMenu(null);
             }}
           >
-            <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-              <path d="M2 9.5L9.5 2a1 1 0 0 1 1.5 1.5L3.5 11H2V9.5z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round" />
-            </svg>
+            <Pencil size={13} strokeWidth={1.8} />
             Rename
           </button>
           <div className="context-menu-divider" />
@@ -466,9 +455,7 @@ export default function SessionList({
               setContextMenu(null);
             }}
           >
-            <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-              <path d="M2.5 4h8M5 4V2.5h3V4M3.5 4l.5 6.5h5L10 4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+            <Trash2 size={13} strokeWidth={1.8} />
             Delete
           </button>
         </div>

@@ -30,8 +30,8 @@ export default memo(function MessageList() {
       if (turns.length > 0) {
         virtualizer.scrollToIndex(turns.length - 1, { align: 'end' });
       }
-    } else {
-      bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    } else if (parentRef.current) {
+      parentRef.current.scrollTo({ top: parentRef.current.scrollHeight, behavior: 'smooth' });
     }
   }, [messages, useVirtual, turns.length, virtualizer]);
 
@@ -65,7 +65,8 @@ export default memo(function MessageList() {
   }
 
   return (
-    <div className="message-list">
+    <div className="message-list" ref={parentRef}>
+      <div className="message-list-spacer" />
       {turns.map((turn, i) => (
         <TurnGroup key={turn.id} turn={turn} isLast={i === turns.length - 1} />
       ))}

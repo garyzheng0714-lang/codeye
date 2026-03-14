@@ -1,4 +1,5 @@
 import { useState, memo } from 'react';
+import { ChevronDown } from 'lucide-react';
 import { useChatStore } from '../../stores/chatStore';
 import type { ToolCallDisplay } from '../../types';
 import { getToolStatus, getSemanticName, getToolColor } from '../../data/toolMeta';
@@ -107,17 +108,13 @@ export default memo(function ToolCall({
             onClick={(e) => { e.stopPropagation(); setDiffOpen((v) => !v); }}
             title={diffOpen ? 'Hide diff' : 'Show diff'}
           >
-            <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-              <path d="M2.5 4l2.5 2.5L7.5 4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+            <ChevronDown size={11} strokeWidth={2} />
           </button>
         )}
 
         {isSearch && tool.output && (
           <span className={`tool-expand-icon ${tool.expanded ? 'open' : ''}`}>
-            <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-              <path d="M2.5 4l2.5 2.5L7.5 4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+            <ChevronDown size={11} strokeWidth={2} />
           </span>
         )}
       </div>
