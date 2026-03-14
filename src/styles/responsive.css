@@ -1,3 +1,30 @@
+/* ── Tablet: sidebar collapses, content expands ── */
+@media (max-width: 768px) {
+  .app-body {
+    grid-template-columns: var(--activity-bar-w) 0 1fr;
+  }
+
+  .sidebar {
+    width: 0;
+    opacity: 0;
+    border-right: none;
+    pointer-events: none;
+  }
+
+  .sidebar-boundary-toggle {
+    display: none;
+  }
+
+  .title-bar-breadcrumb {
+    display: none;
+  }
+
+  .message-search {
+    min-width: 280px;
+  }
+}
+
+/* ── Mobile: full-width, no chrome ── */
 @media (max-width: 480px) {
   .app-body,
   .app-body.sidebar-collapsed {
@@ -54,5 +81,16 @@
 
   .input-container {
     border-radius: var(--radius-lg);
+  }
+
+  .git-dropdown {
+    width: calc(100vw - var(--space-8));
+    max-width: 258px;
+  }
+
+  .message-search {
+    min-width: 0;
+    left: var(--space-3);
+    right: var(--space-3);
   }
 }

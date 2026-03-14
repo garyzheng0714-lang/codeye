@@ -89,14 +89,18 @@ export default function DiffViewer({ oldText, newText, fileName }: Props) {
         </span>
         <div className="diff-mode-toggle">
           <button
+            type="button"
             className={mode === 'unified' ? 'active' : ''}
             onClick={() => setMode('unified')}
+            aria-pressed={mode === 'unified'}
           >
             Unified
           </button>
           <button
+            type="button"
             className={mode === 'split' ? 'active' : ''}
             onClick={() => setMode('split')}
+            aria-pressed={mode === 'split'}
           >
             Split
           </button>

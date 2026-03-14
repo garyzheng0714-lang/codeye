@@ -56,6 +56,8 @@ export default function ModelConfigSelector() {
         onClick={() => setOpen(!open)}
         disabled={isStreaming}
         title={`${currentModel.label} · ${supportsEffort ? currentEffort.label : 'Thinking unavailable'}`}
+        aria-haspopup="listbox"
+        aria-expanded={open}
       >
         <span className="config-selector-model">{currentModel.shortLabel}</span>
         <span className="config-selector-sep">·</span>
@@ -69,6 +71,7 @@ export default function ModelConfigSelector() {
             {MODELS.map((m) => (
               <button
                 key={m.id}
+                type="button"
                 className={`config-option ${m.id === model ? 'active' : ''}`}
                 onClick={() => setModel(m.id as ModelId)}
               >
@@ -87,6 +90,7 @@ export default function ModelConfigSelector() {
               visibleEfforts.map((entry) => (
                 <button
                   key={entry.id}
+                  type="button"
                   className={`config-option ${entry.id === effort ? 'active' : ''}`}
                   onClick={() => setEffort(entry.id as EffortLevel)}
                 >

@@ -100,11 +100,11 @@
    ============================================ */
 [data-theme="dark"] .message-search {
   background: var(--bg-elevated);
-  border-color: rgba(142, 71, 255, 0.15);
+  border-color: var(--border-accent);
 }
 
 [data-theme="dark"] .message-search-results {
-  border-top-color: rgba(142, 71, 255, 0.12);
+  border-top-color: var(--border-accent);
 }
 
 [data-theme="dark"] .message-search-input::placeholder {

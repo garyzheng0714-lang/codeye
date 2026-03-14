@@ -134,17 +134,19 @@ export default function InputArea() {
                   className="queue-action-btn"
                   onClick={() => handleQueueRemove(index)}
                   title="Remove queued message"
+                  aria-label="Remove queued message"
                   type="button"
                 >
-                  <X size={12} strokeWidth={2} />
+                  <X size={12} strokeWidth={2} aria-hidden="true" />
                 </button>
                 <button
                   className="queue-action-btn"
                   onClick={() => setQueueMenuIndex((prev) => (prev === index ? null : index))}
                   title="Queue options"
+                  aria-label="Queue options"
                   type="button"
                 >
-                  <MoreHorizontal size={14} strokeWidth={2} />
+                  <MoreHorizontal size={14} strokeWidth={2} aria-hidden="true" />
                 </button>
                 {queueMenuIndex === index && (
                   <div className="queue-item-menu">
@@ -173,9 +175,10 @@ export default function InputArea() {
                   className="skill-pill-remove"
                   onClick={clearActiveSkill}
                   title="Remove (Esc)"
+                  aria-label="Remove skill"
                   type="button"
                 >
-                  <X size={10} strokeWidth={2.5} />
+                  <X size={10} strokeWidth={2.5} aria-hidden="true" />
                 </button>
               </span>
             )}
@@ -192,9 +195,10 @@ export default function InputArea() {
                   className="skill-pill-remove"
                   onClick={() => removeAttachment(attachment.id)}
                   title="Remove attachment"
+                  aria-label="Remove attachment"
                   type="button"
                 >
-                  <X size={10} strokeWidth={2.5} />
+                  <X size={10} strokeWidth={2.5} aria-hidden="true" />
                 </button>
               </span>
             ))}
@@ -210,6 +214,7 @@ export default function InputArea() {
           <textarea
             ref={textareaRef}
             className={`input-textarea ${isStreaming ? 'is-streaming' : ''}`}
+            aria-label="Message input"
             value={input}
             onChange={handleInput}
             onKeyDown={handleKeyDown}
@@ -221,8 +226,8 @@ export default function InputArea() {
           />
           <div className="input-actions">
             {isStreaming ? (
-              <button className="stop-btn" onClick={stopClaude} title="Stop" type="button">
-                <Square size={12} strokeWidth={0} fill="currentColor" />
+              <button className="stop-btn" onClick={stopClaude} title="Stop" aria-label="Stop" type="button">
+                <Square size={12} strokeWidth={0} fill="currentColor" aria-hidden="true" />
               </button>
             ) : (
               <button
@@ -230,9 +235,10 @@ export default function InputArea() {
                 onClick={handleSend}
                 disabled={!canSend}
                 title="Send (Enter)"
+                aria-label="Send message"
                 type="button"
               >
-                <ArrowUp size={16} strokeWidth={2.2} />
+                <ArrowUp size={16} strokeWidth={2.2} aria-hidden="true" />
               </button>
             )}
           </div>

@@ -117,7 +117,7 @@
 
 .slash-palette-item.active .slash-palette-icon {
   background: var(--accent);
-  color: white;
+  color: var(--bg-base);
 }
 
 .slash-palette-name {

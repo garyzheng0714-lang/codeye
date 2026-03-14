@@ -26,7 +26,7 @@ export default function HintCard({ text }: { text: string }) {
   };
 
   return (
-    <button className="hint-card" onClick={handleClick}>
+    <button type="button" className="hint-card" onClick={handleClick}>
       {text}
     </button>
   );

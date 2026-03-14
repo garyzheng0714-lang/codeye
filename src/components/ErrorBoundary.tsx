@@ -31,7 +31,7 @@ export default class ErrorBoundary extends Component<Props, State> {
 
       return (
         <div className="error-boundary-fallback">
-          <div className="error-boundary-card">
+          <div className="error-boundary-card" role="alert">
             <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
               <circle cx="16" cy="16" r="14" stroke="var(--error)" strokeWidth="2" />
               <path d="M16 10v8" stroke="var(--error)" strokeWidth="2" strokeLinecap="round" />
@@ -41,7 +41,7 @@ export default class ErrorBoundary extends Component<Props, State> {
             <p className="error-boundary-message">
               {this.state.error?.message || 'An unexpected error occurred.'}
             </p>
-            <button className="error-boundary-btn" onClick={this.handleReset}>
+            <button type="button" className="error-boundary-btn" onClick={this.handleReset}>
               Try Again
             </button>
           </div>

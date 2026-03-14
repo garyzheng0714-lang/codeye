@@ -254,3 +254,39 @@ v0.{Phase}.{patch}[-alpha.N | -beta.N]
 - 禁止跳过迁移版本（v1 不能直接到 v3）
 - 禁止性能指标回归无告警
 - 禁止在 Phase 7 Threat Model 完成前实现远程连接功能
+
+---
+
+## Design Context
+
+### Users
+
+Professional developers and full-stack/indie developers who use Claude Code CLI daily and want a visual GUI layer for more efficient AI-assisted coding. They value speed, keyboard-first workflows, and tools that stay out of the way. They use Codeye in focused coding sessions — debugging, feature building, code review — where context and flow state matter.
+
+### Brand Personality
+
+**Warm, Lively, Friendly** — like Notion meets Figma. Approachable and human, with personality in micro-interactions (the eye logo blinks, hops, thinks). Not cold or corporate. The interface should feel like a helpful companion, not a sterile tool.
+
+Voice: conversational, encouraging, concise. Never robotic or overly formal.
+
+### Aesthetic Direction
+
+- **Visual tone**: Clean and minimal foundations (Linear/Vercel structure) with warm, characterful touches (Notion/Figma personality). Low saturation backgrounds, vibrant purple accent used sparingly for focus points.
+- **Primary references**: Linear (information density, keyboard-first), Vercel (typography, spacing, restraint), Cursor/Windsurf (AI tool call patterns, chat UX conventions)
+- **Anti-references**: High-saturation gradients, "AI-glow" aesthetics, cluttered dashboards, overly decorative UI. Never look like a generic AI chatbot wrapper.
+- **Theme**: Dark-first with full light mode support. Dark uses deep neutral greys (#101012 base), light uses warm whites (#ffffff base). Purple accent (#a855f7 dark / #9333ea light) is the sole brand color — reserved for interactive focus, active states, and streaming indicators.
+- **Typography**: Inter with OpenType features (cv02-04, cv11) for UI, JetBrains Mono for code. Tight letter-spacing (-0.011em). Small base sizes (13-14px) for information density.
+- **Motion**: Purposeful and subtle. Entrance animations (slideUp, fadeIn) are fast (120-300ms). The logo character has expressive states (blink, think, hop) that add warmth. All motion respects `prefers-reduced-motion`.
+- **Surfaces**: Glass-like overlays (rgba white/black at 3-7% opacity) for tool blocks and elevated elements. Deep shadows in dark mode, gentle shadows in light.
+
+### Design Principles
+
+1. **Content over chrome** — Maximize space for conversation and code. Every pixel of UI decoration must earn its place. Prefer negative space over borders, subtle elevation over heavy dividers.
+
+2. **Keyboard-native, mouse-friendly** — Design for keyboard-first power users (Cmd+K, Cmd+F, slash commands) but ensure every action is discoverable via mouse. Focus rings use the accent color consistently.
+
+3. **Progressive disclosure** — Show the minimum by default, reveal detail on interaction. Tool calls collapse to a single line, expand on click. Actions appear on hover. Complexity is available but never forced.
+
+4. **Alive but not distracting** — The logo character, streaming cursor, and entrance animations add life. But animations are fast, purposeful, and never block interaction. The app should feel responsive and alive, not busy.
+
+5. **Consistent token discipline** — All values come from design tokens (tokens.css). No magic numbers in component CSS. Spacing follows the 4px scale. Border radius follows the xs/sm/md/lg/xl scale. Colors reference semantic variables, never raw hex in components.

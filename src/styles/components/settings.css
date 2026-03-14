@@ -96,7 +96,7 @@
   padding: 6px var(--space-3);
   border: none;
   background: var(--accent);
-  color: white;
+  color: var(--bg-base);
   border-radius: var(--radius-sm);
   font-size: var(--text-sm);
   cursor: pointer;
@@ -229,13 +229,13 @@
 
 [data-theme="dark"] .settings-section {
   background: var(--bg-tertiary);
-  border-color: rgba(142, 71, 255, 0.1);
+  border-color: var(--accent-muted);
 }
 
 [data-theme="dark"] .settings-input,
 [data-theme="dark"] .settings-select {
   background: var(--bg-primary);
-  border-color: rgba(142, 71, 255, 0.12);
+  border-color: var(--border-accent);
   color: var(--text-primary);
 }
 
@@ -246,7 +246,7 @@
 
 [data-theme="dark"] .shortcut-keys {
   background: var(--bg-primary);
-  border-color: rgba(142, 71, 255, 0.12);
+  border-color: var(--border-accent);
 }
 
 [data-theme="dark"] .perf-stat {
@@ -255,5 +255,5 @@
 
 [data-theme="dark"] .settings-table td,
 [data-theme="dark"] .settings-table th {
-  border-bottom-color: rgba(142, 71, 255, 0.08);
+  border-bottom-color: var(--accent-muted);
 }

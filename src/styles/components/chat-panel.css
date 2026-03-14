@@ -35,7 +35,7 @@
   font-weight: 800;
   letter-spacing: -0.03em;
   margin-bottom: var(--space-3);
-  background: linear-gradient(135deg, #d8b4fe 0%, var(--accent) 60%, #7c3aed 100%);
+  background: linear-gradient(135deg, var(--accent-active) 0%, var(--accent) 60%, var(--accent-deep) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -130,7 +130,7 @@
 }
 
 [data-theme="light"] .welcome-title {
-  background: linear-gradient(135deg, var(--accent) 0%, #7c3aed 60%, #6d28d9 100%);
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-deep) 60%, var(--accent-deeper) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

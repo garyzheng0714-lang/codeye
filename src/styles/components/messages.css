@@ -88,7 +88,7 @@
 }
 
 .user-timestamp {
-  font-size: 10px;
+  font-size: var(--text-2xs);
   color: var(--text-disabled);
   padding-right: 2px;
 }
@@ -281,7 +281,7 @@
   width: 2px;
   height: 16px;
   background: var(--accent);
-  border-radius: 1px;
+  border-radius: var(--radius-2xs);
   animation: cursorPulse 1.2s ease-in-out infinite;
   vertical-align: text-bottom;
   margin-left: 2px;
@@ -291,7 +291,7 @@
 
 [data-theme="light"] .user-bubble {
   background: var(--accent);
-  color: white;
+  color: var(--bg-base);
   border: none;
 }
 

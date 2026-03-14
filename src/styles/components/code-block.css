@@ -1,5 +1,5 @@
 .code-block {
-  background: #1e1b2e;
+  background: var(--bg-code);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   overflow: hidden;
@@ -11,15 +11,15 @@
   align-items: center;
   justify-content: space-between;
   padding: var(--space-2) var(--space-3);
-  background: #16132a;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
+  background: var(--bg-code-header);
+  border-bottom: 1px solid var(--surface-glass-border);
 }
 
 .code-lang {
   font-family: var(--font-mono);
   font-size: var(--text-xs);
-  color: #a78bfa;
-  background: rgba(124, 58, 237, 0.15);
+  color: var(--accent-code);
+  background: var(--accent-muted);
   padding: 2px var(--space-2);
   border-radius: var(--radius-xs);
   text-transform: uppercase;
@@ -29,7 +29,7 @@
 .copy-btn {
   border: none;
   background: transparent;
-  color: rgba(255,255,255,0.4);
+  color: var(--text-disabled);
   font-size: var(--text-sm);
   cursor: pointer;
   padding: 2px var(--space-2);
@@ -41,8 +41,8 @@
 }
 
 .copy-btn:hover {
-  background: rgba(255,255,255,0.08);
-  color: rgba(255,255,255,0.8);
+  background: var(--interactive-hover);
+  color: var(--text-secondary);
 }
 
 .copy-btn.copied {
@@ -55,7 +55,7 @@
   font-family: var(--font-mono);
   font-size: var(--text-sm);
   line-height: 1.7;
-  color: #e2e0f0;
+  color: var(--text-code);
 }
 
 .code-block-shiki {
@@ -75,29 +75,11 @@
   font-family: var(--font-mono);
 }
 
-/* ============================================
-   Light Theme Overrides (code blocks stay dark by default,
-   but we soften them slightly for light theme readability)
-   ============================================ */
-:root:not([data-theme="dark"]) .code-block {
-  background: #1e1b2e;
-  border-color: rgba(124, 58, 237, 0.15);
-}
-
-:root:not([data-theme="dark"]) .code-block-header {
-  background: #16132a;
-  border-bottom-color: rgba(255, 255, 255, 0.06);
-}
-
-/* ============================================
-   Dark Theme Overrides
-   ============================================ */
+/* Dark theme — code blocks use dedicated tokens */
 [data-theme="dark"] .code-block {
-  background: #1a1625;
-  border-color: rgba(142, 71, 255, 0.12);
+  border-color: var(--border-accent);
 }
 
 [data-theme="dark"] .code-block-header {
-  background: #130f1e;
-  border-bottom-color: rgba(142, 71, 255, 0.10);
+  border-bottom-color: var(--border-accent);
 }

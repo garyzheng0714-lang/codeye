@@ -37,7 +37,7 @@
 }
 
 .title-bar-name {
-  font-size: 13px;
+  font-size: var(--text-base);
   font-weight: 600;
   color: var(--text-secondary);
   letter-spacing: -0.02em;
@@ -122,7 +122,7 @@
 .context-dot {
   width: 6px;
   height: 6px;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
 }
 
 .context-dot-chat {
@@ -140,7 +140,7 @@
 .agent-spark {
   width: 6px;
   height: 6px;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   background: var(--accent);
 }
 
@@ -219,7 +219,7 @@
 .git-chip-mark {
   width: 6px;
   height: 6px;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   background: var(--accent);
 }
 

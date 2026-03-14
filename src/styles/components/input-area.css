@@ -72,7 +72,7 @@
 
 .send-btn {
   background: var(--accent);
-  color: white;
+  color: var(--bg-base);
 }
 
 .send-btn:hover:not(:disabled) {
@@ -87,7 +87,7 @@
 
 .stop-btn {
   background: var(--danger);
-  color: white;
+  color: var(--bg-base);
   animation: pulseGlow 2s infinite;
 }
 
@@ -401,11 +401,11 @@
 }
 
 .permission-trigger--plan {
-  border-color: rgba(129, 140, 248, 0.25);
+  border-color: var(--border-info);
 }
 
 .permission-trigger--full-access {
-  border-color: rgba(251, 191, 36, 0.25);
+  border-color: var(--border-warning);
 }
 
 .permission-dot {
@@ -564,7 +564,7 @@
 
 .skill-pill-remove:hover {
   background: var(--accent);
-  color: white;
+  color: var(--bg-base);
 }
 
 /* ── Light Theme ── */

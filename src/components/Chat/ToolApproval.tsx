@@ -11,7 +11,7 @@ export default function ToolApproval({ toolName, input, onApprove, onDeny }: Pro
   const [expanded, setExpanded] = useState(false);
 
   return (
-    <div className="tool-approval">
+    <div className="tool-approval" role="alertdialog" aria-label="Tool approval required">
       <div className="tool-approval-header">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
           <path d="M8 1L1 8l7 7 7-7-7-7z" stroke="var(--warning)" strokeWidth="1.2" />
@@ -24,8 +24,10 @@ export default function ToolApproval({ toolName, input, onApprove, onDeny }: Pro
       {Object.keys(input).length > 0 && (
         <>
           <button
+            type="button"
             className="tool-approval-toggle"
             onClick={() => setExpanded(!expanded)}
+            aria-expanded={expanded}
           >
             {expanded ? 'Hide' : 'Show'} arguments
           </button>
@@ -37,10 +39,10 @@ export default function ToolApproval({ toolName, input, onApprove, onDeny }: Pro
         </>
       )}
       <div className="tool-approval-actions">
-        <button className="tool-approval-approve" onClick={onApprove}>
+        <button type="button" className="tool-approval-approve" onClick={onApprove}>
           Approve
         </button>
-        <button className="tool-approval-deny" onClick={onDeny}>
+        <button type="button" className="tool-approval-deny" onClick={onDeny}>
           Deny
         </button>
       </div>

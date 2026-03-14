@@ -40,7 +40,7 @@ export default memo(function CodeBlock({ code, language }: Props) {
     <div className="code-block">
       <div className="code-block-header">
         <span className="code-lang">{language}</span>
-        <button className={`copy-btn ${copied ? 'copied' : ''}`} onClick={handleCopy}>
+        <button type="button" className={`copy-btn ${copied ? 'copied' : ''}`} onClick={handleCopy} aria-label={copied ? 'Copied' : 'Copy code'}>
           {copied ? (
             <>
               <svg width="12" height="12" viewBox="0 0 12 12" fill="none">

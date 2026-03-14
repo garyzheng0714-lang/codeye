@@ -144,7 +144,7 @@ export default memo(function AIMessage({ message }: { message: DisplayMessage })
         {/* Thinking state */}
         {isThinking && (
           <div className="thinking-row">
-            <div className="thinking-dots">
+            <div className="thinking-dots" aria-hidden="true">
               <div className="thinking-dot" />
               <div className="thinking-dot" />
               <div className="thinking-dot" />
@@ -161,7 +161,7 @@ export default memo(function AIMessage({ message }: { message: DisplayMessage })
                 <Zap size={12} strokeWidth={2} />
                 Steps
               </span>
-              <span className={`steps-status steps-status--${stepsStatus}`}>
+              <span className={`steps-status steps-status--${stepsStatus}`} aria-live="polite">
                 {stepsStatus === 'running' ? 'In Progress' : stepsStatus === 'error' ? 'Error' : `Completed (${stepTools.length})`}
               </span>
             </div>
@@ -216,14 +216,14 @@ export default memo(function AIMessage({ message }: { message: DisplayMessage })
             </div>
 {message.isStreaming && <span className="streaming-cursor" />}
             <div className="ai-message-actions">
-              <button className="ai-action-btn" onClick={handleCopy} title={copied ? 'Copied!' : 'Copy'}>
+              <button className="ai-action-btn" onClick={handleCopy} title={copied ? 'Copied!' : 'Copy'} aria-label={copied ? 'Copied' : 'Copy message'}>
                 {copied ? (
                   <Check size={13} strokeWidth={2} style={{ color: 'var(--success)' }} />
                 ) : (
                   <Copy size={13} strokeWidth={1.8} />
                 )}
               </button>
-              <button className="ai-action-btn" onClick={handleFork} title="Fork from here">
+              <button className="ai-action-btn" onClick={handleFork} title="Fork from here" aria-label="Fork conversation from here">
                 <GitFork size={13} strokeWidth={1.8} />
               </button>
             </div>

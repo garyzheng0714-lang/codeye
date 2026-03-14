@@ -52,9 +52,9 @@
 }
 
 .sidebar-boundary-handle {
-  width: 3px;
+  width: var(--radius-2xs);
   height: 28px;
-  border-radius: 2px;
+  border-radius: var(--radius-2xs);
   background: transparent;
   transition:
     background var(--transition-fast),
@@ -284,10 +284,10 @@
   font-family: var(--font-mono);
   font-size: var(--text-xs);
   color: var(--warning);
-  background: rgba(251, 191, 36, 0.06);
+  background: var(--bg-warning);
   padding: 1px 5px;
   border-radius: var(--radius-xs);
-  border: 1px solid rgba(251, 191, 36, 0.10);
+  border: 1px solid var(--border-warning);
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;

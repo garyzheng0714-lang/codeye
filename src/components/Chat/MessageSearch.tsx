@@ -45,7 +45,7 @@ export default function MessageSearch() {
   if (!isOpen) return null;
 
   return (
-    <div className="message-search">
+    <div className="message-search" role="search">
       <div className="message-search-bar">
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
           <circle cx="6" cy="6" r="4.5" stroke="currentColor" strokeWidth="1.2" />
@@ -57,12 +57,13 @@ export default function MessageSearch() {
           placeholder="Search messages..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
+          aria-label="Search messages"
           autoFocus
         />
         <span className="message-search-count">
           {query.trim() ? `${results.length} found` : ''}
         </span>
-        <button className="message-search-close" onClick={() => { setIsOpen(false); setQuery(''); }}>
+        <button type="button" className="message-search-close" aria-label="Close search" onClick={() => { setIsOpen(false); setQuery(''); }}>
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
             <path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
           </svg>

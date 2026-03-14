@@ -28,7 +28,7 @@
 }
 
 .diff-add { color: var(--success); }
-.diff-del { color: var(--error); }
+.diff-del { color: var(--danger); }
 
 .diff-mode-toggle {
   margin-left: auto;
@@ -81,10 +81,10 @@
   white-space: pre;
 }
 
-.diff-line--add { background: rgba(34, 197, 94, 0.08); }
+.diff-line--add { background: var(--bg-success); }
 .diff-line--add .diff-sign { color: var(--success); }
-.diff-line--remove { background: rgba(239, 68, 68, 0.08); }
-.diff-line--remove .diff-sign { color: var(--error); }
+.diff-line--remove { background: var(--bg-danger); }
+.diff-line--remove .diff-sign { color: var(--danger); }
 
 .diff-split {
   display: grid;
@@ -95,26 +95,16 @@
 
 .diff-split .diff-table { background: var(--bg-base); }
 
-/* ============================================
-   Dark Theme Overrides
-   ============================================ */
+/* Dark theme */
 [data-theme="dark"] .diff-viewer {
-  border-color: rgba(142, 71, 255, 0.12);
+  border-color: var(--border-accent);
 }
 
 [data-theme="dark"] .diff-header {
-  background: rgba(142, 71, 255, 0.06);
-  border-bottom-color: rgba(142, 71, 255, 0.12);
-}
-
-[data-theme="dark"] .diff-line--add {
-  background: rgba(34, 197, 94, 0.10);
-}
-
-[data-theme="dark"] .diff-line--remove {
-  background: rgba(239, 68, 68, 0.10);
+  background: var(--bg-accent);
+  border-bottom-color: var(--border-accent);
 }
 
 [data-theme="dark"] .diff-gutter {
-  border-right-color: rgba(142, 71, 255, 0.12);
+  border-right-color: var(--border-accent);
 }

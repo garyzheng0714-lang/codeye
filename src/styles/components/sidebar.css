@@ -104,7 +104,7 @@
 
 .sidebar-content::-webkit-scrollbar-thumb {
   background: transparent;
-  border-radius: 3px;
+  border-radius: var(--radius-2xs);
 }
 
 .sidebar-content:hover::-webkit-scrollbar-thumb {

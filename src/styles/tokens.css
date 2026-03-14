@@ -54,7 +54,30 @@
   --danger-strong: #b91c1c;
   --info:     #818cf8;
 
+  /* Semantic backgrounds (muted state fills) */
+  --bg-success:  rgba(52, 211, 153, 0.10);
+  --bg-warning:  rgba(251, 191, 36, 0.10);
+  --bg-danger:   rgba(248, 113, 113, 0.10);
+  --bg-info:     rgba(129, 140, 248, 0.10);
+
+  /* Semantic borders */
+  --border-success: rgba(52, 211, 153, 0.25);
+  --border-warning: rgba(251, 191, 36, 0.25);
+  --border-danger:  rgba(248, 113, 113, 0.25);
+  --border-info:    rgba(129, 140, 248, 0.25);
+
+  /* Code block surfaces */
+  --bg-code:        #1a1625;
+  --bg-code-header: #130f1e;
+  --text-code:      #e2e0f0;
+  --accent-code:    #a78bfa;
+
+  /* Accent extended (for gradients) */
+  --accent-deep:    #7c3aed;
+  --accent-deeper:  #6d28d9;
+
   /* Radius */
+  --radius-2xs:  3px;
   --radius-xs:   4px;
   --radius-sm:   6px;
   --radius-md:   10px;
@@ -68,6 +91,7 @@
   --font-body:    'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono:    'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
 
+  --text-2xs:  10px;
   --text-xs:   11px;
   --text-sm:   12px;
   --text-base: 13px;
@@ -155,6 +179,24 @@
   --surface-glass-divider: rgba(0, 0, 0, 0.05);
   --surface-terminal:      rgba(245, 245, 248, 0.88);
   --surface-pill:          rgba(0, 0, 0, 0.055);
+
+  --bg-success:  rgba(22, 163, 74, 0.08);
+  --bg-warning:  rgba(217, 119, 6, 0.08);
+  --bg-danger:   rgba(220, 38, 38, 0.08);
+  --bg-info:     rgba(79, 70, 229, 0.08);
+
+  --border-success: rgba(22, 163, 74, 0.25);
+  --border-warning: rgba(217, 119, 6, 0.25);
+  --border-danger:  rgba(220, 38, 38, 0.25);
+  --border-info:    rgba(79, 70, 229, 0.25);
+
+  --bg-code:        #1e1b2e;
+  --bg-code-header: #16132a;
+  --text-code:      #e2e0f0;
+  --accent-code:    #a78bfa;
+
+  --accent-deep:    #7c3aed;
+  --accent-deeper:  #6d28d9;
 
   --shadow-sm:   0 1px 2px rgba(0, 0, 0, 0.05);
   --shadow-md:   0 4px 12px rgba(0, 0, 0, 0.08);

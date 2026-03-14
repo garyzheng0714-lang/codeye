@@ -310,6 +310,7 @@ export default function SessionList({
                 role="button"
                 tabIndex={0}
                 className="folder-header"
+                aria-expanded={isExpanded}
                 onClick={() => void handleActivateFolder(folder)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') {
@@ -340,6 +341,7 @@ export default function SessionList({
                       onCreateSession(folder.id);
                     }}
                     title="New session"
+                    aria-label="New session"
                   >
                     <Plus size={14} strokeWidth={2} />
                   </button>
@@ -361,7 +363,11 @@ export default function SessionList({
                           key={session.id}
                           className={`session-card ${isActive ? 'active' : ''}`}
                           style={{ '--session-idx': index } as React.CSSProperties}
+                          role="button"
+                          tabIndex={0}
+                          aria-current={isActive ? 'true' : undefined}
                           onClick={() => handleSelectSession(session)}
+                          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSelectSession(session); } }}
                           onContextMenu={(e) => handleContextMenu(e, session)}
                           onDoubleClick={(e) => {
                             e.stopPropagation();
@@ -373,6 +379,7 @@ export default function SessionList({
                             <input
                               ref={inputRef}
                               className="session-rename-input"
+                              aria-label="Rename session"
                               value={editName}
                               onChange={(e) => setEditName(e.target.value)}
                               onBlur={commitRename}
@@ -418,16 +425,19 @@ export default function SessionList({
                               {/* Delete action */}
                               <div className={`session-actions ${pendingDeleteId === session.id ? 'confirming' : ''}`}>
                                 <button
+                                  type="button"
                                   className="session-delete"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     setPendingDeleteId((current) => (current === session.id ? null : session.id));
                                   }}
-                                  title="Delete"
+                                  title="Delete session"
+                                  aria-label="Delete session"
                                 >
                                   <X size={12} strokeWidth={2} />
                                 </button>
                                 <button
+                                  type="button"
                                   className="session-confirm-delete"
                                   onClick={(e) => handleDeleteConfirm(e, session)}
                                   title="Confirm delete"
@@ -460,6 +470,7 @@ export default function SessionList({
           className="session-context-menu"
           style={{ left: contextMenu.x, top: contextMenu.y }}
           role="menu"
+          aria-label="Session actions"
         >
           <button
             className="context-menu-item"

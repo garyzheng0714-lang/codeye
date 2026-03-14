@@ -19,8 +19,10 @@ export default memo(function TurnGroup({ turn, isLast }: Props) {
       )}
       {hasTools && !isLast && turn.assistantMessages.length > 1 && (
         <button
+          type="button"
           className="turn-collapse-btn"
           onClick={() => setToolsCollapsed(!toolsCollapsed)}
+          aria-expanded={!toolsCollapsed}
         >
           {toolsCollapsed
             ? `Show ${turn.assistantMessages.length} responses`

@@ -68,7 +68,7 @@ function BashInline({ tool }: { tool: ToolCallDisplay }) {
             <div key={i} className="tool-bash-out-line">{line}</div>
           ))}
           {lines.length > PREVIEW && !expanded && (
-            <button className="tool-bash-more-btn" onClick={() => setExpanded(true)}>
+            <button type="button" className="tool-bash-more-btn" onClick={() => setExpanded(true)}>
               +{lines.length - PREVIEW} more lines
             </button>
           )}
@@ -114,6 +114,16 @@ export default memo(function ToolCall({
           : isEdit && status === 'success' ? () => setDiffOpen((v) => !v)
           : undefined
         }
+        role={isClickable ? 'button' : undefined}
+        tabIndex={isClickable ? 0 : undefined}
+        aria-expanded={isClickable ? (isSearch ? tool.expanded : diffOpen) : undefined}
+        onKeyDown={isClickable ? (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            if (isSearch) toggleToolExpand(messageId, tool.id);
+            else if (isEdit && status === 'success') setDiffOpen((v) => !v);
+          }
+        } : undefined}
       >
         <ToolStatusIcon name={tool.name} status={status} />
 
@@ -131,9 +141,12 @@ export default memo(function ToolCall({
 
         {isEdit && status === 'success' && (
           <button
+            type="button"
             className={`tool-diff-btn ${diffOpen ? 'open' : ''}`}
             onClick={(e) => { e.stopPropagation(); setDiffOpen((v) => !v); }}
             title={diffOpen ? 'Hide diff' : 'Show diff'}
+            aria-label={diffOpen ? 'Hide diff' : 'Show diff'}
+            aria-expanded={diffOpen}
           >
             <ChevronDown size={11} strokeWidth={2} />
           </button>

@@ -269,12 +269,12 @@ export default function SplitPane({ onClose }: { onClose: () => void }) {
           <span>Split</span>
         </div>
         <div className="split-pane-header-actions">
-          <button className="split-pane-action" onClick={() => dispatch({ type: 'clear' })} title="Clear (⌘K)">
+          <button type="button" className="split-pane-action" onClick={() => dispatch({ type: 'clear' })} title="Clear (⌘K)" aria-label="Clear conversation">
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
               <path d="M2 3h8M4 3V2h4v1M5 5.5v3M7 5.5v3M3 3l.5 7h5l.5-7" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>
-          <button className="split-pane-action split-pane-close" onClick={onClose} title="Close split (⌘W)">
+          <button type="button" className="split-pane-action split-pane-close" onClick={onClose} title="Close split (⌘W)" aria-label="Close split pane">
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
               <path d="M2.5 2.5l7 7M9.5 2.5l-7 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
             </svg>
@@ -351,6 +351,7 @@ export default function SplitPane({ onClose }: { onClose: () => void }) {
           <textarea
             ref={textareaRef}
             className="split-input-textarea"
+            aria-label="Split pane message input"
             value={input}
             onChange={(e) => {
               setInput(e.target.value);
@@ -364,13 +365,13 @@ export default function SplitPane({ onClose }: { onClose: () => void }) {
             autoFocus
           />
           {isStreaming ? (
-            <button className="stop-btn" onClick={stop} title="Stop (Esc)">
+            <button type="button" className="stop-btn" onClick={stop} title="Stop (Esc)" aria-label="Stop generation">
               <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
                 <rect x="2" y="2" width="8" height="8" rx="1.5" fill="currentColor" />
               </svg>
             </button>
           ) : (
-            <button className="send-btn" onClick={send} disabled={!input.trim()} title="Send (Enter)">
+            <button type="button" className="send-btn" onClick={send} disabled={!input.trim()} title="Send (Enter)" aria-label="Send message">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                 <path d="M2.5 11.5L11.5 7L2.5 2.5v3.5l5 1-5 1v3.5z" fill="currentColor" />
               </svg>

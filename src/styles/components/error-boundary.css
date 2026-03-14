@@ -32,7 +32,7 @@
 .error-boundary-btn {
   padding: var(--space-2) var(--space-4);
   background: var(--accent);
-  color: white;
+  color: var(--bg-base);
   border: none;
   border-radius: var(--radius-md);
   font-size: var(--text-sm);
@@ -76,6 +76,6 @@
    Dark Theme Overrides
    ============================================ */
 [data-theme="dark"] .connection-status {
-  background: rgba(142, 71, 255, 0.06);
-  border-bottom-color: rgba(142, 71, 255, 0.12);
+  background: var(--bg-accent);
+  border-bottom-color: var(--border-accent);
 }

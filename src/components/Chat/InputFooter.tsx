@@ -53,6 +53,8 @@ export default function InputFooter() {
             onClick={() => setOpen((v) => !v)}
             type="button"
             title="Permission mode"
+            aria-haspopup="listbox"
+            aria-expanded={open}
           >
             <span className="permission-dot" style={{ background: current.color }} />
             <span className="permission-trigger-label">{current.label}</span>

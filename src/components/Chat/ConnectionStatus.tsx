@@ -32,8 +32,8 @@ export default function ConnectionStatus() {
   if (status === 'connected') return null;
 
   return (
-    <div className={`connection-status connection-status--${status}`}>
-      <span className="connection-dot" />
+    <div className={`connection-status connection-status--${status}`} role="status" aria-live="polite">
+      <span className="connection-dot" aria-hidden="true" />
       <span>{status === 'connecting' ? 'Connecting...' : 'Disconnected'}</span>
     </div>
   );
