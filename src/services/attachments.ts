@@ -1,7 +1,7 @@
 import type { InputAttachment } from '../types';
 
 export const MAX_ATTACHMENTS_PER_MESSAGE = 8;
-export const MAX_ATTACHMENT_BYTES = 12 * 1024 * 1024;
+const MAX_ATTACHMENT_BYTES = 12 * 1024 * 1024;
 
 function readFileAsDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
