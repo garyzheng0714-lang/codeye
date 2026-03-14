@@ -1,0 +1,140 @@
+/* ── Container ── */
+.mode-toggle {
+  position: relative;
+  display: inline-grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  align-items: center;
+  height: 30px;
+  padding: 3px;
+  border-radius: 9999px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  -webkit-app-region: no-drag;
+}
+
+/* ── Sliding glass indicator ── */
+.mode-toggle-slider {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  bottom: 3px;
+  width: calc((100% - 6px) / 3);
+  border-radius: 9999px;
+  pointer-events: none;
+  z-index: 1;
+  transition:
+    transform 300ms cubic-bezier(0.16, 1, 0.3, 1),
+    background 300ms ease-out,
+    border-color 300ms ease-out,
+    box-shadow 300ms ease-out;
+}
+
+/* Default — neutral */
+.mode-toggle-slider--default {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-strong);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* Plan — blue-purple thinking */
+.mode-toggle-slider--plan {
+  background: rgba(129, 140, 248, 0.12);
+  border: 1px solid rgba(129, 140, 248, 0.25);
+  box-shadow: 0 0 8px rgba(129, 140, 248, 0.08);
+}
+
+/* Full Access — amber warning */
+.mode-toggle-slider--full-access {
+  background: rgba(251, 191, 36, 0.12);
+  border: 1px solid rgba(251, 191, 36, 0.25);
+  box-shadow: 0 0 8px rgba(251, 191, 36, 0.08);
+}
+
+/* ── Each segment ── */
+.mode-toggle-item {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 100%;
+  padding: 0 10px;
+  border: none;
+  border-radius: 9999px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  user-select: none;
+  outline: none;
+  transition: color 200ms ease-out;
+}
+
+.mode-toggle-item:hover:not(.active) {
+  color: var(--text-secondary);
+}
+
+.mode-toggle-item:focus-visible {
+  box-shadow: 0 0 0 2px var(--accent-muted);
+}
+
+/* ── Active text colors ── */
+.mode-toggle-item--default.active {
+  color: var(--text-primary);
+}
+
+.mode-toggle-item--plan.active {
+  color: #818cf8;
+}
+
+.mode-toggle-item--full-access.active {
+  color: #fbbf24;
+}
+
+/* ── Shield icon ── */
+.mode-toggle-icon {
+  flex-shrink: 0;
+  opacity: 0.6;
+  transition: opacity 200ms ease-out;
+}
+
+.mode-toggle-item--full-access.active .mode-toggle-icon {
+  opacity: 1;
+}
+
+/* ── Label variants ── */
+.mode-toggle-label-short {
+  display: none;
+}
+
+/* ── Responsive ── */
+@media (max-width: 760px) {
+  .mode-toggle-item {
+    padding: 0 8px;
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 600px) {
+  .mode-toggle-label {
+    display: none;
+  }
+
+  .mode-toggle-label-short {
+    display: inline;
+  }
+
+  .mode-toggle-item {
+    padding: 0 8px;
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 440px) {
+  .mode-toggle {
+    display: none;
+  }
+}

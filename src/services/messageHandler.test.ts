@@ -8,6 +8,8 @@ function createMockActions(): StoreActions {
     addToolCall: vi.fn(),
     updateCost: vi.fn(),
     setClaudeSessionId: vi.fn(),
+    setRuntimeSlashCommands: vi.fn(),
+    getLastAssistantContent: vi.fn(() => null),
   };
 }
 
@@ -19,6 +21,25 @@ describe('handleClaudeMessage', () => {
       actions
     );
     expect(actions.setClaudeSessionId).toHaveBeenCalledWith('sess-123');
+  });
+
+  it('extracts slash_commands and skills from init message', () => {
+    const actions = createMockActions();
+    handleClaudeMessage(
+      {
+        type: 'system',
+        subtype: 'init',
+        session_id: 'sess-456',
+        slash_commands: ['review', 'plugin:run'],
+        skills: ['agent-reach'],
+      },
+      actions
+    );
+
+    expect(actions.setRuntimeSlashCommands).toHaveBeenCalledWith({
+      slashCommands: ['review', 'plugin:run'],
+      skills: ['agent-reach'],
+    });
   });
 
   it('handles assistant text content', () => {
@@ -81,6 +102,30 @@ describe('handleClaudeMessage', () => {
       actions
     );
     expect(actions.updateCost).toHaveBeenCalledWith(0.005, 100, 50);
+  });
+
+  it('skips duplicate result text when assistant content already matches', () => {
+    const actions = createMockActions();
+    (actions.getLastAssistantContent as ReturnType<typeof vi.fn>).mockReturnValue('Done!');
+
+    handleClaudeMessage(
+      { type: 'result', result: 'Done!' },
+      actions
+    );
+
+    expect(actions.appendAssistantContent).not.toHaveBeenCalled();
+  });
+
+  it('still appends result text when assistant content differs', () => {
+    const actions = createMockActions();
+    (actions.getLastAssistantContent as ReturnType<typeof vi.fn>).mockReturnValue('Working...');
+
+    handleClaudeMessage(
+      { type: 'result', result: 'Done!' },
+      actions
+    );
+
+    expect(actions.appendAssistantContent).toHaveBeenCalledWith('Done!');
   });
 
   it('ignores messages with no matching type', () => {

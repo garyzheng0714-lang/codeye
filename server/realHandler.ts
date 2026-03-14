@@ -111,6 +111,7 @@ export function handleRealQuery(ws: WebSocket, msg: QueryMessage) {
   clientProcesses.set(ws, childProcess);
 
   let buffer = '';
+  let stderrBuffer = '';
 
   childProcess.stdout?.on('data', (chunk: Buffer) => {
     buffer += chunk.toString();
@@ -131,10 +132,12 @@ export function handleRealQuery(ws: WebSocket, msg: QueryMessage) {
   });
 
   childProcess.stderr?.on('data', (chunk: Buffer) => {
-    process.stderr.write(`[claude-cli] ${chunk.toString()}`);
+    const text = chunk.toString();
+    stderrBuffer += text;
+    process.stderr.write(`[claude-cli] ${text}`);
   });
 
-  childProcess.on('close', (_code) => {
+  childProcess.on('close', (code, signal) => {
     if (buffer.trim()) {
       try {
         const parsed = JSON.parse(buffer);
@@ -146,6 +149,17 @@ export function handleRealQuery(ws: WebSocket, msg: QueryMessage) {
       }
     }
     clientProcesses.delete(ws);
+
+    const stoppedByUser = signal === 'SIGTERM' || signal === 'SIGINT';
+    const success = code === 0 || stoppedByUser;
+    if (!success && ws.readyState === WebSocket.OPEN) {
+      const stderrText = stderrBuffer.trim();
+      const fallback = typeof code === 'number'
+        ? `Claude CLI exited with code ${code}.`
+        : 'Claude CLI exited unexpectedly.';
+      ws.send(wrapEvent('error', { error: stderrText || fallback }));
+    }
+
     if (ws.readyState === WebSocket.OPEN) {
       ws.send(wrapEvent('complete', {}));
     }

@@ -1,5 +1,6 @@
 import { useChatStore } from '../../stores/chatStore';
 import GitActionMenu from './GitActionMenu';
+import ModeToggle from './ModeToggle';
 
 export default function TitleBar() {
   const cwd = useChatStore((s) => s.cwd);
@@ -19,6 +20,9 @@ export default function TitleBar() {
               ))}
             </div>
           )}
+        </div>
+        <div className="title-bar-center">
+          <ModeToggle />
         </div>
         <div className="title-bar-actions">
           <GitActionMenu />

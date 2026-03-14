@@ -5,6 +5,7 @@
 @import "./layout.css";
 @import "./components/activity-bar.css";
 @import "./components/title-bar.css";
+@import "./components/mode-toggle.css";
 @import "./components/sidebar.css";
 @import "./components/session-list.css";
 @import "./components/settings.css";

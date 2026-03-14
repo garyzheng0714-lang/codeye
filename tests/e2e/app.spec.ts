@@ -41,9 +41,9 @@ test.describe('App Launch', () => {
   test('opens model config dropdown with models and thinking levels', async ({ appPage }) => {
     await appPage.modelConfigTrigger.click();
     await expect(appPage.modelConfigDropdown).toBeVisible();
-    await expect(appPage.modelConfigDropdown).toContainText('Opus 4.6');
-    await expect(appPage.modelConfigDropdown).toContainText('Sonnet 4.6');
-    await expect(appPage.modelConfigDropdown).toContainText('Haiku 4.5');
+    await expect(appPage.modelConfigDropdown).toContainText('Opus (Latest)');
+    await expect(appPage.modelConfigDropdown).toContainText('Sonnet (Latest)');
+    await expect(appPage.modelConfigDropdown).toContainText('Haiku (Latest)');
     await expect(appPage.modelConfigDropdown).toContainText('Low');
     await expect(appPage.modelConfigDropdown).toContainText('High');
   });

@@ -27,7 +27,7 @@ export class SidebarPage {
     this.emptyState = page.locator('.empty-state');
     this.folderEmptyState = page.locator('.folder-empty');
     this.settingsBtn = page.getByRole('button', { name: 'Open settings' });
-    this.sessionsBtn = page.locator('.activity-bar-top .activity-btn');
+    this.sessionsBtn = page.locator('.activity-bar-top').getByRole('button', { name: /conversations/i });
     this.settingsPanel = page.locator('.settings-panel');
     this.settingsInput = page.locator('.settings-input');
     this.settingsTabs = page.locator('.settings-tab');

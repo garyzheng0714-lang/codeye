@@ -58,11 +58,17 @@ export const categoryLabels: Record<SlashCommand['category'], string> = {
   action: 'Actions',
 };
 
-import { readJson } from '../utils/jsonStorage';
+import { readJson, writeJson } from '../utils/jsonStorage';
 
 const CUSTOM_COMMANDS_KEY = 'codeye.custom-commands';
+const RUNTIME_COMMAND_NAMES_KEY = 'codeye.runtime-slash-command-names';
 let cachedCustomCommands: SlashCommand[] | null = null;
-let cachedAllCommands: SlashCommand[] | null = null;
+let cachedRuntimeCommandNames: string[] | null = null;
+
+const MODE_COMMANDS = new Set(['chat', 'code', 'plan']);
+const MODEL_COMMANDS = new Set(['opus', 'sonnet', 'haiku']);
+const EFFORT_COMMANDS = new Set(['think-low', 'think-med', 'think-high']);
+const ACTION_COMMANDS = new Set(['clear', 'new', 'help', 'compact']);
 
 function loadCustomCommands(): SlashCommand[] {
   if (cachedCustomCommands) {
@@ -73,11 +79,87 @@ function loadCustomCommands(): SlashCommand[] {
   return cachedCustomCommands;
 }
 
-function getAllCommands(): SlashCommand[] {
-  if (!cachedAllCommands) {
-    cachedAllCommands = [...slashCommands, ...loadCustomCommands()];
+function loadRuntimeCommandNames(): string[] {
+  if (cachedRuntimeCommandNames) {
+    return cachedRuntimeCommandNames;
   }
-  return cachedAllCommands;
+  const parsed = readJson<string[]>(RUNTIME_COMMAND_NAMES_KEY);
+  cachedRuntimeCommandNames = Array.isArray(parsed)
+    ? parsed.filter((entry): entry is string => typeof entry === 'string' && entry.trim().length > 0)
+    : [];
+  return cachedRuntimeCommandNames;
+}
+
+function saveRuntimeCommandNames(names: string[]): void {
+  cachedRuntimeCommandNames = names;
+  writeJson(RUNTIME_COMMAND_NAMES_KEY, names);
+}
+
+function normalizeCommandName(raw: string): string | null {
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  const withoutPrefix = trimmed.startsWith('/') ? trimmed.slice(1) : trimmed;
+  const firstToken = withoutPrefix.split(/\s+/)[0]?.trim();
+  if (!firstToken) return null;
+  return firstToken;
+}
+
+function dedupeNames(values: string[]): string[] {
+  const seen = new Set<string>();
+  const output: string[] = [];
+  for (const value of values) {
+    const key = value.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    output.push(value);
+  }
+  return output;
+}
+
+function inferCategory(name: string): SlashCommand['category'] {
+  const normalized = name.toLowerCase();
+  if (MODE_COMMANDS.has(normalized)) return 'mode';
+  if (MODEL_COMMANDS.has(normalized)) return 'model';
+  if (EFFORT_COMMANDS.has(normalized)) return 'effort';
+  if (ACTION_COMMANDS.has(normalized)) return 'action';
+  return 'skill';
+}
+
+function inferRuntimeDescription(name: string): string {
+  if (name.includes(':')) return 'Plugin command loaded from Claude runtime';
+  if (name.startsWith('mcp__')) return 'MCP command loaded from Claude runtime';
+  return 'Skill loaded from Claude runtime';
+}
+
+function inferIcon(category: SlashCommand['category']): string {
+  if (category === 'mode') return 'chat';
+  if (category === 'model') return 'model';
+  if (category === 'effort') return 'help';
+  if (category === 'action') return 'help';
+  return 'build';
+}
+
+function toRuntimeCommands(baseCommands: SlashCommand[], commandNames: string[]): SlashCommand[] {
+  const baseNames = new Set(baseCommands.map((cmd) => cmd.name.toLowerCase()));
+  const runtimeCommands: SlashCommand[] = [];
+
+  for (const name of commandNames) {
+    if (baseNames.has(name.toLowerCase())) continue;
+    const category = inferCategory(name);
+    runtimeCommands.push({
+      name,
+      description: inferRuntimeDescription(name),
+      category,
+      icon: inferIcon(category),
+    });
+  }
+
+  return runtimeCommands;
+}
+
+function getAllCommands(): SlashCommand[] {
+  const baseCommands = [...slashCommands, ...loadCustomCommands()];
+  return [...baseCommands, ...toRuntimeCommands(baseCommands, loadRuntimeCommandNames())];
 }
 
 export function filterCommands(query: string): SlashCommand[] {
@@ -102,4 +184,22 @@ export function getSlashCommandByName(name: string): SlashCommand | undefined {
   const normalized = name.trim().toLowerCase();
   if (!normalized) return undefined;
   return getAllCommands().find((cmd) => cmd.name.toLowerCase() === normalized);
+}
+
+export function setRuntimeSlashCommands(payload: {
+  slashCommands?: string[];
+  skills?: string[];
+}): void {
+  const names = dedupeNames([
+    ...(payload.slashCommands ?? []).map(normalizeCommandName).filter((value): value is string => Boolean(value)),
+    ...(payload.skills ?? []).map(normalizeCommandName).filter((value): value is string => Boolean(value)),
+  ]);
+
+  if (names.length === 0) return;
+  saveRuntimeCommandNames(names);
+}
+
+export function __resetSlashCommandCachesForTest(): void {
+  cachedCustomCommands = null;
+  cachedRuntimeCommandNames = null;
 }

@@ -1,5 +1,5 @@
 import { IpcMain, BrowserWindow } from 'electron';
-import { spawn, ChildProcess } from 'child_process';
+import { spawn, spawnSync, ChildProcess } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
@@ -16,11 +16,88 @@ const ALLOWED_MODELS = new Set([
   'claude-haiku-4-5',
 ]);
 const ALLOWED_EFFORTS = new Set(['low', 'medium', 'high']);
+const CLAUDE_CLI_NOT_FOUND_MESSAGE =
+  'Claude CLI executable not found. Install with "npm i -g @anthropic-ai/claude-code", or set CLAUDE_PATH to the absolute binary path.';
+const COMMON_CLAUDE_PATHS = [
+  '/opt/homebrew/bin/claude',
+  '/usr/local/bin/claude',
+  path.join(os.homedir(), '.npm-global', 'bin', 'claude'),
+  path.join(os.homedir(), '.local', 'bin', 'claude'),
+];
+let cachedClaudeBinary: string | null = null;
 
 function supportsEffort(model?: string): boolean {
   if (!model) return true;
   const normalized = model.toLowerCase();
   return !(normalized === 'haiku' || normalized.startsWith('claude-haiku-'));
+}
+
+function isExecutableFile(filePath: string): boolean {
+  try {
+    fs.accessSync(filePath, fs.constants.X_OK);
+    return fs.statSync(filePath).isFile();
+  } catch {
+    return false;
+  }
+}
+
+function resolveFromLoginShell(shellPath: string): string | null {
+  const probe = spawnSync(shellPath, ['-lc', 'command -v claude'], {
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'ignore'],
+  });
+  if (probe.status !== 0) return null;
+  const output = typeof probe.stdout === 'string' ? probe.stdout.trim() : '';
+  if (!output || !isExecutableFile(output)) return null;
+  return output;
+}
+
+function resolveClaudeBinary(): string | null {
+  if (cachedClaudeBinary && isExecutableFile(cachedClaudeBinary)) {
+    return cachedClaudeBinary;
+  }
+
+  const envPath = process.env.CLAUDE_PATH;
+  if (envPath && isExecutableFile(envPath)) {
+    cachedClaudeBinary = envPath;
+    return envPath;
+  }
+
+  for (const shellPath of ['/bin/zsh', '/bin/bash']) {
+    if (!fs.existsSync(shellPath)) continue;
+    const fromShell = resolveFromLoginShell(shellPath);
+    if (fromShell) {
+      cachedClaudeBinary = fromShell;
+      return fromShell;
+    }
+  }
+
+  for (const candidate of COMMON_CLAUDE_PATHS) {
+    if (isExecutableFile(candidate)) {
+      cachedClaudeBinary = candidate;
+      return candidate;
+    }
+  }
+
+  // nvm installations: ~/.nvm/versions/node/*/bin/claude
+  const nvmNodeRoot = path.join(os.homedir(), '.nvm', 'versions', 'node');
+  if (fs.existsSync(nvmNodeRoot)) {
+    const versions = fs.readdirSync(nvmNodeRoot).sort().reverse();
+    for (const version of versions) {
+      const nvmCandidate = path.join(nvmNodeRoot, version, 'bin', 'claude');
+      if (isExecutableFile(nvmCandidate)) {
+        cachedClaudeBinary = nvmCandidate;
+        return nvmCandidate;
+      }
+    }
+  }
+
+  const pathProbe = spawnSync('claude', ['--version'], { stdio: 'ignore' });
+  if (!pathProbe.error) {
+    return 'claude';
+  }
+
+  return null;
 }
 
 // Per-pane process management: 'primary' uses legacy events, others use pane-specific events
@@ -70,6 +147,14 @@ function safeCwd(requestedCwd?: string): string {
 }
 
 function checkClaudeAuth(): { authenticated: boolean; method?: string; error?: string } {
+  const claudeBinary = resolveClaudeBinary();
+  if (!claudeBinary) {
+    return {
+      authenticated: false,
+      error: CLAUDE_CLI_NOT_FOUND_MESSAGE,
+    };
+  }
+
   if (process.env.ANTHROPIC_API_KEY) {
     return { authenticated: true, method: 'api-key' };
   }
@@ -84,7 +169,10 @@ function checkClaudeAuth(): { authenticated: boolean; method?: string; error?: s
     return { authenticated: true, method: 'cli-config' };
   }
 
-  return { authenticated: false, error: 'No authentication found. Set ANTHROPIC_API_KEY or run "claude login" in terminal.' };
+  return {
+    authenticated: false,
+    error: `Claude CLI found at "${claudeBinary}", but no authentication was detected. Run "claude login" in terminal.`,
+  };
 }
 
 export function registerClaudeHandlers(ipcMain: IpcMain) {
@@ -136,8 +224,14 @@ export function registerClaudeHandlers(ipcMain: IpcMain) {
 
     args.push(safePrompt);
 
-    console.log('[claude:query] spawning:', 'claude', args.join(' '));
-    const proc = spawn('claude', args, {
+    const claudeBinary = resolveClaudeBinary();
+    if (!claudeBinary) {
+      win.webContents.send(channels.error, CLAUDE_CLI_NOT_FOUND_MESSAGE);
+      return;
+    }
+
+    console.log('[claude:query] spawning:', claudeBinary, args.join(' '));
+    const proc = spawn(claudeBinary, args, {
       cwd: safeCwd(cwd),
       env: getCleanEnv(),
       stdio: ['ignore', 'pipe', 'pipe'],
@@ -145,6 +239,7 @@ export function registerClaudeHandlers(ipcMain: IpcMain) {
     activeProcesses.set(safePaneId, proc);
 
     let buffer = '';
+    let stderrBuffer = '';
 
     proc.stdout?.on('data', (data: Buffer) => {
       buffer += data.toString();
@@ -164,13 +259,11 @@ export function registerClaudeHandlers(ipcMain: IpcMain) {
 
     proc.stderr?.on('data', (data: Buffer) => {
       const errText = data.toString();
+      stderrBuffer += errText;
       console.log('[claude:stderr]', errText);
-      if (errText.includes('error') || errText.includes('Error')) {
-        win.webContents.send(channels.error, errText);
-      }
     });
 
-    proc.on('close', () => {
+    proc.on('close', (code, signal) => {
       if (buffer.trim()) {
         try {
           const message = JSON.parse(buffer);
@@ -180,12 +273,27 @@ export function registerClaudeHandlers(ipcMain: IpcMain) {
         }
       }
       activeProcesses.delete(safePaneId);
+
+      const stoppedByUser = signal === 'SIGTERM' || signal === 'SIGINT';
+      const success = code === 0 || stoppedByUser;
+      if (!success) {
+        const stderrText = stderrBuffer.trim();
+        const fallback = typeof code === 'number'
+          ? `Claude CLI exited with code ${code}.`
+          : 'Claude CLI exited unexpectedly.';
+        win.webContents.send(channels.error, stderrText || fallback);
+      }
+
       win.webContents.send(channels.complete);
     });
 
     proc.on('error', (err) => {
-      console.log('[claude:error]', err.message);
-      win.webContents.send(channels.error, err.message);
+      const maybeErr = err as NodeJS.ErrnoException;
+      const errorMessage = maybeErr.code === 'ENOENT'
+        ? CLAUDE_CLI_NOT_FOUND_MESSAGE
+        : err.message;
+      console.log('[claude:error]', errorMessage);
+      win.webContents.send(channels.error, errorMessage);
       activeProcesses.delete(safePaneId);
     });
   });

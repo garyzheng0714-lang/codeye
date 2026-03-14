@@ -1,7 +1,7 @@
 interface ElectronAPI {
   getCwd: () => Promise<string>;
   claude: {
-    query: (params: { prompt: string; sessionId?: string; cwd?: string; mode?: string }) => Promise<void>;
+    query: (params: { prompt: string; sessionId?: string; cwd?: string; mode?: string; model?: string; effort?: string }) => Promise<void>;
     stop: () => Promise<void>;
     checkAuth: () => Promise<{ authenticated: boolean; method?: string; error?: string }>;
     onMessage: (callback: (message: unknown) => void) => () => void;

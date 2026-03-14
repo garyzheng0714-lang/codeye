@@ -7,6 +7,7 @@ import { parseStreamEvent } from '../types/streamEvent';
 import { finishStreamTrace, markStreamChunk } from '../observability/perfBaseline';
 import { StreamBatcher } from '../services/streamBatcher';
 import { getEffectiveEffort, normalizeModelId, toCliModelId } from '../data/models';
+import { setRuntimeSlashCommands } from '../data/slashCommands';
 
 function getActions(): StoreActions {
   const s = useChatStore.getState();
@@ -16,6 +17,12 @@ function getActions(): StoreActions {
     addToolCall: s.addToolCall,
     updateCost: s.updateCost,
     setClaudeSessionId: s.setClaudeSessionId,
+    setRuntimeSlashCommands,
+    getLastAssistantContent: () => {
+      const last = s.messages[s.messages.length - 1];
+      if (last?.role !== 'assistant') return null;
+      return last.content;
+    },
   };
 }
 
