@@ -170,27 +170,31 @@
   padding: var(--space-1) 0;
 }
 
-/* ── Session items ── */
+/* ── Session cards (Kiro-inspired) ── */
 
 .session-item {
   position: relative;
   display: flex;
-  align-items: center;
-  padding: var(--space-2) var(--space-2) var(--space-2) var(--space-5);
-  margin: 0 var(--space-1);
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  margin: var(--space-1) var(--space-1);
   cursor: pointer;
-  border-radius: var(--radius-sm);
-  transition: background var(--transition-fast);
-  min-height: 32px;
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  transition: background var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
 }
 
 .folder-session-shell.open .session-item {
   animation: sessionSlideIn var(--transition-base) cubic-bezier(0.16, 1, 0.3, 1) both;
-  animation-delay: calc(var(--session-idx, 0) * 16ms);
+  animation-delay: calc(var(--session-idx, 0) * 20ms);
 }
 
 .session-item:hover {
-  background: var(--interactive-hover);
+  background: var(--bg-tertiary);
+  border-color: var(--border-strong);
+  transform: translateY(-1px);
 }
 
 .session-item:focus-visible {
@@ -199,14 +203,16 @@
 }
 
 .session-item.active {
-  background: var(--interactive-selection);
+  background: var(--bg-tertiary);
+  border-color: var(--accent-muted);
+  border-left: 2px solid var(--accent);
 }
 
 .session-item.active:hover {
-  background: var(--interactive-selection);
+  border-color: var(--border-accent);
 }
 
-/* ── Session content ── */
+/* ── Session card content ── */
 
 .session-item-row {
   display: flex;
@@ -217,22 +223,22 @@
 }
 
 .session-icon {
-  color: var(--text-disabled);
+  color: var(--text-muted);
   flex-shrink: 0;
   transition: color var(--transition-fast);
 }
 
 .session-item:hover .session-icon {
-  color: var(--text-muted);
+  color: var(--text-secondary);
 }
 
 .session-item.active .session-icon {
-  color: var(--text-secondary);
+  color: var(--accent);
 }
 
 .session-name {
   font-size: var(--text-base);
-  font-weight: 400;
+  font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -248,7 +254,6 @@
 
 .session-item.active .session-name {
   color: var(--text-primary);
-  font-weight: 500;
 }
 
 .session-time {
@@ -257,16 +262,16 @@
   flex-shrink: 0;
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
-  opacity: 0;
-  transition: opacity var(--transition-fast);
-}
-
-.session-item:hover .session-time {
-  opacity: 1;
 }
 
 .session-preview {
-  display: none;
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.4;
 }
 
 /* ── Session actions ── */
@@ -274,8 +279,7 @@
 .session-actions {
   position: absolute;
   right: var(--space-2);
-  top: 50%;
-  transform: translateY(-50%);
+  top: var(--space-2);
   display: flex;
   align-items: center;
   opacity: 0;
@@ -287,10 +291,6 @@
 .session-actions.confirming {
   opacity: 1;
   pointer-events: auto;
-}
-
-.session-item:hover .session-time {
-  opacity: 0;
 }
 
 .session-delete,
