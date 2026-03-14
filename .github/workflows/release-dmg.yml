@@ -12,6 +12,9 @@ permissions:
 jobs:
   build-and-release:
     runs-on: macos-14
+    concurrency:
+      group: release-${{ github.ref }}
+      cancel-in-progress: true
     env:
       CSC_IDENTITY_AUTO_DISCOVERY: "false"
     steps:
@@ -30,6 +33,14 @@ jobs:
       - name: Build DMG
         run: npm run dist:mac
 
+      - name: Verify updater artifacts
+        run: |
+          set -euo pipefail
+          ls -lh release
+          test -f release/latest-mac.yml
+          ls release/*.zip >/dev/null
+          ls release/*.dmg >/dev/null
+
       - name: Upload release artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -45,7 +56,9 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ github.ref_name }}
           generate_release_notes: true
+          overwrite_files: true
           files: |
             release/*.dmg
             release/*.zip

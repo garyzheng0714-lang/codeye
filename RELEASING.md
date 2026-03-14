@@ -32,6 +32,7 @@
 
 - 只构建 macOS 包（`.dmg` + `.zip`，不会产出 Windows/Linux 包）。
 - 工作流使用 `macos-14` 运行器。
+- `electron-builder` 已固定 `--publish never`，由 workflow 统一负责发布到 GitHub Releases，可避免 `GH_TOKEN` 缺失导致的构建失败。
 - 当前默认不做签名/公证（`CSC_IDENTITY_AUTO_DISCOVERY=false`），首次分发会有 macOS 安全提示，属于预期行为。
 - 如需正式分发（减少“无法验证开发者”提示），后续可以再接入 Apple Developer 签名和 notarization。
 - App 内「One-click Update」基于 GitHub Releases：必须有更高版本号的 Release，并包含 `latest-mac.yml`、`.zip`、`.dmg`、`.blockmap`。
