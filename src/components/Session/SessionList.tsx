@@ -22,6 +22,12 @@ interface FolderSection {
   sessions: SessionData[];
 }
 
+interface ContextMenuState {
+  sessionId: string;
+  x: number;
+  y: number;
+}
+
 function formatRelativeTime(timestamp: number) {
   const now = new Date();
   const date = new Date(timestamp);
@@ -34,6 +40,19 @@ function formatRelativeTime(timestamp: number) {
   if (diffDays === 1) return 'Yesterday';
   if (diffDays < 7) return `${diffDays}d ago`;
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+function getSessionPreview(session: SessionData): string {
+  const lastMsg = [...session.messages].reverse().find((m) => m.content.trim());
+  if (!lastMsg) return '';
+  return lastMsg.content
+    .replace(/```[\s\S]*?```/g, '[code]')
+    .replace(/#{1,6}\s+/g, '')
+    .replace(/\*\*/g, '')
+    .replace(/`([^`]+)`/g, '$1')
+    .replace(/\n+/g, ' ')
+    .trim()
+    .slice(0, 80);
 }
 
 export default function SessionList({
@@ -60,10 +79,12 @@ export default function SessionList({
   const setClaudeSessionId = useChatStore((s) => s.setClaudeSessionId);
   const setCwd = useChatStore((s) => s.setCwd);
   const loadSession = useChatStore((s) => s.loadSession);
+
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
   const [collapsedFolderIds, setCollapsedFolderIds] = useState<Set<string>>(new Set());
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const deferredSearch = useDeferredValue(searchQuery);
 
@@ -79,9 +100,7 @@ export default function SessionList({
     };
 
     const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setPendingDeleteId(null);
-      }
+      if (event.key === 'Escape') setPendingDeleteId(null);
     };
 
     window.addEventListener('pointerdown', handlePointerDown);
@@ -91,6 +110,27 @@ export default function SessionList({
       window.removeEventListener('keydown', handleEscape);
     };
   }, [pendingDeleteId]);
+
+  useEffect(() => {
+    if (!contextMenu) return;
+
+    const handlePointerDown = (e: PointerEvent) => {
+      if (!(e.target as HTMLElement).closest('.session-context-menu')) {
+        setContextMenu(null);
+      }
+    };
+
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setContextMenu(null);
+    };
+
+    window.addEventListener('pointerdown', handlePointerDown);
+    window.addEventListener('keydown', handleEscape);
+    return () => {
+      window.removeEventListener('pointerdown', handlePointerDown);
+      window.removeEventListener('keydown', handleEscape);
+    };
+  }, [contextMenu]);
 
   const folderSections = useMemo<FolderSection[]>(() => {
     const query = deferredSearch.trim().toLowerCase();
@@ -190,8 +230,7 @@ export default function SessionList({
     }
   };
 
-  const handleDeleteConfirm = (event: React.MouseEvent, session: SessionData) => {
-    event.stopPropagation();
+  const handleDeleteSession = (session: SessionData) => {
     deleteSession(session.id);
     setPendingDeleteId(null);
 
@@ -203,6 +242,23 @@ export default function SessionList({
       setCwd(folder?.path || '');
     }
   };
+
+  const handleDeleteConfirm = (event: React.MouseEvent, session: SessionData) => {
+    event.stopPropagation();
+    handleDeleteSession(session);
+  };
+
+  const handleContextMenu = (e: React.MouseEvent, session: SessionData) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const x = Math.min(e.clientX, window.innerWidth - 176);
+    const y = Math.min(e.clientY, window.innerHeight - 88);
+    setContextMenu({ sessionId: session.id, x, y });
+  };
+
+  const contextMenuSession = contextMenu
+    ? sessions.find((s) => s.id === contextMenu.sessionId)
+    : null;
 
   if (folders.length === 0) {
     return (
@@ -231,76 +287,82 @@ export default function SessionList({
   }
 
   return (
-    <div className="session-list">
-      {folderSections.map(({ folder, sessions: folderSessions }) => {
-        const isExpanded = deferredSearch.trim() ? true : !collapsedFolderIds.has(folder.id);
-        const isActiveFolder = activeFolderId === folder.id;
-        const isSyncing = syncingFolderIds.includes(folder.id);
+    <>
+      <div className="session-list">
+        {folderSections.map(({ folder, sessions: folderSessions }) => {
+          const isExpanded = deferredSearch.trim() ? true : !collapsedFolderIds.has(folder.id);
+          const isActiveFolder = activeFolderId === folder.id;
+          const isSyncing = syncingFolderIds.includes(folder.id);
 
-        return (
-          <section
-            key={folder.id}
-            className={`folder-section ${isActiveFolder ? 'active' : ''}`}
-          >
-            <div
-              role="button"
-              tabIndex={0}
-              className="folder-header"
-              onClick={() => void handleActivateFolder(folder)}
-              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); void handleActivateFolder(folder); } }}
+          return (
+            <section
+              key={folder.id}
+              className={`folder-section ${isActiveFolder ? 'active' : ''}`}
             >
-              <div className="folder-header-main">
-                <span className={`folder-chevron ${isExpanded ? 'open' : ''}`} aria-hidden="true">
-                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                    <path d="M4 4.5L6 7L8 4.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </span>
-                <span className="folder-name">{folder.name}</span>
-                {(isSyncing || (!folder.hasSyncedClaudeHistory && folder.kind === 'local')) && (
-                  <span className={`folder-sync-dot ${isSyncing ? 'syncing' : 'idle'}`} />
-                )}
+              <div
+                role="button"
+                tabIndex={0}
+                className="folder-header"
+                onClick={() => void handleActivateFolder(folder)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    void handleActivateFolder(folder);
+                  }
+                }}
+              >
+                <div className="folder-header-main">
+                  <span className={`folder-chevron ${isExpanded ? 'open' : ''}`} aria-hidden="true">
+                    <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+                      <path d="M3.5 4L5.5 6.5L7.5 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </span>
+                  <span className="folder-name">{folder.name}</span>
+                  {(isSyncing || (!folder.hasSyncedClaudeHistory && folder.kind === 'local')) && (
+                    <span className={`folder-sync-dot ${isSyncing ? 'syncing' : 'idle'}`} />
+                  )}
+                </div>
+                <div className="folder-header-actions">
+                  {folderSessions.length > 0 && (
+                    <span className="folder-count">{folderSessions.length}</span>
+                  )}
+                  <button
+                    type="button"
+                    className="folder-new-session"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setCollapsedFolderIds((current) => {
+                        const next = new Set(current);
+                        next.delete(folder.id);
+                        return next;
+                      });
+                      onCreateSession(folder.id);
+                    }}
+                    title="New session"
+                  >
+                    <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                      <path d="M6.5 2.5v8M2.5 6.5h8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+                    </svg>
+                  </button>
+                </div>
               </div>
-              <div className="folder-header-actions">
-                {folderSessions.length > 0 && (
-                  <span className="folder-count">{folderSessions.length}</span>
-                )}
-                <button
-                  type="button"
-                  className="folder-new-session"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    setCollapsedFolderIds((current) => {
-                      const next = new Set(current);
-                      next.delete(folder.id);
-                      return next;
-                    });
-                    onCreateSession(folder.id);
-                  }}
-                  title="New session"
-                >
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                    <path d="M7 3v8M3 7h8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-                  </svg>
-                </button>
-              </div>
-            </div>
 
-            <div className={`folder-session-shell ${isExpanded ? 'open' : ''}`}>
-              <div className="folder-session-list">
-                {folderSessions.length > 0 ? (
-                  folderSessions.map((session) => {
-                    const isEditing = editingId === session.id;
-                    const isPendingDelete = pendingDeleteId === session.id;
-                    return (
-                      <div
-                        key={session.id}
-                        className={`session-item ${activeSessionId === session.id ? 'active' : ''}`}
-                        onClick={() => handleSelectSession(session)}
-                      >
+              <div className={`folder-session-shell ${isExpanded ? 'open' : ''}`}>
+                <div className="folder-session-list">
+                  {folderSessions.length > 0 ? (
+                    folderSessions.map((session, index) => {
+                      const isEditing = editingId === session.id;
+                      const preview = getSessionPreview(session);
+
+                      return (
                         <div
-                          className="session-item-content"
-                          onDoubleClick={(event) => {
-                            event.stopPropagation();
+                          key={session.id}
+                          className={`session-item ${activeSessionId === session.id ? 'active' : ''}`}
+                          style={{ '--session-idx': index } as React.CSSProperties}
+                          onClick={() => handleSelectSession(session)}
+                          onContextMenu={(e) => handleContextMenu(e, session)}
+                          onDoubleClick={(e) => {
+                            e.stopPropagation();
                             setEditingId(session.id);
                             setEditName(session.name);
                           }}
@@ -310,62 +372,100 @@ export default function SessionList({
                               ref={inputRef}
                               className="session-rename-input"
                               value={editName}
-                              onChange={(event) => setEditName(event.target.value)}
+                              onChange={(e) => setEditName(e.target.value)}
                               onBlur={commitRename}
-                              onKeyDown={(event) => {
-                                if (event.key === 'Enter') commitRename();
-                                if (event.key === 'Escape') setEditingId(null);
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') commitRename();
+                                if (e.key === 'Escape') setEditingId(null);
                               }}
-                              onClick={(event) => event.stopPropagation()}
+                              onClick={(e) => e.stopPropagation()}
                               autoFocus
-                              onFocus={(event) => event.target.select()}
+                              onFocus={(e) => e.target.select()}
                             />
                           ) : (
-                            <span className="session-name">{session.name}</span>
-                          )}
-                          {!isEditing && (
-                            <span className="session-time">
-                              {formatRelativeTime(session.updatedAt)}
-                            </span>
+                            <>
+                              <div className="session-item-row">
+                                <span className="session-name">{session.name}</span>
+                                <span className="session-time">{formatRelativeTime(session.updatedAt)}</span>
+                              </div>
+                              {preview && <p className="session-preview">{preview}</p>}
+                              <div className={`session-actions ${pendingDeleteId === session.id ? 'confirming' : ''}`}>
+                                <button
+                                  className="session-delete"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setPendingDeleteId((current) => (current === session.id ? null : session.id));
+                                  }}
+                                  title="Delete"
+                                >
+                                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                                    <path d="M3.5 3.5l7 7M10.5 3.5l-7 7" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+                                  </svg>
+                                </button>
+                                <button
+                                  className="session-confirm-delete"
+                                  onClick={(e) => handleDeleteConfirm(e, session)}
+                                  title="Confirm delete"
+                                >
+                                  Delete
+                                </button>
+                              </div>
+                            </>
                           )}
                         </div>
-                        <div className={`session-actions ${isPendingDelete ? 'confirming' : ''}`}>
-                          <button
-                            className="session-delete"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              setPendingDeleteId((current) => (current === session.id ? null : session.id));
-                            }}
-                            title="Delete"
-                          >
-                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                              <path d="M3.5 3.5l7 7M10.5 3.5l-7 7" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-                            </svg>
-                          </button>
-                          <button
-                            className="session-confirm-delete"
-                            onClick={(event) => handleDeleteConfirm(event, session)}
-                            title="Confirm delete"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })
-                ) : (
-                  <div className="folder-empty">
-                    <span>No chats yet.</span>
-                    <button type="button" onClick={() => onCreateSession(folder.id)}>
-                      Start one
-                    </button>
-                  </div>
-                )}
+                      );
+                    })
+                  ) : (
+                    <div className="folder-empty">
+                      <span>No chats yet.</span>
+                      <button type="button" onClick={() => onCreateSession(folder.id)}>
+                        Start one
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          </section>
-        );
-      })}
-    </div>
+            </section>
+          );
+        })}
+      </div>
+
+      {contextMenu && contextMenuSession && (
+        <div
+          className="session-context-menu"
+          style={{ left: contextMenu.x, top: contextMenu.y }}
+          role="menu"
+        >
+          <button
+            className="context-menu-item"
+            role="menuitem"
+            onClick={() => {
+              setEditingId(contextMenu.sessionId);
+              setEditName(contextMenuSession.name);
+              setContextMenu(null);
+            }}
+          >
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+              <path d="M2 9.5L9.5 2a1 1 0 0 1 1.5 1.5L3.5 11H2V9.5z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round" />
+            </svg>
+            Rename
+          </button>
+          <div className="context-menu-divider" />
+          <button
+            className="context-menu-item danger"
+            role="menuitem"
+            onClick={() => {
+              handleDeleteSession(contextMenuSession);
+              setContextMenu(null);
+            }}
+          >
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+              <path d="M2.5 4h8M5 4V2.5h3V4M3.5 4l.5 6.5h5L10 4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            Delete
+          </button>
+        </div>
+      )}
+    </>
   );
 }

@@ -42,11 +42,23 @@
 @keyframes sessionSlideIn {
   from {
     opacity: 0;
-    transform: translateX(-8px);
+    transform: translateX(-10px);
   }
   to {
     opacity: 1;
     transform: translateX(0);
+  }
+}
+
+/* ── Context menu spring entrance ── */
+@keyframes contextMenuEnter {
+  from {
+    opacity: 0;
+    transform: scale(0.93) translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
   }
 }
 
