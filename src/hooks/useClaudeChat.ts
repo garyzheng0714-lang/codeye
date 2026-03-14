@@ -17,6 +17,7 @@ function getActions(): StoreActions {
     appendAssistantContent: s.appendAssistantContent,
     finishStreaming: s.finishStreaming,
     addToolCall: s.addToolCall,
+    updateToolResult: s.updateToolResult,
     updateCost: s.updateCost,
     setClaudeSessionId: s.setClaudeSessionId,
     setRuntimeSlashCommands,
@@ -69,16 +70,19 @@ export function useClaudeChat() {
             actions.updateCost(costUsd || 0, inputToks || 0, outputToks || 0);
           }
         } else {
+          if (import.meta.env.DEV) console.debug('[stream-debug] message (electron)', parsed.type, parsed.subtype);
           textBatcher.flush();
           handleClaudeMessage(parsed, getActions());
         }
       });
       const removeComplete = window.electronAPI.claude.onComplete(() => {
+        if (import.meta.env.DEV) console.debug('[stream-debug] complete (electron)');
         textBatcher.flush();
         getActions().finishStreaming();
         finishStreamTrace('completed');
       });
       const removeError = window.electronAPI.claude.onError((err) => {
+        if (import.meta.env.DEV) console.debug('[stream-debug] error (electron)', err);
         textBatcher.flush();
         const a = getActions();
         a.appendAssistantContent(`\n\n**Error:** ${err}`);
@@ -121,14 +125,17 @@ export function useClaudeChat() {
               actions.updateCost(wsCost || 0, wsInput || 0, wsOutput || 0);
             }
           } else {
+            if (import.meta.env.DEV) console.debug('[stream-debug] message (ws)', msg.type, msg.subtype);
             textBatcher.flush();
             handleClaudeMessage(msg, getActions());
           }
         } else if (streamEvent.type === 'complete') {
+          if (import.meta.env.DEV) console.debug('[stream-debug] complete (ws)');
           textBatcher.flush();
           getActions().finishStreaming();
           finishStreamTrace('completed');
         } else if (streamEvent.type === 'error') {
+          if (import.meta.env.DEV) console.debug('[stream-debug] error (ws)', streamEvent.payload.error);
           textBatcher.flush();
           const a = getActions();
           a.appendAssistantContent(`\n\n**Error:** ${streamEvent.payload.error}`);

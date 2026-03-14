@@ -33,6 +33,17 @@ test.describe('Slash Command Palette', () => {
     await expect(chatPage.textarea).toHaveAttribute('placeholder', /Ask a question/);
   });
 
+  test('selecting a skill inserts a pill without sending immediately', async ({ chatPage, page }) => {
+    await chatPage.focusInput();
+    await chatPage.typeSlowly('/tdd');
+    await page.keyboard.press('Enter');
+
+    await expect(chatPage.slashPalette).not.toBeVisible();
+    await expect(chatPage.skillPills).toHaveCount(1);
+    await expect(chatPage.skillPills.first()).toContainText('/tdd');
+    await expect(chatPage.userMessages).toHaveCount(0);
+  });
+
   test('arrow keys navigate items', async ({ chatPage, page }) => {
     await chatPage.openSlashPalette();
     await expect(chatPage.activeSlashItem()).toContainText('/chat');

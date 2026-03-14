@@ -6,6 +6,7 @@ function createMockActions(): StoreActions {
     appendAssistantContent: vi.fn(),
     finishStreaming: vi.fn(),
     addToolCall: vi.fn(),
+    updateToolResult: vi.fn(),
     updateCost: vi.fn(),
     setClaudeSessionId: vi.fn(),
     setRuntimeSlashCommands: vi.fn(),

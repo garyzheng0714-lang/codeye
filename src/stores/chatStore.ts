@@ -20,6 +20,7 @@ interface ChatState {
   cost: number;
   inputTokens: number;
   outputTokens: number;
+  pendingMessages: string[];
 
   setMode: (mode: ChatMode) => void;
   setModel: (model: ModelId) => void;
@@ -32,13 +33,17 @@ interface ChatState {
   startAssistantMessage: () => void;
   finishStreaming: () => void;
   addToolCall: (tool: ToolCallDisplay) => void;
+  updateToolResult: (toolId: string, output: string) => void;
   toggleToolExpand: (messageId: string, toolId: string) => void;
   updateCost: (cost: number, input: number, output: number) => void;
+  enqueueMessage: (content: string) => void;
+  dequeueMessage: () => string | undefined;
+  clearQueue: () => void;
   clearMessages: () => void;
   loadSession: (data: { messages: DisplayMessage[]; cost: number; inputTokens: number; outputTokens: number; claudeSessionId?: string | null; model?: ModelId }) => void;
 }
 
-export const useChatStore = create<ChatState>((set) => ({
+export const useChatStore = create<ChatState>()((set, get) => ({
   messages: [],
   isStreaming: false,
   mode: 'code',
@@ -50,6 +55,7 @@ export const useChatStore = create<ChatState>((set) => ({
   cost: 0,
   inputTokens: 0,
   outputTokens: 0,
+  pendingMessages: [],
 
   setMode: (mode) => set({ mode }),
   setModel: (model) => set({ model: normalizeModelId(model) }),
@@ -115,9 +121,13 @@ export const useChatStore = create<ChatState>((set) => ({
 
   finishStreaming: () =>
     set((state) => {
-      const msgs = state.messages.map((m) =>
-        m.isStreaming ? { ...m, isStreaming: false } : m
-      );
+      const msgs = state.messages.map((m) => {
+        if (!m.isStreaming) return m;
+        const toolCalls = m.toolCalls.map((t) =>
+          t.output === undefined ? { ...t, output: '' } : t
+        );
+        return { ...m, isStreaming: false, toolCalls };
+      });
       return { messages: msgs, isStreaming: false };
     }),
 
@@ -144,6 +154,22 @@ export const useChatStore = create<ChatState>((set) => ({
       return { messages: msgs };
     }),
 
+  updateToolResult: (toolId, output) =>
+    set((state) => {
+      const msgs = state.messages.map((m) => {
+        if (m.role !== 'assistant') return m;
+        const hasTarget = m.toolCalls.some((t) => t.id === toolId);
+        if (!hasTarget) return m;
+        return {
+          ...m,
+          toolCalls: m.toolCalls.map((t) =>
+            t.id === toolId ? { ...t, output } : t
+          ),
+        };
+      });
+      return { messages: msgs };
+    }),
+
   toggleToolExpand: (messageId, toolId) =>
     set((state) => ({
       messages: state.messages.map((m) =>
@@ -165,7 +191,20 @@ export const useChatStore = create<ChatState>((set) => ({
       outputTokens: state.outputTokens + output,
     })),
 
-  clearMessages: () => set({ messages: [], cost: 0, inputTokens: 0, outputTokens: 0, isStreaming: false, claudeSessionId: null }),
+  enqueueMessage: (content) =>
+    set((state) => ({ pendingMessages: [...state.pendingMessages, content] })),
+
+  dequeueMessage: (): string | undefined => {
+    const { pendingMessages } = get();
+    if (pendingMessages.length === 0) return undefined;
+    const [first, ...rest] = pendingMessages;
+    set({ pendingMessages: rest });
+    return first;
+  },
+
+  clearQueue: () => set({ pendingMessages: [] }),
+
+  clearMessages: () => set({ messages: [], cost: 0, inputTokens: 0, outputTokens: 0, isStreaming: false, claudeSessionId: null, pendingMessages: [] }),
 
   loadSession: (data) =>
     set({
@@ -173,6 +212,7 @@ export const useChatStore = create<ChatState>((set) => ({
       cost: data.cost,
       inputTokens: data.inputTokens,
       outputTokens: data.outputTokens,
+      pendingMessages: [],
       claudeSessionId: data.claudeSessionId ?? null,
       model: normalizeModelId(data.model),
       isStreaming: false,

@@ -10,6 +10,8 @@ export class ChatPage {
   readonly slashPalette: Locator;
   readonly slashItems: Locator;
   readonly slashCategories: Locator;
+  readonly skillPills: Locator;
+  readonly queueIndicator: Locator;
   readonly configSelector: Locator;
   readonly configDropdown: Locator;
   readonly configOptions: Locator;
@@ -31,6 +33,8 @@ export class ChatPage {
     this.slashPalette = page.locator('.slash-palette');
     this.slashItems = page.locator('.slash-palette-item');
     this.slashCategories = page.locator('.slash-palette-category');
+    this.skillPills = page.locator('.skill-pill');
+    this.queueIndicator = page.locator('.queue-indicator');
     this.configSelector = page.locator('.config-selector');
     this.configDropdown = page.locator('.config-selector-dropdown');
     this.configOptions = page.locator('.config-option');

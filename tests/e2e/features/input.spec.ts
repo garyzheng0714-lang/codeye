@@ -41,11 +41,9 @@ test.describe('Input Area', () => {
 });
 
 test.describe('Settings Panel', () => {
-  test('can navigate to settings and set working directory', async ({ appPage, sidebarPage }) => {
+  test('can navigate to settings and see version', async ({ sidebarPage }) => {
     await sidebarPage.openSettings();
     await expect(sidebarPage.settingsPanel).toBeVisible();
-
-    await sidebarPage.setWorkingDirectory('/tmp/test-project');
-    await expect(appPage.breadcrumb()).toContainText('test-project');
+    await expect(sidebarPage.settingsContent).toContainText('Codeye v');
   });
 });

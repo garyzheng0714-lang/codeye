@@ -5,6 +5,7 @@ export interface StoreActions {
   appendAssistantContent: (s: string) => void;
   finishStreaming: () => void;
   addToolCall: (t: ToolCallDisplay) => void;
+  updateToolResult: (toolId: string, output: string) => void;
   updateCost: (c: number, i: number, o: number) => void;
   setClaudeSessionId: (id: string) => void;
   setRuntimeSlashCommands?: (payload: { slashCommands?: string[]; skills?: string[] }) => void;
@@ -54,6 +55,19 @@ export function handleClaudeMessage(message: ClaudeMessage, actions: StoreAction
           expanded: false,
         });
       }
+    }
+  }
+
+  if (message.type === 'tool_result' || (message.type === 'assistant' && message.message?.role === 'tool')) {
+    const record = message as unknown as Record<string, unknown>;
+    const toolUseId = typeof record.tool_use_id === 'string' ? record.tool_use_id : '';
+    const content = typeof record.content === 'string'
+      ? record.content
+      : typeof record.output === 'string'
+        ? record.output
+        : '';
+    if (toolUseId) {
+      actions.updateToolResult(toolUseId, content);
     }
   }
 

@@ -1,4 +1,4 @@
-import { useState, useCallback, memo } from 'react';
+import { useCallback, memo, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import type { DisplayMessage, ToolCallDisplay } from '../../types';
@@ -84,12 +84,8 @@ function ReadGroupRow({ files, running, error, index = 0 }: { files: string[]; r
 
 // ── Main component ────────────────────────────────────────────────────
 
-const COLLAPSE_THRESHOLD = 500;
-
 export default memo(function AIMessage({ message }: { message: DisplayMessage }) {
-  const [expanded, setExpanded] = useState(false);
   const [copied, setCopied] = useState(false);
-  const shouldCollapse = message.content.length > COLLAPSE_THRESHOLD && !message.isStreaming;
   const isThinking = message.isStreaming && !message.content && message.toolCalls.length === 0;
 
   const grouped = groupToolCalls(message.toolCalls);
@@ -173,7 +169,7 @@ export default memo(function AIMessage({ message }: { message: DisplayMessage })
         {/* AI text */}
         {message.content && (
           <div className="ai-text-body">
-            <div className={`ai-message-content ${shouldCollapse && !expanded ? 'collapsed' : ''}`}>
+            <div className="ai-message-content">
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 components={{
@@ -190,12 +186,7 @@ export default memo(function AIMessage({ message }: { message: DisplayMessage })
                 {message.content}
               </ReactMarkdown>
             </div>
-            {shouldCollapse && !expanded && (
-              <button className="expand-btn" onClick={() => setExpanded(true)}>
-                Show full response
-              </button>
-            )}
-            {message.isStreaming && <span className="streaming-cursor" />}
+{message.isStreaming && <span className="streaming-cursor" />}
             <div className="ai-message-actions">
               <button className="ai-action-btn" onClick={handleCopy} title={copied ? 'Copied!' : 'Copy'}>
                 {copied ? (

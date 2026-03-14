@@ -1,9 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
-import { getPerfSummary, getMemoryUsageMB } from '../../observability/perfBaseline';
+
+interface UpdaterState {
+  stage: string;
+  message?: string;
+  currentVersion?: string;
+  latestVersion?: string;
+  percent?: number;
+  transferred?: number;
+  total?: number;
+}
 
 export default function AboutTab() {
-  const perf = getPerfSummary();
-  const memMb = getMemoryUsageMB();
   const updater = window.electronAPI?.updater;
 
   const [updateState, setUpdateState] = useState<UpdaterState | null>(null);
@@ -15,7 +22,7 @@ export default function AboutTab() {
     let active = true;
     updater
       .getState()
-      .then((state) => {
+      .then((state: UpdaterState) => {
         if (active) setUpdateState(state);
       })
       .catch(() => {
@@ -28,7 +35,7 @@ export default function AboutTab() {
         }
       });
 
-    const unsubscribe = updater.onStateChange((nextState) => {
+    const unsubscribe = updater.onStateChange((nextState: UpdaterState) => {
       setUpdateState(nextState);
     });
 
@@ -101,30 +108,18 @@ export default function AboutTab() {
     return `${updateState.percent.toFixed(0)}%${speedPart}`;
   }, [updateState]);
 
+  const version = updateState?.currentVersion || '0.3.0';
+
   return (
     <>
       <div className="settings-section">
         <label className="settings-label">About</label>
         <p className="settings-hint">
-          Codeye v{updateState?.currentVersion || '0.3.0'} — A desktop GUI for Claude Code.
+          Codeye v{version}
         </p>
       </div>
 
-      <div className="settings-section">
-        <label className="settings-label">Status</label>
-        <div className="settings-status">
-          <span className={`status-dot ${window.electronAPI ? 'active' : 'idle'}`} />
-          <span>
-            {window.electronAPI ? 'Electron Mode' : (
-              import.meta.env.VITE_DEMO
-                ? 'Demo Mode'
-                : 'Browser Mode (WebSocket Proxy)'
-            )}
-          </span>
-        </div>
-      </div>
-
-      {window.electronAPI && (
+      {window.electronAPI ? (
         <div className="settings-section">
           <label className="settings-label">Updates</label>
           <div className="settings-update-row">
@@ -143,35 +138,12 @@ export default function AboutTab() {
             </button>
           </div>
         </div>
-      )}
-
-      {perf.sampleCount > 0 && (
+      ) : (
         <div className="settings-section">
-          <label className="settings-label">Performance</label>
-          <div className="perf-stats">
-            <div className="perf-stat">
-              <span className="perf-stat-label">TTFT p50</span>
-              <span className="perf-stat-value">{perf.ttftP50?.toFixed(0) ?? '—'}ms</span>
-            </div>
-            <div className="perf-stat">
-              <span className="perf-stat-label">TTFT p95</span>
-              <span className="perf-stat-value">{perf.ttftP95?.toFixed(0) ?? '—'}ms</span>
-            </div>
-            <div className="perf-stat">
-              <span className="perf-stat-label">Avg chunks</span>
-              <span className="perf-stat-value">{perf.avgChunks}</span>
-            </div>
-            {memMb !== null && (
-              <div className="perf-stat">
-                <span className="perf-stat-label">Memory</span>
-                <span className="perf-stat-value">{memMb}MB</span>
-              </div>
-            )}
-            <div className="perf-stat">
-              <span className="perf-stat-label">Samples</span>
-              <span className="perf-stat-value">{perf.sampleCount}</span>
-            </div>
-          </div>
+          <label className="settings-label">Updates</label>
+          <p className="settings-hint">
+            Auto-updates are available in the desktop app. You are using the browser version.
+          </p>
         </div>
       )}
     </>

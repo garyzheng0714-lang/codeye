@@ -14,6 +14,7 @@ function resetChatStore() {
     cost: 0,
     inputTokens: 0,
     outputTokens: 0,
+    pendingMessages: [],
   });
 }
 
@@ -46,5 +47,50 @@ describe('chatStore streaming guards', () => {
       expanded: false,
     });
     expect(useChatStore.getState().messages).toHaveLength(0);
+  });
+
+  it('marks unfinished tools as completed when streaming finishes', () => {
+    const store = useChatStore.getState();
+    store.startAssistantMessage();
+    store.addToolCall({
+      id: 'tool-1',
+      name: 'Read',
+      input: { file_path: 'README.md' },
+      expanded: false,
+    });
+
+    store.finishStreaming();
+
+    const [assistant] = useChatStore.getState().messages;
+    expect(assistant.isStreaming).toBe(false);
+    expect(assistant.toolCalls[0].output).toBe('');
+  });
+
+  it('updates tool output by tool id', () => {
+    const store = useChatStore.getState();
+    store.startAssistantMessage();
+    store.addToolCall({
+      id: 'tool-1',
+      name: 'Read',
+      input: { file_path: 'README.md' },
+      expanded: false,
+    });
+
+    store.updateToolResult('tool-1', 'done');
+
+    const [assistant] = useChatStore.getState().messages;
+    expect(assistant.toolCalls[0].output).toBe('done');
+  });
+
+  it('enqueues and dequeues pending messages in order', () => {
+    const store = useChatStore.getState();
+    store.enqueueMessage('first');
+    store.enqueueMessage('second');
+
+    expect(useChatStore.getState().pendingMessages).toEqual(['first', 'second']);
+    expect(store.dequeueMessage()).toBe('first');
+    expect(useChatStore.getState().pendingMessages).toEqual(['second']);
+    expect(store.dequeueMessage()).toBe('second');
+    expect(store.dequeueMessage()).toBeUndefined();
   });
 });
