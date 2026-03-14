@@ -5,7 +5,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import { ChevronDown, Plus, X, FolderPlus, Search as SearchIcon, Pencil, Trash2, Folder } from 'lucide-react';
+import { ChevronRight, Plus, X, FolderPlus, Search as SearchIcon, Pencil, Trash2, MessageSquare } from 'lucide-react';
 import { useSessionStore } from '../../stores/sessionStore';
 import { useChatStore } from '../../stores/chatStore';
 import { stopClaude } from '../../hooks/useClaudeChat';
@@ -54,7 +54,12 @@ function getSessionPreview(session: SessionData): string {
     .replace(/`([^`]+)`/g, '$1')
     .replace(/\n+/g, ' ')
     .trim()
-    .slice(0, 80);
+    .slice(0, 100);
+}
+
+function formatCost(cost: number): string {
+  if (cost <= 0) return '';
+  return `$${cost.toFixed(cost < 0.01 ? 4 : 2)}`;
 }
 
 export default function SessionList({
@@ -313,20 +318,15 @@ export default function SessionList({
                   }
                 }}
               >
-                <div className="folder-header-main">
-                  <span className={`folder-chevron ${isExpanded ? 'open' : ''}`} aria-hidden="true">
-                    <ChevronDown size={12} strokeWidth={2} />
-                  </span>
-                  <Folder size={14} strokeWidth={1.8} className="folder-icon" />
-                  <span className="folder-name">{folder.name}</span>
-                  {(isSyncing || (!folder.hasSyncedClaudeHistory && folder.kind === 'local')) && (
-                    <span className={`folder-sync-dot ${isSyncing ? 'syncing' : 'idle'}`} />
-                  )}
-                </div>
+                <span className={`folder-chevron ${isExpanded ? 'open' : ''}`} aria-hidden="true">
+                  <ChevronRight size={14} strokeWidth={2} />
+                </span>
+                <span className="folder-name">{folder.name}</span>
+                {(isSyncing || (!folder.hasSyncedClaudeHistory && folder.kind === 'local')) && (
+                  <span className={`folder-sync-dot ${isSyncing ? 'syncing' : 'idle'}`} />
+                )}
                 <div className="folder-header-actions">
-                  {folderSessions.length > 0 && (
-                    <span className="folder-count">{folderSessions.length}</span>
-                  )}
+                  <span className="folder-count">{folderSessions.length}</span>
                   <button
                     type="button"
                     className="folder-new-session"
@@ -341,7 +341,7 @@ export default function SessionList({
                     }}
                     title="New session"
                   >
-                    <Plus size={13} strokeWidth={2} />
+                    <Plus size={14} strokeWidth={2} />
                   </button>
                 </div>
               </div>
@@ -351,12 +351,15 @@ export default function SessionList({
                   {folderSessions.length > 0 ? (
                     folderSessions.map((session, index) => {
                       const isEditing = editingId === session.id;
+                      const isActive = activeSessionId === session.id;
                       const preview = getSessionPreview(session);
+                      const cost = formatCost(session.cost);
+                      const msgCount = session.messages.length;
 
                       return (
                         <div
                           key={session.id}
-                          className={`session-item ${activeSessionId === session.id ? 'active' : ''}`}
+                          className={`session-card ${isActive ? 'active' : ''}`}
                           style={{ '--session-idx': index } as React.CSSProperties}
                           onClick={() => handleSelectSession(session)}
                           onContextMenu={(e) => handleContextMenu(e, session)}
@@ -383,17 +386,36 @@ export default function SessionList({
                             />
                           ) : (
                             <>
-                              <div className="session-item-row">
-                                <span className="session-dot" />
-                                <span className="session-name">{session.name}</span>
+                              {/* Card header: name + time */}
+                              <div className="session-card-header">
+                                <span className="session-card-name">{session.name}</span>
+                                <span className="session-card-time">{formatRelativeTime(session.updatedAt)}</span>
                               </div>
-                              <div className="session-meta-row">
-                                <span className="session-time">{formatRelativeTime(session.updatedAt)}</span>
-                                {session.messages.length > 0 && (
-                                  <span className="session-msg-count">{session.messages.length} msgs</span>
+
+                              {/* Preview text */}
+                              {preview && (
+                                <p className="session-card-preview">{preview}</p>
+                              )}
+
+                              {/* Footer: metadata badges */}
+                              <div className="session-card-footer">
+                                {msgCount > 0 && (
+                                  <span className="session-card-badge">
+                                    <MessageSquare size={10} strokeWidth={2} />
+                                    {msgCount}
+                                  </span>
+                                )}
+                                {cost && (
+                                  <span className="session-card-badge">{cost}</span>
+                                )}
+                                {session.model && (
+                                  <span className="session-card-badge session-card-model">
+                                    {session.model.replace('claude-', '').split('-')[0]}
+                                  </span>
                                 )}
                               </div>
-                              {preview && <p className="session-preview">{preview}</p>}
+
+                              {/* Delete action */}
                               <div className={`session-actions ${pendingDeleteId === session.id ? 'confirming' : ''}`}>
                                 <button
                                   className="session-delete"
@@ -403,7 +425,7 @@ export default function SessionList({
                                   }}
                                   title="Delete"
                                 >
-                                  <X size={13} strokeWidth={1.8} />
+                                  <X size={12} strokeWidth={2} />
                                 </button>
                                 <button
                                   className="session-confirm-delete"
