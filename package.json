@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@tanstack/react-virtual": "^3.13.22",
+    "electron-updater": "^6.8.3",
     "lucide-react": "^0.577.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
@@ -71,6 +72,13 @@
       "target": "dmg",
       "icon": "build/icon.icns",
       "category": "public.app-category.developer-tools"
-    }
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "garyzheng0714-lang",
+        "repo": "codeye"
+      }
+    ]
   }
 }

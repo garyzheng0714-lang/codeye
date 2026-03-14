@@ -4,6 +4,7 @@ import { registerClaudeHandlers } from './ipc/claude';
 import { registerSessionHandlers } from './ipc/sessions';
 import { registerProjectHandlers } from './ipc/projects';
 import { registerSecretHandlers } from './ipc/secrets';
+import { registerUpdaterHandlers } from './updater';
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -36,6 +37,28 @@ function createWindow() {
   } else {
     mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
   }
+}
+
+function ensureWindow() {
+  if (!app.isReady()) {
+    void app.whenReady().then(() => {
+      if (BrowserWindow.getAllWindows().length === 0) {
+        createWindow();
+      }
+    });
+    return;
+  }
+
+  const windows = BrowserWindow.getAllWindows();
+  if (windows.length === 0) {
+    createWindow();
+    return;
+  }
+
+  const existingWindow = windows[0];
+  if (existingWindow.isMinimized()) existingWindow.restore();
+  existingWindow.show();
+  existingWindow.focus();
 }
 
 function buildMenu() {
@@ -122,7 +145,8 @@ app.whenReady().then(() => {
   registerSessionHandlers(ipcMain);
   registerProjectHandlers(ipcMain);
   registerSecretHandlers(ipcMain);
-  createWindow();
+  registerUpdaterHandlers(ipcMain, () => mainWindow);
+  ensureWindow();
 });
 
 app.on('window-all-closed', () => {
@@ -134,5 +158,5 @@ app.on('will-quit', () => {
 });
 
 app.on('activate', () => {
-  if (BrowserWindow.getAllWindows().length === 0) createWindow();
+  ensureWindow();
 });

@@ -36,6 +36,12 @@ interface ElectronAPI {
     maximize: () => Promise<void>;
     close: () => Promise<void>;
   };
+  updater: {
+    getState: () => Promise<UpdaterState>;
+    checkForUpdates: () => Promise<UpdaterState>;
+    quitAndInstall: () => Promise<boolean>;
+    onStateChange: (callback: (state: UpdaterState) => void) => () => void;
+  };
 }
 
 interface Session {
@@ -98,6 +104,26 @@ interface ImportedToolCall {
 }
 
 declare global {
+  type UpdaterStage =
+    | 'idle'
+    | 'unsupported'
+    | 'checking'
+    | 'available'
+    | 'downloading'
+    | 'downloaded'
+    | 'not-available'
+    | 'error';
+
+  interface UpdaterState {
+    stage: UpdaterStage;
+    message: string;
+    currentVersion: string;
+    latestVersion?: string;
+    percent?: number;
+    transferred?: number;
+    total?: number;
+  }
+
   interface Window {
     electronAPI?: ElectronAPI;
   }

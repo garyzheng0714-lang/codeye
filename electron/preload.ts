@@ -1,5 +1,25 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
+type UpdaterStage =
+  | 'idle'
+  | 'unsupported'
+  | 'checking'
+  | 'available'
+  | 'downloading'
+  | 'downloaded'
+  | 'not-available'
+  | 'error';
+
+interface UpdaterState {
+  stage: UpdaterStage;
+  message: string;
+  currentVersion: string;
+  latestVersion?: string;
+  percent?: number;
+  transferred?: number;
+  total?: number;
+}
+
 contextBridge.exposeInMainWorld('electronAPI', {
   getCwd: () => ipcRenderer.invoke('app:get-cwd'),
   claude: {
@@ -63,5 +83,15 @@ contextBridge.exposeInMainWorld('electronAPI', {
     minimize: () => ipcRenderer.invoke('window:minimize'),
     maximize: () => ipcRenderer.invoke('window:maximize'),
     close: () => ipcRenderer.invoke('window:close'),
+  },
+  updater: {
+    getState: () => ipcRenderer.invoke('updater:get-state'),
+    checkForUpdates: () => ipcRenderer.invoke('updater:check-for-updates'),
+    quitAndInstall: () => ipcRenderer.invoke('updater:quit-and-install'),
+    onStateChange: (callback: (state: UpdaterState) => void) => {
+      const handler = (_: unknown, nextState: UpdaterState) => callback(nextState);
+      ipcRenderer.on('updater:state', handler);
+      return () => ipcRenderer.removeListener('updater:state', handler);
+    },
   },
 });

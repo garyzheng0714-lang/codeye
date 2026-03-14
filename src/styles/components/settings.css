@@ -107,6 +107,11 @@
   background: var(--accent-hover);
 }
 
+.settings-browse-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .settings-hint {
   font-size: var(--text-xs);
   color: var(--text-muted);
@@ -196,6 +201,23 @@
   font-weight: 600;
   font-family: var(--font-mono);
   color: var(--text-primary);
+}
+
+.settings-update-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.settings-update-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.settings-update-btn {
+  flex-shrink: 0;
 }
 
 [data-theme="dark"] .settings-section {
