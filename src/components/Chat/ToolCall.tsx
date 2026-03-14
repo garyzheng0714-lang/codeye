@@ -1,10 +1,11 @@
-import { useState, memo } from 'react';
+import { lazy, Suspense, useState, memo } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { useChatStore } from '../../stores/chatStore';
 import type { ToolCallDisplay } from '../../types';
 import { getToolStatus, getSemanticName, getToolColor } from '../../data/toolMeta';
 import { ToolIcon, SpinnerIcon } from '../../data/toolIcons';
-import DiffViewer from './DiffViewer';
+
+const DiffViewer = lazy(() => import('./DiffViewer'));
 
 function getFileName(tool: ToolCallDisplay): string | null {
   if (tool.input.file_path) return String(tool.input.file_path).split('/').pop() || null;
@@ -163,11 +164,13 @@ export default memo(function ToolCall({
 
       {isEdit && diffOpen && (
         <div className="tool-diff-body">
+          <Suspense fallback={null}>
           <DiffViewer
             oldText={String(tool.input.old_string)}
             newText={String(tool.input.new_string || '')}
             fileName={fileName || undefined}
           />
+          </Suspense>
         </div>
       )}
 

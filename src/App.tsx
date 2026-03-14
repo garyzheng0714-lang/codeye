@@ -1,11 +1,12 @@
-import { useEffect } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import TitleBar from './components/Layout/TitleBar';
 import ActivityBar from './components/Layout/ActivityBar';
 import Sidebar from './components/Layout/Sidebar';
 import SidebarBoundaryToggle from './components/Layout/SidebarBoundaryToggle';
 import ChatPanel from './components/Chat/ChatPanel';
-import SplitPane from './components/Chat/SplitPane';
 import ConnectionStatus from './components/Chat/ConnectionStatus';
+
+const SplitPane = lazy(() => import('./components/Chat/SplitPane'));
 import ErrorBoundary from './components/ErrorBoundary';
 import { useClaudeChat } from './hooks/useClaudeChat';
 import { useSessionStore } from './stores/sessionStore';
@@ -119,7 +120,9 @@ export default function App() {
               <>
                 <div className="pane-divider" />
                 <ErrorBoundary>
-                  <SplitPane onClose={() => useUIStore.getState().toggleSplit()} />
+                  <Suspense fallback={null}>
+                    <SplitPane onClose={() => useUIStore.getState().toggleSplit()} />
+                  </Suspense>
                 </ErrorBoundary>
               </>
             )}

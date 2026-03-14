@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { lazy, Suspense, useCallback, useMemo, useState } from 'react';
 import { Search, FolderPlus, Package } from 'lucide-react';
 import { useUIStore } from '../../stores/uiStore';
 import { useSessionStore } from '../../stores/sessionStore';
@@ -6,9 +6,10 @@ import { useChatStore } from '../../stores/chatStore';
 import { stopClaude } from '../../hooks/useClaudeChat';
 import { saveCurrentSession } from '../../utils/session';
 import SessionList from '../Session/SessionList';
-import SettingsPanel from '../Settings/SettingsPanel';
-import ActivityStream from '../Chat/ActivityStream';
 import type { SessionFolder } from '../../types';
+
+const SettingsPanel = lazy(() => import('../Settings/SettingsPanel'));
+const ActivityStream = lazy(() => import('../Chat/ActivityStream'));
 
 export default function Sidebar() {
   const activePanel = useUIStore((s) => s.activePanel);
@@ -138,8 +139,16 @@ export default function Sidebar() {
             syncingFolderIds={syncingFolderIds}
           />
         )}
-        {activePanel === 'settings' && <SettingsPanel />}
-        {activePanel === 'activity' && <ActivityStream />}
+        {activePanel === 'settings' && (
+          <Suspense fallback={null}>
+            <SettingsPanel />
+          </Suspense>
+        )}
+        {activePanel === 'activity' && (
+          <Suspense fallback={null}>
+            <ActivityStream />
+          </Suspense>
+        )}
       </div>
       {activeFolder?.path && (
         <div className="sidebar-footer">

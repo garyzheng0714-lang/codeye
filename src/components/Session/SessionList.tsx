@@ -5,7 +5,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import { ChevronRight, Plus, X, FolderPlus, Search as SearchIcon, Pencil, Trash2, MessageSquare } from 'lucide-react';
+import { ChevronRight, Plus, X, FolderPlus, Search as SearchIcon, Pencil, Trash2 } from 'lucide-react';
 import { useSessionStore } from '../../stores/sessionStore';
 import { useChatStore } from '../../stores/chatStore';
 import { stopClaude } from '../../hooks/useClaudeChat';
@@ -44,22 +44,27 @@ function formatRelativeTime(timestamp: number) {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-function getSessionPreview(session: SessionData): string {
-  const lastMsg = [...session.messages].reverse().find((m) => m.content.trim());
-  if (!lastMsg) return '';
-  return lastMsg.content
+function getSessionTitle(session: SessionData): string {
+  const firstUserMsg = session.messages.find((m) => m.role === 'user' && m.content.trim());
+  if (!firstUserMsg) return session.name;
+  return firstUserMsg.content
     .replace(/```[\s\S]*?```/g, '[code]')
     .replace(/#{1,6}\s+/g, '')
     .replace(/\*\*/g, '')
     .replace(/`([^`]+)`/g, '$1')
     .replace(/\n+/g, ' ')
     .trim()
-    .slice(0, 100);
+    .slice(0, 80);
 }
 
 function formatCost(cost: number): string {
   if (cost <= 0) return '';
   return `$${cost.toFixed(cost < 0.01 ? 4 : 2)}`;
+}
+
+function getModelShort(model?: string): string {
+  if (!model) return '';
+  return model.replace('claude-', '').split('-')[0];
 }
 
 export default function SessionList({
@@ -276,7 +281,7 @@ export default function SessionList({
   if (folders.length === 0) {
     return (
       <div className="empty-state">
-        <FolderPlus size={32} strokeWidth={1.2} className="empty-state-icon" />
+        <FolderPlus size={28} strokeWidth={1.2} className="empty-state-icon" aria-hidden="true" />
         <p>No folders yet</p>
         <p>Add a workspace folder to get started</p>
       </div>
@@ -286,7 +291,7 @@ export default function SessionList({
   if (folderSections.length === 0) {
     return (
       <div className="empty-state">
-        <SearchIcon size={32} strokeWidth={1.2} className="empty-state-icon" />
+        <SearchIcon size={28} strokeWidth={1.2} className="empty-state-icon" aria-hidden="true" />
         <p>No results</p>
         <p>Try a different keyword</p>
       </div>
@@ -320,7 +325,7 @@ export default function SessionList({
                 }}
               >
                 <span className={`folder-chevron ${isExpanded ? 'open' : ''}`} aria-hidden="true">
-                  <ChevronRight size={14} strokeWidth={2} />
+                  <ChevronRight size={12} strokeWidth={2.5} />
                 </span>
                 <span className="folder-name">{folder.name}</span>
                 {(isSyncing || (!folder.hasSyncedClaudeHistory && folder.kind === 'local')) && (
@@ -343,7 +348,7 @@ export default function SessionList({
                     title="New session"
                     aria-label="New session"
                   >
-                    <Plus size={14} strokeWidth={2} />
+                    <Plus size={13} strokeWidth={2.5} />
                   </button>
                 </div>
               </div>
@@ -354,14 +359,21 @@ export default function SessionList({
                     folderSessions.map((session, index) => {
                       const isEditing = editingId === session.id;
                       const isActive = activeSessionId === session.id;
-                      const preview = getSessionPreview(session);
+                      const title = getSessionTitle(session);
                       const cost = formatCost(session.cost);
                       const msgCount = session.messages.length;
+                      const modelShort = getModelShort(session.model);
+
+                      const subtitleParts: string[] = [];
+                      if (modelShort) subtitleParts.push(modelShort);
+                      if (msgCount > 0) subtitleParts.push(`${msgCount} msgs`);
+                      if (cost) subtitleParts.push(cost);
+                      subtitleParts.push(formatRelativeTime(session.updatedAt));
 
                       return (
                         <div
                           key={session.id}
-                          className={`session-card ${isActive ? 'active' : ''}`}
+                          className={`session-row ${isActive ? 'active' : ''}`}
                           style={{ '--session-idx': index } as React.CSSProperties}
                           role="button"
                           tabIndex={0}
@@ -393,36 +405,11 @@ export default function SessionList({
                             />
                           ) : (
                             <>
-                              {/* Card header: name + time */}
-                              <div className="session-card-header">
-                                <span className="session-card-name">{session.name}</span>
-                                <span className="session-card-time">{formatRelativeTime(session.updatedAt)}</span>
+                              <span className="session-dot" aria-hidden="true" />
+                              <div className="session-body">
+                                <span className="session-title">{title}</span>
+                                <span className="session-subtitle">{subtitleParts.join(' · ')}</span>
                               </div>
-
-                              {/* Preview text */}
-                              {preview && (
-                                <p className="session-card-preview">{preview}</p>
-                              )}
-
-                              {/* Footer: metadata badges */}
-                              <div className="session-card-footer">
-                                {msgCount > 0 && (
-                                  <span className="session-card-badge">
-                                    <MessageSquare size={10} strokeWidth={2} />
-                                    {msgCount}
-                                  </span>
-                                )}
-                                {cost && (
-                                  <span className="session-card-badge">{cost}</span>
-                                )}
-                                {session.model && (
-                                  <span className="session-card-badge session-card-model">
-                                    {session.model.replace('claude-', '').split('-')[0]}
-                                  </span>
-                                )}
-                              </div>
-
-                              {/* Delete action */}
                               <div className={`session-actions ${pendingDeleteId === session.id ? 'confirming' : ''}`}>
                                 <button
                                   type="button"
@@ -434,7 +421,7 @@ export default function SessionList({
                                   title="Delete session"
                                   aria-label="Delete session"
                                 >
-                                  <X size={12} strokeWidth={2} />
+                                  <X size={11} strokeWidth={2.5} />
                                 </button>
                                 <button
                                   type="button"

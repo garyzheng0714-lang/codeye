@@ -6,6 +6,7 @@
   flex-direction: column;
   gap: var(--space-5);
   position: relative;
+  contain: layout style;
 }
 
 .message-list > .message-list-spacer {
