@@ -14,6 +14,7 @@ export interface QueryParams {
   mode?: string;
   model?: string;
   effort?: string;
+  permissionMode?: string;
 }
 
 export interface AuthResult {

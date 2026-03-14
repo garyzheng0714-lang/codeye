@@ -8,6 +8,8 @@ import { finishStreamTrace, markStreamChunk } from '../observability/perfBaselin
 import { StreamBatcher } from '../services/streamBatcher';
 import { getEffectiveEffort, normalizeModelId, toCliModelId } from '../data/models';
 import { setRuntimeSlashCommands } from '../data/slashCommands';
+import { useUIStore } from '../stores/uiStore';
+import { toCliPermissionMode } from '../services/permissionMode';
 
 function getActions(): StoreActions {
   const s = useChatStore.getState();
@@ -148,12 +150,27 @@ export function useClaudeChat() {
 }
 
 export function sendClaudeQuery(
-  params: { prompt: string; mode?: string; model?: string; effort?: string; cwd?: string; sessionId?: string }
+  params: {
+    prompt: string;
+    mode?: string;
+    model?: string;
+    effort?: string;
+    cwd?: string;
+    sessionId?: string;
+    permissionMode?: string;
+  }
 ) {
   const normalizedModel = normalizeModelId(params.model);
   const model = toCliModelId(normalizedModel);
   const effort = getEffectiveEffort(normalizedModel, params.effort);
-  const sanitizedParams = { ...params, model, effort };
+  const uiPermissionMode = useUIStore.getState().permissionMode;
+  const permissionMode = toCliPermissionMode(params.permissionMode ?? uiPermissionMode);
+  const sanitizedParams = {
+    ...params,
+    model,
+    effort,
+    permissionMode,
+  };
 
   console.log('[sendClaudeQuery]', { hasElectronAPI: !!window.electronAPI, params: sanitizedParams });
   if (window.electronAPI) {

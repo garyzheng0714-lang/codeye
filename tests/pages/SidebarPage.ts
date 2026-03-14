@@ -55,7 +55,7 @@ export class SidebarPage {
   }
 
   async renameSession(index: number, name: string) {
-    await this.sessionItems.nth(index).locator('.session-item-content').dblclick();
+    await this.sessionItems.nth(index).dblclick();
     const renameInput = this.page.locator('.session-rename-input');
     await renameInput.fill(name);
     await renameInput.press('Enter');

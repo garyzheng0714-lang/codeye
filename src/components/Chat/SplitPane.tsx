@@ -4,7 +4,9 @@ import remarkGfm from 'remark-gfm';
 import { parseClaudeMessage } from '../../types/protocol';
 import { parseStreamEvent } from '../../types/streamEvent';
 import { useChatStore } from '../../stores/chatStore';
+import { useUIStore } from '../../stores/uiStore';
 import { getEffectiveEffort, normalizeModelId, toCliModelId } from '../../data/models';
+import { toCliPermissionMode } from '../../services/permissionMode';
 
 const WS_URL = 'ws://localhost:5174';
 const PANE_ID = 'secondary';
@@ -192,12 +194,14 @@ export default function SplitPane({ onClose }: { onClose: () => void }) {
     setIsStreaming(true);
 
     const chatState = useChatStore.getState();
+    const uiState = useUIStore.getState();
     const normalizedModel = normalizeModelId(chatState.model);
     const params = {
       prompt: text,
       model: toCliModelId(normalizedModel),
       effort: getEffectiveEffort(normalizedModel, chatState.effort),
       cwd: chatState.cwd || undefined,
+      permissionMode: toCliPermissionMode(uiState.permissionMode),
     };
 
     if (window.electronAPI) {

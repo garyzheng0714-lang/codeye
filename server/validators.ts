@@ -5,6 +5,7 @@ export interface QueryMessage {
   mode?: string;
   model?: string;
   effort?: string;
+  permissionMode?: string;
   sessionId?: string;
 }
 

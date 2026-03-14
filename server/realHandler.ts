@@ -15,14 +15,38 @@ const ALLOWED_MODELS = new Set([
   'claude-haiku-4-5',
 ]);
 const ALLOWED_EFFORTS = new Set(['low', 'medium', 'high']);
-const MODE_TO_PERMISSION: Record<string, string> = {
-  plan: 'plan',
-};
+const ALLOWED_PERMISSION_MODES = new Set([
+  'default',
+  'plan',
+  'auto',
+  'dontAsk',
+  'acceptEdits',
+  'bypassPermissions',
+]);
 
 function supportsEffort(model?: string): boolean {
   if (!model) return true;
   const normalized = model.toLowerCase();
   return !(normalized === 'haiku' || normalized.startsWith('claude-haiku-'));
+}
+
+function resolvePermissionMode(
+  requestedPermissionMode?: string,
+  mode?: string
+): string | undefined {
+  if (typeof requestedPermissionMode === 'string') {
+    const normalized = requestedPermissionMode.trim();
+    const mapped = normalized === 'full-access' ? 'bypassPermissions' : normalized;
+    if (ALLOWED_PERMISSION_MODES.has(mapped)) {
+      return mapped;
+    }
+  }
+
+  if (mode === 'plan') {
+    return 'plan';
+  }
+
+  return undefined;
 }
 
 export const clientProcesses = new Map<WebSocket, ChildProcess>();
@@ -92,8 +116,9 @@ export function handleRealQuery(ws: WebSocket, msg: QueryMessage) {
     args.push('--effort', msg.effort);
   }
 
-  if (msg.mode && typeof msg.mode === 'string' && MODE_TO_PERMISSION[msg.mode]) {
-    args.push('--permission-mode', MODE_TO_PERMISSION[msg.mode]);
+  const permissionMode = resolvePermissionMode(msg.permissionMode, msg.mode);
+  if (permissionMode && permissionMode !== 'default') {
+    args.push('--permission-mode', permissionMode);
   }
 
   if (msg.sessionId && typeof msg.sessionId === 'string' && SESSION_ID_RE.test(msg.sessionId)) {

@@ -16,6 +16,14 @@ const ALLOWED_MODELS = new Set([
   'claude-haiku-4-5',
 ]);
 const ALLOWED_EFFORTS = new Set(['low', 'medium', 'high']);
+const ALLOWED_PERMISSION_MODES = new Set([
+  'default',
+  'plan',
+  'auto',
+  'dontAsk',
+  'acceptEdits',
+  'bypassPermissions',
+]);
 const CLAUDE_CLI_NOT_FOUND_MESSAGE =
   'Claude CLI executable not found. Install with "npm i -g @anthropic-ai/claude-code", or set CLAUDE_PATH to the absolute binary path.';
 const COMMON_CLAUDE_PATHS = [
@@ -30,6 +38,25 @@ function supportsEffort(model?: string): boolean {
   if (!model) return true;
   const normalized = model.toLowerCase();
   return !(normalized === 'haiku' || normalized.startsWith('claude-haiku-'));
+}
+
+function resolvePermissionMode(
+  requestedPermissionMode: unknown,
+  safeMode: string
+): string | undefined {
+  if (typeof requestedPermissionMode === 'string') {
+    const normalized = requestedPermissionMode.trim();
+    const mapped = normalized === 'full-access' ? 'bypassPermissions' : normalized;
+    if (ALLOWED_PERMISSION_MODES.has(mapped)) {
+      return mapped;
+    }
+  }
+
+  if (safeMode === 'plan') {
+    return 'plan';
+  }
+
+  return undefined;
 }
 
 function isExecutableFile(filePath: string): boolean {
@@ -178,9 +205,27 @@ function checkClaudeAuth(): { authenticated: boolean; method?: string; error?: s
 export function registerClaudeHandlers(ipcMain: IpcMain) {
   ipcMain.handle('claude:check-auth', () => checkClaudeAuth());
 
-  ipcMain.handle('claude:query', async (event, { prompt, sessionId, cwd, mode = 'code', model, effort, paneId }) => {
+  ipcMain.handle('claude:query', async (event, {
+    prompt,
+    sessionId,
+    cwd,
+    mode = 'code',
+    model,
+    effort,
+    permissionMode,
+    paneId,
+  }) => {
     const safePaneId = typeof paneId === 'string' && paneId.length > 0 ? paneId : 'primary';
-    console.log('[claude:query] received:', { prompt: prompt?.slice(0, 50), sessionId, cwd, mode, model, effort, paneId: safePaneId });
+    console.log('[claude:query] received:', {
+      prompt: prompt?.slice(0, 50),
+      sessionId,
+      cwd,
+      mode,
+      model,
+      effort,
+      permissionMode,
+      paneId: safePaneId,
+    });
     const win = BrowserWindow.fromWebContents(event.sender);
     if (!win) { console.log('[claude:query] no window found'); return; }
 
@@ -195,6 +240,7 @@ export function registerClaudeHandlers(ipcMain: IpcMain) {
     if (!safePrompt) return;
 
     const safeMode = typeof mode === 'string' && ALLOWED_MODES.has(mode) ? mode : 'code';
+    const safePermissionMode = resolvePermissionMode(permissionMode, safeMode);
 
     // -p = print mode (non-interactive)
     // --output-format stream-json requires --verbose
@@ -218,8 +264,8 @@ export function registerClaudeHandlers(ipcMain: IpcMain) {
       args.push('--effort', effort);
     }
 
-    if (safeMode === 'plan') {
-      args.push('--permission-mode', 'plan');
+    if (safePermissionMode && safePermissionMode !== 'default') {
+      args.push('--permission-mode', safePermissionMode);
     }
 
     args.push(safePrompt);

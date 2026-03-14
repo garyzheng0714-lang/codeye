@@ -1,13 +1,13 @@
 interface ElectronAPI {
   getCwd: () => Promise<string>;
   claude: {
-    query: (params: { prompt: string; sessionId?: string; cwd?: string; mode?: string; model?: string; effort?: string }) => Promise<void>;
+    query: (params: { prompt: string; sessionId?: string; cwd?: string; mode?: string; model?: string; effort?: string; permissionMode?: string }) => Promise<void>;
     stop: () => Promise<void>;
     checkAuth: () => Promise<{ authenticated: boolean; method?: string; error?: string }>;
     onMessage: (callback: (message: unknown) => void) => () => void;
     onComplete: (callback: () => void) => () => void;
     onError: (callback: (error: string) => void) => () => void;
-    queryPane: (paneId: string, params: { prompt: string; sessionId?: string; cwd?: string; mode?: string; model?: string; effort?: string }) => Promise<void>;
+    queryPane: (paneId: string, params: { prompt: string; sessionId?: string; cwd?: string; mode?: string; model?: string; effort?: string; permissionMode?: string }) => Promise<void>;
     stopPane: (paneId: string) => Promise<void>;
     onPaneMessage: (paneId: string, callback: (message: unknown) => void) => () => void;
     onPaneComplete: (paneId: string, callback: () => void) => () => void;

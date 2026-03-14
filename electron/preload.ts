@@ -3,7 +3,7 @@ import { contextBridge, ipcRenderer } from 'electron';
 contextBridge.exposeInMainWorld('electronAPI', {
   getCwd: () => ipcRenderer.invoke('app:get-cwd'),
   claude: {
-    query: (params: { prompt: string; sessionId?: string; cwd?: string; mode?: string; model?: string; effort?: string }) =>
+    query: (params: { prompt: string; sessionId?: string; cwd?: string; mode?: string; model?: string; effort?: string; permissionMode?: string }) =>
       ipcRenderer.invoke('claude:query', params),
     stop: () => ipcRenderer.invoke('claude:stop', 'primary'),
     checkAuth: () => ipcRenderer.invoke('claude:check-auth'),
@@ -22,7 +22,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
       ipcRenderer.on('claude:error', handler);
       return () => ipcRenderer.removeListener('claude:error', handler);
     },
-    queryPane: (paneId: string, params: { prompt: string; sessionId?: string; cwd?: string; mode?: string; model?: string; effort?: string }) =>
+    queryPane: (paneId: string, params: { prompt: string; sessionId?: string; cwd?: string; mode?: string; model?: string; effort?: string; permissionMode?: string }) =>
       ipcRenderer.invoke('claude:query', { ...params, paneId }),
     stopPane: (paneId: string) => ipcRenderer.invoke('claude:stop', paneId),
     onPaneMessage: (paneId: string, callback: (message: unknown) => void) => {
