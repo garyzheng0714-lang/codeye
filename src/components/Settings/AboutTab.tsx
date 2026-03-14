@@ -42,6 +42,7 @@ export default function AboutTab() {
     if (!updater) return 'Desktop only';
     if (isUpdateActionBusy) return 'Working...';
 
+    if (updateState?.stage === 'unsupported') return 'Download Latest';
     if (updateState?.stage === 'downloaded') return 'Restart to Install';
     if (updateState?.stage === 'checking') return 'Checking...';
     if (updateState?.stage === 'available' || updateState?.stage === 'downloading') return 'Downloading...';
@@ -51,7 +52,6 @@ export default function AboutTab() {
   const isUpdateButtonDisabled =
     !updater
     || isUpdateActionBusy
-    || updateState?.stage === 'unsupported'
     || updateState?.stage === 'checking'
     || updateState?.stage === 'available'
     || updateState?.stage === 'downloading';
@@ -61,7 +61,9 @@ export default function AboutTab() {
 
     setIsUpdateActionBusy(true);
     try {
-      if (updateState?.stage === 'downloaded') {
+      if (updateState?.stage === 'unsupported') {
+        await updater.openLatestRelease();
+      } else if (updateState?.stage === 'downloaded') {
         const willInstall = await updater.quitAndInstall();
         if (!willInstall) {
           setUpdateState((prev) => ({

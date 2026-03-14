@@ -40,6 +40,7 @@ interface ElectronAPI {
     getState: () => Promise<UpdaterState>;
     checkForUpdates: () => Promise<UpdaterState>;
     quitAndInstall: () => Promise<boolean>;
+    openLatestRelease: () => Promise<boolean>;
     onStateChange: (callback: (state: UpdaterState) => void) => () => void;
   };
 }

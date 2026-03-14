@@ -1,4 +1,6 @@
-import { app, type BrowserWindow, type IpcMain } from 'electron';
+import { spawnSync } from 'node:child_process';
+import path from 'node:path';
+import { app, shell, type BrowserWindow, type IpcMain } from 'electron';
 import { autoUpdater, type ProgressInfo, type UpdateInfo } from 'electron-updater';
 
 type UpdaterStage =
@@ -23,6 +25,9 @@ interface UpdaterState {
 
 const UPDATER_EVENT_CHANNEL = 'updater:state';
 const unsupportedMessage = 'Auto update is only available in packaged desktop builds.';
+const macSignatureUnsupportedMessage =
+  'In-app install requires a Developer ID signed macOS build. Current app is ad-hoc signed. Use Download Latest instead.';
+const latestReleaseUrl = 'https://github.com/garyzheng0714-lang/codeye/releases/latest';
 
 let state: UpdaterState = {
   stage: 'idle',
@@ -32,9 +37,32 @@ let state: UpdaterState = {
 let isChecking = false;
 let handlersBound = false;
 let getMainWindow: (() => BrowserWindow | null) | null = null;
+let supportsInAppInstallCache: boolean | null = null;
 
 function isUpdaterSupported(): boolean {
   return app.isPackaged;
+}
+
+function hasMacInstallCompatibleSignature(): boolean {
+  if (supportsInAppInstallCache !== null) return supportsInAppInstallCache;
+  if (process.platform !== 'darwin') {
+    supportsInAppInstallCache = true;
+    return true;
+  }
+
+  const appBundlePath = path.resolve(process.execPath, '../../..');
+  const result = spawnSync('codesign', ['-dv', '--verbose=4', appBundlePath], { encoding: 'utf8' });
+  const output = `${result.stdout || ''}\n${result.stderr || ''}`;
+  const isAdhoc = /Signature=adhoc/i.test(output);
+  const teamNotSet = /TeamIdentifier=not set/i.test(output);
+  supportsInAppInstallCache = !isAdhoc && !teamNotSet;
+  return supportsInAppInstallCache;
+}
+
+function getUnsupportedReason(): string | null {
+  if (!isUpdaterSupported()) return unsupportedMessage;
+  if (!hasMacInstallCompatibleSignature()) return macSignatureUnsupportedMessage;
+  return null;
 }
 
 function buildState(
@@ -83,6 +111,9 @@ function mapCheckErrorMessage(error: unknown): string {
   }
   if (lower.includes('latest') && lower.includes('release')) {
     return 'No latest release is available yet. Publish a versioned release to enable updates.';
+  }
+  if (lower.includes('did not pass validation') || lower.includes('code signature')) {
+    return 'Update package failed macOS signature validation. Use Download Latest, or publish Developer ID signed builds.';
   }
   return `Unable to check for updates: ${raw}`;
 }
@@ -137,15 +168,17 @@ export function registerUpdaterHandlers(
   bindUpdaterEvents();
 
   ipcMain.handle('updater:get-state', () => {
-    if (!isUpdaterSupported()) {
-      return setUpdaterState('unsupported', unsupportedMessage);
+    const unsupportedReason = getUnsupportedReason();
+    if (unsupportedReason) {
+      return setUpdaterState('unsupported', unsupportedReason);
     }
     return state;
   });
 
   ipcMain.handle('updater:check-for-updates', async () => {
-    if (!isUpdaterSupported()) {
-      return setUpdaterState('unsupported', unsupportedMessage);
+    const unsupportedReason = getUnsupportedReason();
+    if (unsupportedReason) {
+      return setUpdaterState('unsupported', unsupportedReason);
     }
     if (isChecking) return state;
 
@@ -161,12 +194,17 @@ export function registerUpdaterHandlers(
   });
 
   ipcMain.handle('updater:quit-and-install', () => {
-    if (!isUpdaterSupported()) return false;
+    if (getUnsupportedReason()) return false;
     if (state.stage !== 'downloaded') return false;
 
     setImmediate(() => {
       autoUpdater.quitAndInstall();
     });
+    return true;
+  });
+
+  ipcMain.handle('updater:open-latest-release', async () => {
+    await shell.openExternal(latestReleaseUrl);
     return true;
   });
 }

@@ -36,3 +36,4 @@
 - 当前默认不做签名/公证（`CSC_IDENTITY_AUTO_DISCOVERY=false`），首次分发会有 macOS 安全提示，属于预期行为。
 - 如需正式分发（减少“无法验证开发者”提示），后续可以再接入 Apple Developer 签名和 notarization。
 - App 内「One-click Update」基于 GitHub Releases：必须有更高版本号的 Release，并包含 `latest-mac.yml`、`.zip`、`.dmg`、`.blockmap`。
+- 若要真正“应用内自动安装更新”（无需手动拖拽覆盖），macOS 包还需要 **Developer ID** 签名（并建议 notarization）；ad-hoc 签名只能跳转下载页进行手动安装。
