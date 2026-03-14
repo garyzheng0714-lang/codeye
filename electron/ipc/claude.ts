@@ -5,6 +5,7 @@ import path from 'path';
 import os from 'os';
 
 const MAX_PROMPT_LEN = 32_000;
+const MAX_ATTACHMENT_BYTES = 12 * 1024 * 1024;
 const SESSION_ID_RE = /^[a-zA-Z0-9_-]{1,128}$/;
 const ALLOWED_MODES = new Set(['chat', 'code', 'plan']);
 const ALLOWED_MODELS = new Set([
@@ -173,6 +174,57 @@ function safeCwd(requestedCwd?: string): string {
   return resolved;
 }
 
+function sanitizeAttachmentName(raw: string, index: number): string {
+  const fallback = `attachment-${Date.now()}-${index + 1}.bin`;
+  const base = raw.trim() || fallback;
+  const safe = base.replace(/[^a-zA-Z0-9._-]/g, '_');
+  if (safe.startsWith('.')) return `file${safe}`;
+  return safe;
+}
+
+function decodeBase64Payload(input: string): Buffer | null {
+  if (!input || typeof input !== 'string') return null;
+  const normalized = input.includes(',') ? input.split(',').at(-1) ?? '' : input;
+  if (!normalized) return null;
+  try {
+    return Buffer.from(normalized, 'base64');
+  } catch {
+    return null;
+  }
+}
+
+function persistAttachments(
+  attachments: unknown,
+  cwd: string
+): string[] {
+  if (!Array.isArray(attachments) || attachments.length === 0) return [];
+  const dir = path.join(cwd, '.codeye', 'attachments');
+  fs.mkdirSync(dir, { recursive: true });
+  const saved: string[] = [];
+
+  attachments.forEach((entry, index) => {
+    if (!entry || typeof entry !== 'object') return;
+    const attachment = entry as { name?: unknown; dataBase64?: unknown };
+    const name = sanitizeAttachmentName(typeof attachment.name === 'string' ? attachment.name : '', index);
+    const payload = decodeBase64Payload(
+      typeof attachment.dataBase64 === 'string' ? attachment.dataBase64 : ''
+    );
+    if (!payload || payload.length === 0 || payload.length > MAX_ATTACHMENT_BYTES) return;
+    const unique = `${Date.now()}-${index + 1}-${name}`;
+    const filePath = path.join(dir, unique);
+    fs.writeFileSync(filePath, payload);
+    saved.push(filePath);
+  });
+
+  return saved;
+}
+
+function buildPromptWithAttachments(prompt: string, attachmentPaths: string[]): string {
+  if (attachmentPaths.length === 0) return prompt;
+  const lines = attachmentPaths.map((filePath) => `#file ${filePath}`);
+  return `${prompt}\n\nUse these attachments as context before answering:\n${lines.join('\n')}`;
+}
+
 function checkClaudeAuth(): { authenticated: boolean; method?: string; error?: string } {
   const claudeBinary = resolveClaudeBinary();
   if (!claudeBinary) {
@@ -213,6 +265,7 @@ export function registerClaudeHandlers(ipcMain: IpcMain) {
     model,
     effort,
     permissionMode,
+    attachments,
     paneId,
   }) => {
     const safePaneId = typeof paneId === 'string' && paneId.length > 0 ? paneId : 'primary';
@@ -224,6 +277,7 @@ export function registerClaudeHandlers(ipcMain: IpcMain) {
       model,
       effort,
       permissionMode,
+      attachmentCount: Array.isArray(attachments) ? attachments.length : 0,
       paneId: safePaneId,
     });
     const win = BrowserWindow.fromWebContents(event.sender);
@@ -236,7 +290,11 @@ export function registerClaudeHandlers(ipcMain: IpcMain) {
     }
     const channels = getEventChannels(safePaneId);
 
-    const safePrompt = typeof prompt === 'string' ? prompt.slice(0, MAX_PROMPT_LEN) : '';
+    const safeWorkingDir = safeCwd(cwd);
+    const attachmentPaths = persistAttachments(attachments, safeWorkingDir);
+    const safePrompt = typeof prompt === 'string'
+      ? buildPromptWithAttachments(prompt, attachmentPaths).slice(0, MAX_PROMPT_LEN)
+      : '';
     if (!safePrompt) return;
 
     const safeMode = typeof mode === 'string' && ALLOWED_MODES.has(mode) ? mode : 'code';
@@ -278,7 +336,7 @@ export function registerClaudeHandlers(ipcMain: IpcMain) {
 
     console.log('[claude:query] spawning:', claudeBinary, args.join(' '));
     const proc = spawn(claudeBinary, args, {
-      cwd: safeCwd(cwd),
+      cwd: safeWorkingDir,
       env: getCleanEnv(),
       stdio: ['ignore', 'pipe', 'pipe'],
     });

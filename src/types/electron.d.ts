@@ -1,13 +1,13 @@
 interface ElectronAPI {
   getCwd: () => Promise<string>;
   claude: {
-    query: (params: { prompt: string; sessionId?: string; cwd?: string; mode?: string; model?: string; effort?: string; permissionMode?: string }) => Promise<void>;
+    query: (params: { prompt: string; sessionId?: string; cwd?: string; mode?: string; model?: string; effort?: string; permissionMode?: string; attachments?: ElectronAttachment[] }) => Promise<void>;
     stop: () => Promise<void>;
     checkAuth: () => Promise<{ authenticated: boolean; method?: string; error?: string }>;
     onMessage: (callback: (message: unknown) => void) => () => void;
     onComplete: (callback: () => void) => () => void;
     onError: (callback: (error: string) => void) => () => void;
-    queryPane: (paneId: string, params: { prompt: string; sessionId?: string; cwd?: string; mode?: string; model?: string; effort?: string; permissionMode?: string }) => Promise<void>;
+    queryPane: (paneId: string, params: { prompt: string; sessionId?: string; cwd?: string; mode?: string; model?: string; effort?: string; permissionMode?: string; attachments?: ElectronAttachment[] }) => Promise<void>;
     stopPane: (paneId: string) => Promise<void>;
     onPaneMessage: (paneId: string, callback: (message: unknown) => void) => () => void;
     onPaneComplete: (paneId: string, callback: () => void) => () => void;
@@ -24,6 +24,7 @@ interface ElectronAPI {
     list: () => Promise<ProjectInfo[]>;
     selectDirectory: () => Promise<string | null>;
     importClaudeHistory: (folderPath: string) => Promise<ImportedClaudeSession[]>;
+    getGitStatus: (cwd: string) => Promise<GitStatusSnapshot>;
   };
   secrets: {
     get: (key: string) => Promise<string | null>;
@@ -102,6 +103,23 @@ interface ImportedToolCall {
   input: Record<string, unknown>;
   output?: string;
   expanded: boolean;
+}
+
+interface ElectronAttachment {
+  id: string;
+  name: string;
+  mimeType: string;
+  size: number;
+  dataBase64: string;
+}
+
+interface GitStatusSnapshot {
+  available: boolean;
+  cwd: string;
+  branch: string | null;
+  dirty: boolean;
+  ahead: number;
+  behind: number;
 }
 
 declare global {

@@ -1,4 +1,5 @@
 import { IpcMain, dialog, BrowserWindow } from 'electron';
+import { spawnSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
@@ -29,6 +30,15 @@ interface ImportedClaudeSession {
   outputTokens: number;
   createdAt: number;
   updatedAt: number;
+}
+
+interface GitStatusSnapshot {
+  available: boolean;
+  cwd: string;
+  branch: string | null;
+  dirty: boolean;
+  ahead: number;
+  behind: number;
 }
 
 function resolveProjectPath(folderPath: string): string {
@@ -280,6 +290,88 @@ function readClaudeHistoryForPath(folderPath: string): ImportedClaudeSession[] {
     .sort((a, b) => b.updatedAt - a.updatedAt);
 }
 
+function readGitStatusForPath(folderPath: string): GitStatusSnapshot {
+  const safePath = resolveProjectPath(folderPath);
+  try {
+    if (!fs.existsSync(safePath) || !fs.statSync(safePath).isDirectory()) {
+      return {
+        available: false,
+        cwd: safePath,
+        branch: null,
+        dirty: false,
+        ahead: 0,
+        behind: 0,
+      };
+    }
+  } catch {
+    return {
+      available: false,
+      cwd: safePath,
+      branch: null,
+      dirty: false,
+      ahead: 0,
+      behind: 0,
+    };
+  }
+
+  const probe = spawnSync('git', ['-C', safePath, 'status', '--porcelain=2', '--branch'], {
+    encoding: 'utf8',
+  });
+  if (probe.status !== 0 || probe.error) {
+    return {
+      available: false,
+      cwd: safePath,
+      branch: null,
+      dirty: false,
+      ahead: 0,
+      behind: 0,
+    };
+  }
+
+  const output = typeof probe.stdout === 'string' ? probe.stdout : '';
+  let branch: string | null = null;
+  let dirty = false;
+  let ahead = 0;
+  let behind = 0;
+
+  for (const rawLine of output.split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (!line) continue;
+
+    if (line.startsWith('# branch.head ')) {
+      const value = line.replace('# branch.head ', '').trim();
+      if (value && value !== '(detached)') {
+        branch = value;
+      } else if (value === '(detached)') {
+        branch = 'detached';
+      }
+      continue;
+    }
+
+    if (line.startsWith('# branch.ab ')) {
+      const match = line.match(/# branch\.ab \+(\d+) -(\d+)/);
+      if (match) {
+        ahead = Number.parseInt(match[1], 10) || 0;
+        behind = Number.parseInt(match[2], 10) || 0;
+      }
+      continue;
+    }
+
+    if (!line.startsWith('#')) {
+      dirty = true;
+    }
+  }
+
+  return {
+    available: true,
+    cwd: safePath,
+    branch,
+    dirty,
+    ahead,
+    behind,
+  };
+}
+
 export function registerProjectHandlers(ipcMain: IpcMain) {
   ipcMain.handle('projects:list', () => {
     const projectsDir = path.join(os.homedir(), '.claude', 'projects');
@@ -317,6 +409,21 @@ export function registerProjectHandlers(ipcMain: IpcMain) {
     }
 
     return readClaudeHistoryForPath(folderPath);
+  });
+
+  ipcMain.handle('projects:get-git-status', (_, folderPath?: string) => {
+    if (typeof folderPath !== 'string' || !folderPath.trim()) {
+      return {
+        available: false,
+        cwd: '',
+        branch: null,
+        dirty: false,
+        ahead: 0,
+        behind: 0,
+      } satisfies GitStatusSnapshot;
+    }
+
+    return readGitStatusForPath(folderPath);
   });
 
   ipcMain.handle('window:minimize', (event) => {

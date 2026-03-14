@@ -6,6 +6,7 @@ import { SESSION_ID_RE, type QueryMessage } from './validators';
 import { wrapEvent } from './streamEvent';
 
 const MAX_PROMPT_LEN = 32_000;
+const MAX_ATTACHMENT_BYTES = 12 * 1024 * 1024;
 const ALLOWED_MODELS = new Set([
   'opus',
   'sonnet',
@@ -50,6 +51,53 @@ function resolvePermissionMode(
 }
 
 export const clientProcesses = new Map<WebSocket, ChildProcess>();
+
+function sanitizeAttachmentName(raw: string, index: number): string {
+  const fallback = `attachment-${Date.now()}-${index + 1}.bin`;
+  const base = raw.trim() || fallback;
+  const safe = base.replace(/[^a-zA-Z0-9._-]/g, '_');
+  if (safe.startsWith('.')) return `file${safe}`;
+  return safe;
+}
+
+function decodeBase64Payload(input: string): Buffer | null {
+  if (!input || typeof input !== 'string') return null;
+  const normalized = input.includes(',') ? input.split(',').at(-1) ?? '' : input;
+  if (!normalized) return null;
+  try {
+    return Buffer.from(normalized, 'base64');
+  } catch {
+    return null;
+  }
+}
+
+function persistAttachments(msg: QueryMessage, cwd: string): string[] {
+  if (!Array.isArray(msg.attachments) || msg.attachments.length === 0) return [];
+  const dir = path.join(cwd, '.codeye', 'attachments');
+  fs.mkdirSync(dir, { recursive: true });
+  const saved: string[] = [];
+
+  msg.attachments.forEach((attachment, index) => {
+    if (!attachment || typeof attachment !== 'object') return;
+    const name = sanitizeAttachmentName(typeof attachment.name === 'string' ? attachment.name : '', index);
+    const payload = decodeBase64Payload(
+      typeof attachment.dataBase64 === 'string' ? attachment.dataBase64 : ''
+    );
+    if (!payload || payload.length === 0 || payload.length > MAX_ATTACHMENT_BYTES) return;
+    const unique = `${Date.now()}-${index + 1}-${name}`;
+    const filePath = path.join(dir, unique);
+    fs.writeFileSync(filePath, payload);
+    saved.push(filePath);
+  });
+
+  return saved;
+}
+
+function buildPromptWithAttachments(prompt: string, attachmentPaths: string[]): string {
+  if (attachmentPaths.length === 0) return prompt;
+  const lines = attachmentPaths.map((filePath) => `#file ${filePath}`);
+  return `${prompt}\n\nUse these attachments as context before answering:\n${lines.join('\n')}`;
+}
 
 function safeCwd(requestedCwd?: string): string {
   if (!requestedCwd) return process.cwd();
@@ -100,7 +148,9 @@ export function handleRealQuery(ws: WebSocket, msg: QueryMessage) {
     clientProcesses.delete(ws);
   }
 
-  const prompt = msg.prompt.slice(0, MAX_PROMPT_LEN);
+  const safeWorkingDir = safeCwd(msg.cwd);
+  const attachmentPaths = persistAttachments(msg, safeWorkingDir);
+  const prompt = buildPromptWithAttachments(msg.prompt, attachmentPaths).slice(0, MAX_PROMPT_LEN);
   const args = ['-p', '--output-format', 'stream-json', '--verbose'];
 
   if (msg.model && typeof msg.model === 'string' && ALLOWED_MODELS.has(msg.model)) {
@@ -128,7 +178,7 @@ export function handleRealQuery(ws: WebSocket, msg: QueryMessage) {
   args.push(prompt);
 
   const childProcess = spawn('claude', args, {
-    cwd: safeCwd(msg.cwd),
+    cwd: safeWorkingDir,
     env: getCleanEnv(),
     stdio: ['ignore', 'pipe', 'pipe'],
   });

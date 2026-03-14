@@ -1,3 +1,11 @@
+export interface QueryAttachment {
+  id?: string;
+  name: string;
+  mimeType?: string;
+  size?: number;
+  dataBase64: string;
+}
+
 export interface QueryMessage {
   type: 'query';
   prompt: string;
@@ -7,6 +15,7 @@ export interface QueryMessage {
   effort?: string;
   permissionMode?: string;
   sessionId?: string;
+  attachments?: QueryAttachment[];
 }
 
 export function isQueryMessage(msg: unknown): msg is QueryMessage {

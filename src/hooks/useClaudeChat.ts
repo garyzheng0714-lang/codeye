@@ -10,6 +10,7 @@ import { getEffectiveEffort, normalizeModelId, toCliModelId } from '../data/mode
 import { setRuntimeSlashCommands } from '../data/slashCommands';
 import { useUIStore } from '../stores/uiStore';
 import { toCliPermissionMode } from '../services/permissionMode';
+import type { InputAttachment } from '../types';
 
 function getActions(): StoreActions {
   const s = useChatStore.getState();
@@ -162,6 +163,7 @@ export function sendClaudeQuery(
     cwd?: string;
     sessionId?: string;
     permissionMode?: string;
+    attachments?: InputAttachment[];
   }
 ) {
   const normalizedModel = normalizeModelId(params.model);

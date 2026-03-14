@@ -1,4 +1,4 @@
-import type { ImportedClaudeSession } from '../types';
+import type { ImportedClaudeSession, InputAttachment } from '../types';
 import { sendMessage } from './websocket';
 
 export type RuntimeMode = 'electron' | 'browser';
@@ -15,6 +15,7 @@ export interface QueryParams {
   model?: string;
   effort?: string;
   permissionMode?: string;
+  attachments?: InputAttachment[];
 }
 
 export interface AuthResult {
@@ -27,6 +28,15 @@ export interface ProjectInfo {
   id: string;
   path: string;
   name: string;
+}
+
+export interface GitStatusSnapshot {
+  available: boolean;
+  cwd: string;
+  branch: string | null;
+  dirty: boolean;
+  ahead: number;
+  behind: number;
 }
 
 export interface ClaudeAdapter {
@@ -42,6 +52,7 @@ export interface ProjectAdapter {
   list(): Promise<ProjectInfo[]>;
   selectDirectory(): Promise<string | null>;
   importClaudeHistory(folderPath: string): Promise<ImportedClaudeSession[]>;
+  getGitStatus(cwd: string): Promise<GitStatusSnapshot>;
 }
 
 function createElectronClaudeAdapter(): ClaudeAdapter {
@@ -92,6 +103,7 @@ function createElectronProjectAdapter(): ProjectAdapter {
     list: () => api.projects.list(),
     selectDirectory: () => api.projects.selectDirectory(),
     importClaudeHistory: (folderPath) => api.projects.importClaudeHistory(folderPath),
+    getGitStatus: (cwd) => api.projects.getGitStatus(cwd),
   };
 }
 
@@ -100,6 +112,16 @@ function createBrowserProjectAdapter(): ProjectAdapter {
     async list() { return []; },
     async selectDirectory() { return null; },
     async importClaudeHistory() { return []; },
+    async getGitStatus(cwd) {
+      return {
+        available: false,
+        cwd,
+        branch: null,
+        dirty: false,
+        ahead: 0,
+        behind: 0,
+      };
+    },
   };
 }
 

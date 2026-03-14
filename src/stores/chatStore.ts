@@ -1,5 +1,12 @@
 import { create } from 'zustand';
-import type { ChatMode, DisplayMessage, ToolCallDisplay, ModelId, EffortLevel } from '../types';
+import type {
+  ChatMode,
+  DisplayMessage,
+  ToolCallDisplay,
+  ModelId,
+  EffortLevel,
+  PendingMessage,
+} from '../types';
 import {
   DEFAULT_MODEL,
   DEFAULT_EFFORT,
@@ -20,7 +27,7 @@ interface ChatState {
   cost: number;
   inputTokens: number;
   outputTokens: number;
-  pendingMessages: string[];
+  pendingMessages: PendingMessage[];
 
   setMode: (mode: ChatMode) => void;
   setModel: (model: ModelId) => void;
@@ -36,8 +43,9 @@ interface ChatState {
   updateToolResult: (toolId: string, output: string) => void;
   toggleToolExpand: (messageId: string, toolId: string) => void;
   updateCost: (cost: number, input: number, output: number) => void;
-  enqueueMessage: (content: string) => void;
-  dequeueMessage: () => string | undefined;
+  enqueueMessage: (message: PendingMessage) => void;
+  dequeueMessage: () => PendingMessage | undefined;
+  removeQueuedMessage: (index: number) => PendingMessage | undefined;
   clearQueue: () => void;
   clearMessages: () => void;
   loadSession: (data: { messages: DisplayMessage[]; cost: number; inputTokens: number; outputTokens: number; claudeSessionId?: string | null; model?: ModelId }) => void;
@@ -191,15 +199,24 @@ export const useChatStore = create<ChatState>()((set, get) => ({
       outputTokens: state.outputTokens + output,
     })),
 
-  enqueueMessage: (content) =>
-    set((state) => ({ pendingMessages: [...state.pendingMessages, content] })),
+  enqueueMessage: (message) =>
+    set((state) => ({ pendingMessages: [...state.pendingMessages, message] })),
 
-  dequeueMessage: (): string | undefined => {
+  dequeueMessage: (): PendingMessage | undefined => {
     const { pendingMessages } = get();
     if (pendingMessages.length === 0) return undefined;
     const [first, ...rest] = pendingMessages;
     set({ pendingMessages: rest });
     return first;
+  },
+
+  removeQueuedMessage: (index): PendingMessage | undefined => {
+    const { pendingMessages } = get();
+    if (index < 0 || index >= pendingMessages.length) return undefined;
+    const picked = pendingMessages[index];
+    const rest = pendingMessages.filter((_, idx) => idx !== index);
+    set({ pendingMessages: rest });
+    return picked;
   },
 
   clearQueue: () => set({ pendingMessages: [] }),

@@ -4,14 +4,34 @@ import { useSessionStore } from '../stores/sessionStore';
 import { sendClaudeQuery, stopClaude } from './useClaudeChat';
 import { saveCurrentSession } from '../utils/session';
 import { filterCommands, getSlashCommandByName, type SlashCommand } from '../data/slashCommands';
-import type { ModelId, EffortLevel } from '../types';
+import type { ModelId, EffortLevel, InputAttachment, PendingMessage } from '../types';
 import { startStreamTrace } from '../observability/perfBaseline';
 import { parseContextReferences, CONTEXT_SUGGESTIONS } from '../services/contextReferences';
+import {
+  MAX_ATTACHMENTS_PER_MESSAGE,
+  fileToInputAttachment,
+  takeAttachmentFilesFromClipboard,
+} from '../services/attachments';
 
 const OPEN_SLASH_EVENT = 'codeye:open-slash-command';
 const MAX_INPUT_HEIGHT = 200;
 const COMPACT_INPUT_HEIGHT = 26;
 const SLASH_SELECTION_GUARD_MS = 200;
+const ATTACHMENTS_ONLY_PROMPT = 'Please inspect the attached files and summarize the key points.';
+
+function normalizePendingMessage(payload: PendingMessage): PendingMessage {
+  const prompt = payload.prompt.trim() || ATTACHMENTS_ONLY_PROMPT;
+  return {
+    prompt,
+    attachments: payload.attachments,
+  };
+}
+
+function buildUserMessageDisplay(prompt: string, attachments: InputAttachment[]): string {
+  if (attachments.length === 0) return prompt;
+  const listed = attachments.map((item) => item.name).join(', ');
+  return `${prompt}\n\n[Attachments: ${listed}]`;
+}
 
 export function useInputComposer() {
   const [input, setInput] = useState('');
@@ -19,19 +39,24 @@ export function useInputComposer() {
   const [showContextSuggestions, setShowContextSuggestions] = useState(false);
   const [slashQuery, setSlashQuery] = useState('');
   const [activeSkill, setActiveSkill] = useState<string | null>(null);
+  const [attachments, setAttachments] = useState<InputAttachment[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const composingRef = useRef(false);
   const historyRef = useRef<string[]>([]);
   const historyIdxRef = useRef(-1);
   const draftRef = useRef('');
   const suppressSendUntilRef = useRef(0);
+  const attachmentPasteTokenRef = useRef(0);
 
   const isStreaming = useChatStore((s) => s.isStreaming);
   const mode = useChatStore((s) => s.mode);
+  const pendingMessages = useChatStore((s) => s.pendingMessages);
   const pendingCount = useChatStore((s) => s.pendingMessages.length);
   const addUserMessage = useChatStore((s) => s.addUserMessage);
   const startAssistantMessage = useChatStore((s) => s.startAssistantMessage);
   const enqueueMessage = useChatStore((s) => s.enqueueMessage);
+  const removeQueuedMessage = useChatStore((s) => s.removeQueuedMessage);
+  const clearQueue = useChatStore((s) => s.clearQueue);
   const setMode = useChatStore((s) => s.setMode);
   const setModel = useChatStore((s) => s.setModel);
   const setEffort = useChatStore((s) => s.setEffort);
@@ -76,7 +101,9 @@ export function useInputComposer() {
     suppressSendUntilRef.current = performance.now() + SLASH_SELECTION_GUARD_MS;
   }, []);
 
-  const dispatchPrompt = useCallback((prompt: string) => {
+  const dispatchPrompt = useCallback((message: PendingMessage) => {
+    const normalizedMessage = normalizePendingMessage(message);
+    const prompt = normalizedMessage.prompt;
     const dispatchStart = performance.now();
 
     if (!activeSessionId) {
@@ -84,10 +111,11 @@ export function useInputComposer() {
       createSession(preview);
     }
 
-    addUserMessage(prompt);
+    addUserMessage(buildUserMessageDisplay(prompt, normalizedMessage.attachments));
     startAssistantMessage();
     setInput('');
     setActiveSkill(null);
+    setAttachments([]);
     setShowPalette(false);
     setShowContextSuggestions(false);
     resetTextareaHeight();
@@ -106,6 +134,7 @@ export function useInputComposer() {
       effort: state.effort,
       cwd: state.cwd || undefined,
       sessionId: state.claudeSessionId || undefined,
+      attachments: normalizedMessage.attachments,
     });
   }, [activeSessionId, addUserMessage, createSession, mode, resetTextareaHeight, startAssistantMessage]);
 
@@ -202,7 +231,7 @@ export function useInputComposer() {
     if (!command) return false;
 
     if (command.category === 'skill') {
-      dispatchPrompt(rawInput.trim());
+      dispatchPrompt({ prompt: rawInput.trim(), attachments: [] });
       return true;
     }
 
@@ -220,6 +249,7 @@ export function useInputComposer() {
     }
 
     const text = input.trim();
+    const currentAttachments = attachments;
 
     // Compose prompt from activeSkill + input
     let prompt: string | null = null;
@@ -228,13 +258,19 @@ export function useInputComposer() {
       setActiveSkill(null);
     } else if (text) {
       // Non-skill slash commands are handled inline (mode/model/effort/action)
-      if (text.startsWith('/') && !isStreaming && executeSlashInput(text)) {
+      if (text.startsWith('/') && currentAttachments.length === 0 && !isStreaming && executeSlashInput(text)) {
         return;
       }
       prompt = text;
+    } else if (currentAttachments.length > 0) {
+      prompt = ATTACHMENTS_ONLY_PROMPT;
     }
 
     if (!prompt) return;
+    const outboundMessage: PendingMessage = normalizePendingMessage({
+      prompt,
+      attachments: currentAttachments,
+    });
 
     // Save to history
     if (historyRef.current[0] !== prompt) {
@@ -246,15 +282,16 @@ export function useInputComposer() {
 
     // Queue if streaming, dispatch if idle
     if (isStreaming) {
-      enqueueMessage(prompt);
+      enqueueMessage(outboundMessage);
       setInput('');
+      setAttachments([]);
       setShowPalette(false);
       setShowContextSuggestions(false);
       resetTextareaHeight();
     } else {
-      dispatchPrompt(prompt);
+      dispatchPrompt(outboundMessage);
     }
-  }, [activeSkill, dispatchPrompt, enqueueMessage, executeSlashInput, input, isStreaming, resetTextareaHeight]);
+  }, [activeSkill, attachments, dispatchPrompt, enqueueMessage, executeSlashInput, input, isStreaming, resetTextareaHeight]);
 
   // Queue drain: when streaming finishes and there are pending messages, dispatch next
   useEffect(() => {
@@ -295,6 +332,73 @@ export function useInputComposer() {
     return () => window.removeEventListener(OPEN_SLASH_EVENT, handleOpenSlashCommand);
   }, [resizeTextarea]);
 
+  const appendAttachments = useCallback((incoming: InputAttachment[]) => {
+    if (incoming.length === 0) return;
+    setAttachments((prev) => {
+      if (prev.length >= MAX_ATTACHMENTS_PER_MESSAGE) return prev;
+      const room = MAX_ATTACHMENTS_PER_MESSAGE - prev.length;
+      return [...prev, ...incoming.slice(0, room)];
+    });
+  }, []);
+
+  const handlePaste = useCallback(async (event: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const files = takeAttachmentFilesFromClipboard(event.clipboardData);
+    if (files.length === 0) return;
+
+    event.preventDefault();
+
+    if (attachments.length >= MAX_ATTACHMENTS_PER_MESSAGE) {
+      return;
+    }
+
+    const nextToken = attachmentPasteTokenRef.current + 1;
+    attachmentPasteTokenRef.current = nextToken;
+    const room = MAX_ATTACHMENTS_PER_MESSAGE - attachments.length;
+    const filesToConvert = files.slice(0, room);
+
+    const converted = await Promise.allSettled(
+      filesToConvert.map((file, index) => fileToInputAttachment(file, index))
+    );
+
+    if (attachmentPasteTokenRef.current !== nextToken) return;
+
+    appendAttachments(
+      converted.flatMap((result) => {
+        if (result.status !== 'fulfilled' || !result.value) return [];
+        return [result.value];
+      })
+    );
+  }, [appendAttachments, attachments.length]);
+
+  const removeAttachment = useCallback((attachmentId: string) => {
+    setAttachments((prev) => prev.filter((item) => item.id !== attachmentId));
+  }, []);
+
+  const clearAttachments = useCallback(() => {
+    setAttachments([]);
+  }, []);
+
+  const editQueuedMessage = useCallback((index: number) => {
+    const picked = removeQueuedMessage(index);
+    if (!picked) return;
+
+    setInput(picked.prompt === ATTACHMENTS_ONLY_PROMPT ? '' : picked.prompt);
+    setAttachments(picked.attachments);
+    setShowPalette(false);
+    setShowContextSuggestions(false);
+    requestAnimationFrame(() => {
+      const el = textareaRef.current;
+      if (!el) return;
+      el.focus();
+      el.selectionStart = el.selectionEnd = el.value.length;
+      resizeTextarea();
+    });
+  }, [removeQueuedMessage, resizeTextarea]);
+
+  const removeQueuedMessageAt = useCallback((index: number) => {
+    removeQueuedMessage(index);
+  }, [removeQueuedMessage]);
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (showPalette && e.key === 'Escape') {
       e.preventDefault();
@@ -320,6 +424,10 @@ export function useInputComposer() {
       e.preventDefault();
       if (activeSkill) {
         setActiveSkill(null);
+        return;
+      }
+      if (attachments.length > 0 && !input) {
+        clearAttachments();
         return;
       }
       if (isStreaming) {
@@ -421,12 +529,17 @@ export function useInputComposer() {
     plan: 'Describe what to plan...   Enter to send · / for commands',
   } as const;
 
+  const canSend = input.trim().length > 0 || !!activeSkill || attachments.length > 0;
+
   return {
     input,
     mode,
     isStreaming,
     activeSkill,
+    attachments,
+    pendingMessages,
     pendingCount,
+    canSend,
     showPalette,
     showContextSuggestions,
     slashQuery,
@@ -436,9 +549,15 @@ export function useInputComposer() {
     placeholders,
     handleKeyDown,
     handleInput,
+    handlePaste,
     handleSend,
     handleCommandSelect,
     handleContextSelect,
+    removeAttachment,
+    clearAttachments,
+    editQueuedMessage,
+    removeQueuedMessageAt,
+    closeQueue: clearQueue,
     clearActiveSkill,
     setShowPalette,
     CONTEXT_SUGGESTIONS,

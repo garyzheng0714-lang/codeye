@@ -84,13 +84,22 @@ describe('chatStore streaming guards', () => {
 
   it('enqueues and dequeues pending messages in order', () => {
     const store = useChatStore.getState();
-    store.enqueueMessage('first');
-    store.enqueueMessage('second');
+    store.enqueueMessage({ prompt: 'first', attachments: [] });
+    store.enqueueMessage({ prompt: 'second', attachments: [] });
 
-    expect(useChatStore.getState().pendingMessages).toEqual(['first', 'second']);
-    expect(store.dequeueMessage()).toBe('first');
-    expect(useChatStore.getState().pendingMessages).toEqual(['second']);
-    expect(store.dequeueMessage()).toBe('second');
+    expect(useChatStore.getState().pendingMessages.map((item) => item.prompt)).toEqual(['first', 'second']);
+    expect(store.dequeueMessage()?.prompt).toBe('first');
+    expect(useChatStore.getState().pendingMessages.map((item) => item.prompt)).toEqual(['second']);
+    expect(store.dequeueMessage()?.prompt).toBe('second');
     expect(store.dequeueMessage()).toBeUndefined();
+  });
+
+  it('removes queued message by index', () => {
+    const store = useChatStore.getState();
+    store.enqueueMessage({ prompt: 'first', attachments: [] });
+    store.enqueueMessage({ prompt: 'second', attachments: [] });
+    const removed = store.removeQueuedMessage(0);
+    expect(removed?.prompt).toBe('first');
+    expect(useChatStore.getState().pendingMessages.map((item) => item.prompt)).toEqual(['second']);
   });
 });

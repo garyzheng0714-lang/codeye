@@ -20,10 +20,18 @@ interface UpdaterState {
   total?: number;
 }
 
+interface AttachmentPayload {
+  id: string;
+  name: string;
+  mimeType: string;
+  size: number;
+  dataBase64: string;
+}
+
 contextBridge.exposeInMainWorld('electronAPI', {
   getCwd: () => ipcRenderer.invoke('app:get-cwd'),
   claude: {
-    query: (params: { prompt: string; sessionId?: string; cwd?: string; mode?: string; model?: string; effort?: string; permissionMode?: string }) =>
+    query: (params: { prompt: string; sessionId?: string; cwd?: string; mode?: string; model?: string; effort?: string; permissionMode?: string; attachments?: AttachmentPayload[] }) =>
       ipcRenderer.invoke('claude:query', params),
     stop: () => ipcRenderer.invoke('claude:stop', 'primary'),
     checkAuth: () => ipcRenderer.invoke('claude:check-auth'),
@@ -42,7 +50,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
       ipcRenderer.on('claude:error', handler);
       return () => ipcRenderer.removeListener('claude:error', handler);
     },
-    queryPane: (paneId: string, params: { prompt: string; sessionId?: string; cwd?: string; mode?: string; model?: string; effort?: string; permissionMode?: string }) =>
+    queryPane: (paneId: string, params: { prompt: string; sessionId?: string; cwd?: string; mode?: string; model?: string; effort?: string; permissionMode?: string; attachments?: AttachmentPayload[] }) =>
       ipcRenderer.invoke('claude:query', { ...params, paneId }),
     stopPane: (paneId: string) => ipcRenderer.invoke('claude:stop', paneId),
     onPaneMessage: (paneId: string, callback: (message: unknown) => void) => {
@@ -72,6 +80,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     list: () => ipcRenderer.invoke('projects:list'),
     selectDirectory: () => ipcRenderer.invoke('projects:select-directory'),
     importClaudeHistory: (folderPath: string) => ipcRenderer.invoke('projects:import-claude-history', folderPath),
+    getGitStatus: (cwd: string) => ipcRenderer.invoke('projects:get-git-status', cwd),
   },
   secrets: {
     get: (key: string) => ipcRenderer.invoke('secret:get', key),
