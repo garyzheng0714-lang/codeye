@@ -36,6 +36,11 @@ export default function SlashCommandPalette({ query, onSelect, onClose, visible 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       if (!visible || flatList.length === 0) return;
+      const activeEl = document.activeElement;
+      const inComposer =
+        activeEl instanceof HTMLTextAreaElement
+        && (activeEl.classList.contains('input-textarea') || activeEl.classList.contains('split-input-textarea'));
+      if (!inComposer) return;
 
       if (e.key === 'ArrowDown') {
         e.preventDefault();
@@ -88,7 +93,9 @@ export default function SlashCommandPalette({ query, onSelect, onClose, visible 
                     ref={(el) => { itemRefs.current[idx] = el; }}
                     className={`slash-palette-item ${isActive ? 'active' : ''}`}
                     onClick={() => onSelect(cmd)}
+                    onMouseDown={(e) => e.preventDefault()}
                     onMouseEnter={() => setActiveIndex(idx)}
+                    type="button"
                   >
                     <span className="slash-palette-icon">{getCommandIcon(cmd.icon)}</span>
                     <span className="slash-palette-name">/{cmd.name}</span>

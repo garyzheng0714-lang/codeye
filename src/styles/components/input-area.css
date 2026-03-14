@@ -4,6 +4,10 @@
   position: relative;
 }
 
+.input-area.is-streaming {
+  padding-bottom: var(--space-3);
+}
+
 .input-container {
   display: flex;
   align-items: center;
@@ -13,6 +17,11 @@
   border-radius: var(--radius-md);
   padding: var(--space-3);
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.input-container.is-streaming {
+  padding-top: var(--space-2);
+  padding-bottom: var(--space-2);
 }
 
 .input-container:focus-within {
@@ -32,6 +41,11 @@
   outline: none;
   max-height: 200px;
   padding: 0 var(--space-1);
+}
+
+.input-textarea.is-streaming {
+  max-height: 26px;
+  overflow-y: hidden;
 }
 
 .input-textarea::placeholder {
@@ -185,10 +199,19 @@
 }
 
 .queue-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
   font-size: var(--text-xs);
   color: var(--accent);
   padding: var(--space-1) var(--space-2) 0;
   font-weight: 500;
+}
+
+.queue-indicator-note {
+  color: var(--text-muted);
+  font-weight: 400;
 }
 
 .skill-pill {

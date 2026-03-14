@@ -15,7 +15,7 @@ type GroupedTool =
   | { kind: 'single'; tool: ToolCallDisplay }
   | { kind: 'reads'; files: string[]; running: boolean; error: boolean };
 
-function groupToolCalls(tools: ToolCallDisplay[]): GroupedTool[] {
+function groupToolCalls(tools: ToolCallDisplay[], isStreaming: boolean): GroupedTool[] {
   const out: GroupedTool[] = [];
   let i = 0;
   while (i < tools.length) {
@@ -28,7 +28,7 @@ function groupToolCalls(tools: ToolCallDisplay[]): GroupedTool[] {
         const fp = tools[i].input.file_path ? String(tools[i].input.file_path) : '';
         const fname = fp.split('/').pop() || fp;
         if (fname) files.push(fname);
-        const s = getToolStatus(tools[i]);
+        const s = getToolStatus(tools[i], { isStreaming });
         if (s === 'running' || s === 'pending') running = true;
         if (s === 'error') error = true;
         i++;
@@ -44,13 +44,13 @@ function groupToolCalls(tools: ToolCallDisplay[]): GroupedTool[] {
 
 // ── Steps block status ───────────────────────────────────────────────
 
-function getStepsStatus(grouped: GroupedTool[]): 'running' | 'error' | 'completed' {
+function getStepsStatus(grouped: GroupedTool[], isStreaming: boolean): 'running' | 'error' | 'completed' {
   for (const g of grouped) {
     if (g.kind === 'reads') {
       if (g.running) return 'running';
       if (g.error) return 'error';
     } else {
-      const s = getToolStatus(g.tool);
+      const s = getToolStatus(g.tool, { isStreaming });
       if (s === 'running' || s === 'pending') return 'running';
       if (s === 'error') return 'error';
     }
@@ -87,8 +87,9 @@ function ReadGroupRow({ files, running, error, index = 0 }: { files: string[]; r
 export default memo(function AIMessage({ message }: { message: DisplayMessage }) {
   const [copied, setCopied] = useState(false);
   const isThinking = message.isStreaming && !message.content && message.toolCalls.length === 0;
+  const messageIsStreaming = Boolean(message.isStreaming);
 
-  const grouped = groupToolCalls(message.toolCalls);
+  const grouped = groupToolCalls(message.toolCalls, messageIsStreaming);
 
   // Split into step tools vs bash tools
   const stepTools = grouped.filter((g) =>
@@ -98,7 +99,7 @@ export default memo(function AIMessage({ message }: { message: DisplayMessage })
     g.kind === 'single' && g.tool.name === 'Bash'
   ) as { kind: 'single'; tool: ToolCallDisplay }[];
 
-  const stepsStatus = stepTools.length > 0 ? getStepsStatus(stepTools) : null;
+  const stepsStatus = stepTools.length > 0 ? getStepsStatus(stepTools, messageIsStreaming) : null;
 
   const handleCopy = useCallback(async () => {
     try {
@@ -154,7 +155,13 @@ export default memo(function AIMessage({ message }: { message: DisplayMessage })
                 g.kind === 'reads' ? (
                   <ReadGroupRow key={`reads-${i}`} files={g.files} running={g.running} error={g.error} index={i} />
                 ) : (
-                  <ToolCall key={g.tool.id} tool={g.tool} messageId={message.id} index={i} />
+                  <ToolCall
+                    key={g.tool.id}
+                    tool={g.tool}
+                    messageId={message.id}
+                    index={i}
+                    isStreaming={messageIsStreaming}
+                  />
                 )
               )}
             </div>
@@ -163,7 +170,13 @@ export default memo(function AIMessage({ message }: { message: DisplayMessage })
 
         {/* Terminal output blocks (Bash) */}
         {bashTools.map((g, i) => (
-          <ToolCall key={g.tool.id} tool={g.tool} messageId={message.id} index={i} />
+          <ToolCall
+            key={g.tool.id}
+            tool={g.tool}
+            messageId={message.id}
+            index={i}
+            isStreaming={messageIsStreaming}
+          />
         ))}
 
         {/* AI text */}

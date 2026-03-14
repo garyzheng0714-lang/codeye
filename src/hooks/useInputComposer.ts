@@ -10,6 +10,8 @@ import { parseContextReferences, CONTEXT_SUGGESTIONS } from '../services/context
 
 const OPEN_SLASH_EVENT = 'codeye:open-slash-command';
 const MAX_INPUT_HEIGHT = 200;
+const COMPACT_INPUT_HEIGHT = 26;
+const SLASH_SELECTION_GUARD_MS = 200;
 
 export function useInputComposer() {
   const [input, setInput] = useState('');
@@ -22,6 +24,7 @@ export function useInputComposer() {
   const historyRef = useRef<string[]>([]);
   const historyIdxRef = useRef(-1);
   const draftRef = useRef('');
+  const suppressSendUntilRef = useRef(0);
 
   const isStreaming = useChatStore((s) => s.isStreaming);
   const mode = useChatStore((s) => s.mode);
@@ -39,18 +42,38 @@ export function useInputComposer() {
   const contextRefs = useMemo(() => parseContextReferences(input), [input]);
   const paletteHasMatches = useMemo(() => filterCommands(slashQuery).length > 0, [slashQuery]);
 
-  const resizeTextarea = useCallback(() => {
+  const setCompactTextareaHeight = useCallback(() => {
     const el = textareaRef.current;
     if (!el) return;
     el.style.height = 'auto';
-    el.style.height = `${Math.min(el.scrollHeight, MAX_INPUT_HEIGHT)}px`;
+    el.style.height = `${COMPACT_INPUT_HEIGHT}px`;
   }, []);
+
+  const resizeTextarea = useCallback(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    if (isStreaming) {
+      setCompactTextareaHeight();
+      return;
+    }
+    el.style.height = 'auto';
+    el.style.height = `${Math.min(el.scrollHeight, MAX_INPUT_HEIGHT)}px`;
+  }, [isStreaming, setCompactTextareaHeight]);
 
   const resetTextareaHeight = useCallback(() => {
     requestAnimationFrame(() => {
       const el = textareaRef.current;
-      if (el) el.style.height = 'auto';
+      if (!el) return;
+      if (isStreaming) {
+        setCompactTextareaHeight();
+        return;
+      }
+      el.style.height = 'auto';
     });
+  }, [isStreaming, setCompactTextareaHeight]);
+
+  const markSlashSelection = useCallback(() => {
+    suppressSendUntilRef.current = performance.now() + SLASH_SELECTION_GUARD_MS;
   }, []);
 
   const dispatchPrompt = useCallback((prompt: string) => {
@@ -87,6 +110,7 @@ export function useInputComposer() {
   }, [activeSessionId, addUserMessage, createSession, mode, resetTextareaHeight, startAssistantMessage]);
 
   const handleCommandSelect = useCallback((command: SlashCommand, commandArgs = '') => {
+    markSlashSelection();
     setShowPalette(false);
 
     if (command.category === 'mode') {
@@ -167,7 +191,7 @@ export function useInputComposer() {
       el.selectionStart = el.selectionEnd = el.value.length;
       resizeTextarea();
     });
-  }, [clearMessages, createSession, dispatchPrompt, resizeTextarea, setEffort, setMode, setModel]);
+  }, [clearMessages, createSession, markSlashSelection, resizeTextarea, setEffort, setMode, setModel]);
 
   const executeSlashInput = useCallback((rawInput: string): boolean => {
     const match = rawInput.trim().match(/^\/([^\s]+)(?:\s+(.*))?$/);
@@ -191,6 +215,10 @@ export function useInputComposer() {
   }, []);
 
   const handleSend = useCallback(() => {
+    if (performance.now() < suppressSendUntilRef.current) {
+      return;
+    }
+
     const text = input.trim();
 
     // Compose prompt from activeSkill + input
@@ -238,6 +266,14 @@ export function useInputComposer() {
       return () => clearTimeout(timer);
     }
   }, [isStreaming, pendingCount, dispatchPrompt]);
+
+  useEffect(() => {
+    if (isStreaming) {
+      setCompactTextareaHeight();
+      return;
+    }
+    resizeTextarea();
+  }, [isStreaming, resizeTextarea, setCompactTextareaHeight]);
 
   useEffect(() => {
     const handleOpenSlashCommand = () => {

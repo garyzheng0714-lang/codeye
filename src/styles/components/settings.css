@@ -220,6 +220,13 @@
   flex-shrink: 0;
 }
 
+.settings-update-only {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
 [data-theme="dark"] .settings-section {
   background: var(--bg-tertiary);
   border-color: rgba(142, 71, 255, 0.1);

@@ -1,14 +1,35 @@
 import { useState, useEffect, useRef } from 'react';
 import { useChatStore } from '../../stores/chatStore';
+import { normalizeModelId, toCliModelId } from '../../data/models';
+
+const CONTEXT_WINDOWS: Record<'opus' | 'sonnet' | 'haiku', number> = {
+  opus: 200_000,
+  sonnet: 200_000,
+  haiku: 200_000,
+};
+
+function formatCompactTokens(value: number): string {
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
+  if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K`;
+  return `${value}`;
+}
 
 export default function SessionStats() {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const model = useChatStore((s) => s.model);
   const cost = useChatStore((s) => s.cost);
   const inputTokens = useChatStore((s) => s.inputTokens);
   const outputTokens = useChatStore((s) => s.outputTokens);
+  const pendingCount = useChatStore((s) => s.pendingMessages.length);
 
   const hasActivity = cost > 0 || inputTokens > 0 || outputTokens > 0;
+  const usedTokens = inputTokens + outputTokens;
+  const modelAlias = toCliModelId(normalizeModelId(model));
+  const contextWindow = CONTEXT_WINDOWS[modelAlias];
+  const remainingTokens = Math.max(contextWindow - usedTokens, 0);
+  const remainingPercent = Math.max(0, Math.round((remainingTokens / contextWindow) * 100));
+  const lowContext = remainingPercent <= 20;
 
   useEffect(() => {
     if (!open) return;
@@ -42,6 +63,10 @@ export default function SessionStats() {
           <rect x="10" y="1.5" width="2.5" height="10.5" rx="0.75" fill="currentColor" />
         </svg>
         {hasActivity && <span className="session-stats-cost">${cost.toFixed(4)}</span>}
+        <span className={`session-stats-context ${lowContext ? 'low' : ''}`}>
+          {formatCompactTokens(remainingTokens)} ctx
+        </span>
+        {pendingCount > 0 && <span className="session-stats-queue">+{pendingCount}</span>}
       </button>
       {open && (
         <div className="session-stats-panel">
@@ -62,6 +87,17 @@ export default function SessionStats() {
               Output
             </span>
             <span className="session-stats-value">{outputTokens.toLocaleString()}</span>
+          </div>
+          <div className="session-stats-divider" />
+          <div className="session-stats-row">
+            <span className="session-stats-label">Context left</span>
+            <span className={`session-stats-value ${lowContext ? 'low' : ''}`}>
+              {remainingTokens.toLocaleString()} ({remainingPercent}%)
+            </span>
+          </div>
+          <div className="session-stats-row">
+            <span className="session-stats-label">Queue</span>
+            <span className="session-stats-value">{pendingCount}</span>
           </div>
           <div className="session-stats-divider" />
           <div className="session-stats-row total">

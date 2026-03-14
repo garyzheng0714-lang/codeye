@@ -1,7 +1,12 @@
 export type ToolStatus = 'pending' | 'running' | 'error' | 'success';
 
-export function getToolStatus(tool: { name: string; output?: string }): ToolStatus {
-  if (tool.output === undefined) return 'pending';
+export function getToolStatus(
+  tool: { name: string; output?: string },
+  options?: { isStreaming?: boolean }
+): ToolStatus {
+  if (tool.output === undefined) {
+    return options?.isStreaming ? 'pending' : 'success';
+  }
   if (tool.output?.startsWith('Error') || tool.output?.startsWith('error')) return 'error';
   return 'success';
 }

@@ -35,6 +35,29 @@
   font-variant-numeric: tabular-nums;
 }
 
+.session-stats-context {
+  font-variant-numeric: tabular-nums;
+}
+
+.session-stats-context.low,
+.session-stats-value.low {
+  color: var(--danger);
+}
+
+.session-stats-queue {
+  min-width: 18px;
+  height: 18px;
+  border-radius: var(--radius-full);
+  background: var(--accent-muted);
+  color: var(--accent);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1;
+}
+
 .session-stats-panel {
   position: absolute;
   bottom: calc(100% + 8px);

@@ -28,7 +28,7 @@ export default function InputArea() {
   } = useInputComposer();
 
   return (
-    <div className="input-area">
+    <div className={`input-area ${isStreaming ? 'is-streaming' : ''}`}>
       <div className="input-container-wrapper">
         <SlashCommandPalette
           query={slashQuery}
@@ -43,6 +43,7 @@ export default function InputArea() {
                 key={s.type}
                 className="context-suggestion-item"
                 onClick={() => handleContextSelect(s)}
+                type="button"
               >
                 <span className="context-suggestion-trigger">{s.trigger}</span>
                 <span className="context-suggestion-desc">{s.description}</span>
@@ -58,6 +59,7 @@ export default function InputArea() {
                 className="skill-pill-remove"
                 onClick={clearActiveSkill}
                 title="Remove (Esc)"
+                type="button"
               >
                 <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
                   <path d="M2.5 2.5l5 5M7.5 2.5l-5 5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
@@ -75,10 +77,10 @@ export default function InputArea() {
             ))}
           </div>
         )}
-        <div className="input-container">
+        <div className={`input-container ${isStreaming ? 'is-streaming' : ''}`}>
           <textarea
             ref={textareaRef}
-            className="input-textarea"
+            className={`input-textarea ${isStreaming ? 'is-streaming' : ''}`}
             value={input}
             onChange={handleInput}
             onKeyDown={handleKeyDown}
@@ -89,7 +91,7 @@ export default function InputArea() {
           />
           <div className="input-actions">
             {isStreaming ? (
-              <button className="stop-btn" onClick={stopClaude} title="Stop">
+              <button className="stop-btn" onClick={stopClaude} title="Stop" type="button">
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                   <rect x="3" y="3" width="8" height="8" rx="1.5" fill="currentColor" />
                 </svg>
@@ -100,6 +102,7 @@ export default function InputArea() {
                 onClick={handleSend}
                 disabled={!input.trim() && !activeSkill}
                 title="Send (Enter)"
+                type="button"
               >
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                   <path d="M3 13L13 8L3 3v4l6 1-6 1v4z" fill="currentColor" />
@@ -108,9 +111,12 @@ export default function InputArea() {
             )}
           </div>
         </div>
-        {pendingCount > 0 && (
+        {(isStreaming || pendingCount > 0) && (
           <div className="queue-indicator">
-            {pendingCount} message{pendingCount > 1 ? 's' : ''} queued
+            {isStreaming && <span className="queue-indicator-note">Replying now, press Enter to queue your next prompt.</span>}
+            {pendingCount > 0 && (
+              <span>{pendingCount} message{pendingCount > 1 ? 's' : ''} queued</span>
+            )}
           </div>
         )}
         <InputFooter />

@@ -41,9 +41,9 @@ test.describe('Input Area', () => {
 });
 
 test.describe('Settings Panel', () => {
-  test('can navigate to settings and see version', async ({ sidebarPage }) => {
+  test('can navigate to settings and see update action', async ({ sidebarPage }) => {
     await sidebarPage.openSettings();
     await expect(sidebarPage.settingsPanel).toBeVisible();
-    await expect(sidebarPage.settingsContent).toContainText('Codeye v');
+    await expect(sidebarPage.settingsContent.locator('.settings-update-btn')).toBeVisible();
   });
 });

@@ -108,44 +108,18 @@ export default function AboutTab() {
     return `${updateState.percent.toFixed(0)}%${speedPart}`;
   }, [updateState]);
 
-  const version = updateState?.currentVersion || '0.3.0';
+  const updateMessage = updateProgressText ?? updateState?.message ?? 'Ready to check for updates.';
 
   return (
-    <>
-      <div className="settings-section">
-        <label className="settings-label">About</label>
-        <p className="settings-hint">
-          Codeye v{version}
-        </p>
-      </div>
-
-      {window.electronAPI ? (
-        <div className="settings-section">
-          <label className="settings-label">Updates</label>
-          <div className="settings-update-row">
-            <div className="settings-update-meta">
-              <span className="settings-hint">{updateState?.message || 'Ready to check for updates.'}</span>
-              {updateProgressText && (
-                <span className="settings-hint">{updateProgressText}</span>
-              )}
-            </div>
-            <button
-              className="settings-browse-btn settings-update-btn"
-              onClick={handleUpdateAction}
-              disabled={isUpdateButtonDisabled}
-            >
-              {updateButtonLabel}
-            </button>
-          </div>
-        </div>
-      ) : (
-        <div className="settings-section">
-          <label className="settings-label">Updates</label>
-          <p className="settings-hint">
-            Auto-updates are available in the desktop app. You are using the browser version.
-          </p>
-        </div>
-      )}
-    </>
+    <div className="settings-section settings-update-only">
+      <button
+        className="settings-browse-btn settings-update-btn"
+        onClick={handleUpdateAction}
+        disabled={isUpdateButtonDisabled}
+      >
+        {updateButtonLabel}
+      </button>
+      <span className="settings-hint">{updater ? updateMessage : 'Desktop app required for updates.'}</span>
+    </div>
   );
 }

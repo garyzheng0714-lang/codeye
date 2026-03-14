@@ -50,11 +50,21 @@ function BashInline({ tool }: { tool: ToolCallDisplay }) {
   );
 }
 
-export default memo(function ToolCall({ tool, messageId, index = 0 }: { tool: ToolCallDisplay; messageId: string; index?: number }) {
+export default memo(function ToolCall({
+  tool,
+  messageId,
+  index = 0,
+  isStreaming = false,
+}: {
+  tool: ToolCallDisplay;
+  messageId: string;
+  index?: number;
+  isStreaming?: boolean;
+}) {
   const toggleToolExpand = useChatStore((s) => s.toggleToolExpand);
   const [diffOpen, setDiffOpen] = useState(false);
 
-  const status = getToolStatus(tool);
+  const status = getToolStatus(tool, { isStreaming });
   const semanticName = getSemanticName(tool.name);
   const fileName = getFileName(tool);
   const isEdit = tool.name === 'Edit' && typeof tool.input.old_string === 'string';

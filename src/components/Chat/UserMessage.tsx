@@ -10,14 +10,14 @@ export default memo(function UserMessage({ message }: { message: DisplayMessage 
 
   return (
     <div className="message-row user-message-row" data-message-id={message.id}>
-      <div className="user-message-wrapper">
-        <div className="user-bubble-wrapper">
+      <div className="user-message-shell">
+        <div className="user-message-wrapper">
           <div className="user-bubble">{message.content}</div>
-          <span className="user-timestamp">{time}</span>
+          <div className="user-avatar">
+            <CodeyeMark size={28} />
+          </div>
         </div>
-        <div className="user-avatar">
-          <CodeyeMark size={28} />
-        </div>
+        <span className="user-timestamp">{time}</span>
       </div>
     </div>
   );
