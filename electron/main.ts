@@ -1,5 +1,6 @@
 import { app, BrowserWindow, ipcMain, nativeImage, shell, globalShortcut, Menu, Notification } from 'electron';
 import path from 'path';
+import fs from 'fs';
 import { registerClaudeHandlers } from './ipc/claude';
 import { registerSessionHandlers } from './ipc/sessions';
 import { registerProjectHandlers } from './ipc/projects';
@@ -7,6 +8,27 @@ import { registerSecretHandlers } from './ipc/secrets';
 import { registerUpdaterHandlers } from './updater';
 
 let mainWindow: BrowserWindow | null = null;
+
+function resolveDockIconPath(): string | null {
+  const candidates = [
+    path.join(process.cwd(), 'build/icon-source.png'),
+    path.join(__dirname, '../build/icon-source.png'),
+    path.join(app.getAppPath(), 'build/icon-source.png'),
+    path.join(process.resourcesPath, 'build/icon-source.png'),
+  ];
+
+  for (const candidate of candidates) {
+    try {
+      if (fs.existsSync(candidate)) {
+        return candidate;
+      }
+    } catch {
+      // ignore invalid candidate paths
+    }
+  }
+
+  return null;
+}
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -135,8 +157,13 @@ ipcMain.handle('notification:show', (_event, { title, body }) => {
 
 app.whenReady().then(() => {
   if (process.platform === 'darwin' && app.dock) {
-    const icon = nativeImage.createFromPath(path.join(__dirname, '../build/icon-source.png'));
-    app.dock.setIcon(icon);
+    const iconPath = resolveDockIconPath();
+    if (iconPath) {
+      const icon = nativeImage.createFromPath(iconPath);
+      if (!icon.isEmpty()) {
+        app.dock.setIcon(icon);
+      }
+    }
   }
   Menu.setApplicationMenu(buildMenu());
   registerGlobalShortcuts();
