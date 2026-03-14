@@ -4,7 +4,7 @@
   padding: var(--space-6) var(--space-6);
   display: flex;
   flex-direction: column;
-  gap: var(--space-6);
+  gap: var(--space-5);
   position: relative;
 }
 
@@ -15,7 +15,7 @@
 .turn-group {
   display: flex;
   flex-direction: column;
-  gap: var(--space-5);
+  gap: var(--space-4);
 }
 
 .turn-collapse-btn {
@@ -88,8 +88,8 @@
 }
 
 .user-timestamp {
-  font-size: var(--text-xs);
-  color: var(--text-muted);
+  font-size: 10px;
+  color: var(--text-disabled);
   padding-right: 2px;
 }
 
@@ -107,10 +107,10 @@
   min-width: 0;
 }
 
-/* Text body — clear visual break after dense tool blocks */
+/* Text body */
 .ai-text-body {
   min-width: 0;
-  padding-top: var(--space-4);
+  padding-top: var(--space-3);
   animation: textBodyFadeIn var(--transition-slow) both;
 }
 
@@ -130,8 +130,8 @@
 }
 
 .thinking-dot {
-  width: 5px;
-  height: 5px;
+  width: 4px;
+  height: 4px;
   border-radius: var(--radius-full);
   background: var(--text-muted);
   animation: thinkingDotWave 1.4s ease-in-out infinite;
@@ -178,7 +178,7 @@
 }
 
 .ai-action-btn:hover {
-  background: var(--bg-hover);
+  background: var(--interactive-hover);
   color: var(--text-primary);
 }
 
@@ -268,7 +268,7 @@
 
 .inline-code {
   background: var(--bg-tertiary);
-  padding: 2px 8px;
+  padding: 2px 7px;
   border-radius: var(--radius-xs);
   font-family: var(--font-mono);
   font-size: var(--text-base);

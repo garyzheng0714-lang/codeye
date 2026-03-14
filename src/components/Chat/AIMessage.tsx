@@ -1,7 +1,7 @@
 import { useCallback, memo, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { Copy, Check, GitFork, Eye } from 'lucide-react';
+import { Copy, Check, GitFork, Zap } from 'lucide-react';
 import type { DisplayMessage, ToolCallDisplay } from '../../types';
 import { useChatStore } from '../../stores/chatStore';
 import { useSessionStore } from '../../stores/sessionStore';
@@ -61,14 +61,31 @@ function getStepsStatus(grouped: GroupedTool[], isStreaming: boolean): 'running'
 
 // ── Grouped Read row (inside steps block) ────────────────────────────
 
+function StepStatusCircle({ status }: { status: 'done' | 'running' | 'error' }) {
+  if (status === 'running') {
+    return (
+      <span className="step-circle step-circle--running">
+        <span className="step-circle-inner" />
+      </span>
+    );
+  }
+  if (status === 'error') {
+    return <span className="step-circle step-circle--error">!</span>;
+  }
+  return (
+    <span className="step-circle step-circle--done">
+      <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+        <path d="M2 5.5L4 7.5L8 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    </span>
+  );
+}
+
 function ReadGroupRow({ files, running, error, index = 0 }: { files: string[]; running: boolean; error: boolean; index?: number }) {
-  const color = error ? 'var(--danger)' : running ? 'var(--text-muted)' : getToolColor('Read');
   return (
     <div className="step-row" style={{ '--tool-index': index } as React.CSSProperties}>
       <div className="step-row-left">
-        <span className="tool-icon" style={{ color }}>
-          {running ? <SpinnerIcon size={14} /> : <ToolIcon name="Read" size={14} />}
-        </span>
+        <StepStatusCircle status={error ? 'error' : running ? 'running' : 'done'} />
         <span className="step-label">Read {files.length > 1 ? 'files' : 'file'}</span>
         <div className="step-badges">
           {files.slice(0, 4).map((f, i) => (
@@ -141,11 +158,11 @@ export default memo(function AIMessage({ message }: { message: DisplayMessage })
           <div className="ai-steps-block">
             <div className="steps-header">
               <span className="steps-header-label">
-                <Eye size={13} strokeWidth={1.8} />
-                STEPS TAKEN
+                <Zap size={12} strokeWidth={2} />
+                Steps
               </span>
               <span className={`steps-status steps-status--${stepsStatus}`}>
-                {stepsStatus === 'running' ? 'Running' : stepsStatus === 'error' ? 'Error' : 'Completed'}
+                {stepsStatus === 'running' ? 'In Progress' : stepsStatus === 'error' ? 'Error' : `Completed (${stepTools.length})`}
               </span>
             </div>
             <div className="steps-list">

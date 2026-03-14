@@ -1,13 +1,11 @@
 /* ============================================
-   Session List — Codeye Design System Compliant
-   All spacing: 4px grid  |  All colors: CSS vars
-   All transitions: system tokens  |  All radii: vars
+   Session List — Kiro-inspired refined cards
    ============================================ */
 
 .session-list {
   display: flex;
   flex-direction: column;
-  padding: 0 var(--space-1);
+  padding: 0 var(--space-2);
 }
 
 /* ── Folder header ── */
@@ -21,8 +19,8 @@
   width: 100%;
   border: none;
   background: transparent;
-  padding: var(--space-1) var(--space-2);
-  margin-top: var(--space-1);
+  padding: var(--space-2) var(--space-2);
+  margin-top: var(--space-2);
   display: flex;
   align-items: center;
   gap: var(--space-1);
@@ -81,16 +79,18 @@
 }
 
 .folder-name {
-  font-size: var(--text-base);
-  font-weight: 500;
-  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .folder-section.active .folder-name {
-  color: var(--text-primary);
+  color: var(--text-secondary);
 }
 
 .folder-header-actions {
@@ -104,6 +104,10 @@
   font-size: var(--text-xs);
   color: var(--text-disabled);
   font-variant-numeric: tabular-nums;
+  background: var(--surface-pill);
+  padding: 1px 6px;
+  border-radius: var(--radius-full);
+  font-weight: 500;
 }
 
 .folder-new-session {
@@ -170,20 +174,20 @@
   padding: var(--space-1) 0;
 }
 
-/* ── Session cards (Kiro-inspired) ── */
+/* ── Session cards ── */
 
 .session-item {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  gap: 5px;
   padding: var(--space-3);
-  margin: var(--space-1) var(--space-1);
+  margin: 2px 0;
   cursor: pointer;
   border-radius: var(--radius-md);
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-subtle);
-  transition: background var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
+  background: transparent;
+  border: 1px solid transparent;
+  transition: background var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .folder-session-shell.open .session-item {
@@ -192,9 +196,7 @@
 }
 
 .session-item:hover {
-  background: var(--bg-tertiary);
-  border-color: var(--border-strong);
-  transform: translateY(-1px);
+  background: var(--interactive-hover-soft);
 }
 
 .session-item:focus-visible {
@@ -203,13 +205,25 @@
 }
 
 .session-item.active {
-  background: var(--bg-tertiary);
-  border-color: var(--accent-muted);
-  border-left: 2px solid var(--accent);
+  background: var(--bg-secondary);
+  border-color: var(--border-subtle);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.session-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 2px;
+  border-radius: 1px;
+  background: var(--accent);
 }
 
 .session-item.active:hover {
-  border-color: var(--border-accent);
+  background: var(--bg-tertiary);
+  border-color: var(--border-strong);
 }
 
 /* ── Session card content ── */
@@ -222,18 +236,35 @@
   min-width: 0;
 }
 
-.session-icon {
-  color: var(--text-muted);
+.session-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: var(--text-disabled);
   flex-shrink: 0;
-  transition: color var(--transition-fast);
+  transition: background var(--transition-fast);
 }
 
-.session-item:hover .session-icon {
-  color: var(--text-secondary);
+.session-item:hover .session-dot {
+  background: var(--text-muted);
 }
 
-.session-item.active .session-icon {
-  color: var(--accent);
+.session-item.active .session-dot {
+  background: var(--accent);
+  box-shadow: 0 0 6px var(--accent-glow);
+}
+
+.session-meta-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding-left: 14px;
+}
+
+.session-msg-count {
+  font-size: 10px;
+  color: var(--text-disabled);
+  font-variant-numeric: tabular-nums;
 }
 
 .session-name {
@@ -248,16 +279,13 @@
   transition: color var(--transition-fast);
 }
 
-.session-item:hover .session-name {
-  color: var(--text-primary);
-}
-
+.session-item:hover .session-name,
 .session-item.active .session-name {
   color: var(--text-primary);
 }
 
 .session-time {
-  font-size: var(--text-xs);
+  font-size: 10px;
   color: var(--text-disabled);
   flex-shrink: 0;
   white-space: nowrap;
@@ -267,11 +295,12 @@
 .session-preview {
   margin: 0;
   font-size: var(--text-xs);
-  color: var(--text-muted);
+  color: var(--text-disabled);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  line-height: 1.4;
+  line-height: 1.5;
+  padding-left: 21px;
 }
 
 /* ── Session actions ── */
@@ -305,10 +334,10 @@
 }
 
 .session-delete {
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
   background: transparent;
-  color: var(--text-muted);
+  color: var(--text-disabled);
 }
 
 .session-delete:hover {
@@ -317,7 +346,7 @@
 }
 
 .session-confirm-delete {
-  height: 24px;
+  height: 22px;
   padding: 0 var(--space-2);
   background: var(--danger);
   color: white;
@@ -407,7 +436,7 @@
 /* ── Folder empty ── */
 
 .folder-empty {
-  padding: var(--space-2) var(--space-3);
+  padding: var(--space-3) var(--space-3);
   color: var(--text-disabled);
   font-size: var(--text-sm);
 }

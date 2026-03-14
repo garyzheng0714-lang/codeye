@@ -11,15 +11,42 @@ function getFileName(tool: ToolCallDisplay): string | null {
   return null;
 }
 
+function StepStatusCircle({ status }: { status: 'done' | 'running' | 'error' }) {
+  if (status === 'running') {
+    return (
+      <span className="step-circle step-circle--running">
+        <span className="step-circle-inner" />
+      </span>
+    );
+  }
+  if (status === 'error') {
+    return <span className="step-circle step-circle--error">!</span>;
+  }
+  return (
+    <span className="step-circle step-circle--done">
+      <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+        <path d="M2 5.5L4 7.5L8 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    </span>
+  );
+}
+
 function ToolStatusIcon({ name, status }: { name: string; status: ReturnType<typeof getToolStatus> }) {
   const isRunning = status === 'running' || status === 'pending';
   const isError = status === 'error';
-  const color = isError ? 'var(--danger)' : isRunning ? 'var(--text-muted)' : getToolColor(name);
-  return (
-    <span className="tool-icon" style={{ color }}>
-      {isRunning ? <SpinnerIcon size={14} /> : <ToolIcon name={name} size={14} />}
-    </span>
-  );
+  const isBash = name === 'Bash';
+
+  // Bash uses original icon style, step tools use Kiro-style circles
+  if (isBash) {
+    const color = isError ? 'var(--danger)' : isRunning ? 'var(--text-muted)' : getToolColor(name);
+    return (
+      <span className="tool-icon" style={{ color }}>
+        {isRunning ? <SpinnerIcon size={14} /> : <ToolIcon name={name} size={14} />}
+      </span>
+    );
+  }
+
+  return <StepStatusCircle status={isError ? 'error' : isRunning ? 'running' : 'done'} />;
 }
 
 function BashInline({ tool }: { tool: ToolCallDisplay }) {

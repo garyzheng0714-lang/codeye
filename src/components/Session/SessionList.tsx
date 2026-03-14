@@ -5,7 +5,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import { ChevronDown, Plus, X, FolderPlus, Search as SearchIcon, Pencil, Trash2, Folder, MessageCircle } from 'lucide-react';
+import { ChevronDown, Plus, X, FolderPlus, Search as SearchIcon, Pencil, Trash2, Folder } from 'lucide-react';
 import { useSessionStore } from '../../stores/sessionStore';
 import { useChatStore } from '../../stores/chatStore';
 import { stopClaude } from '../../hooks/useClaudeChat';
@@ -384,9 +384,14 @@ export default function SessionList({
                           ) : (
                             <>
                               <div className="session-item-row">
-                                <MessageCircle size={13} strokeWidth={1.6} className="session-icon" />
+                                <span className="session-dot" />
                                 <span className="session-name">{session.name}</span>
+                              </div>
+                              <div className="session-meta-row">
                                 <span className="session-time">{formatRelativeTime(session.updatedAt)}</span>
+                                {session.messages.length > 0 && (
+                                  <span className="session-msg-count">{session.messages.length} msgs</span>
+                                )}
                               </div>
                               {preview && <p className="session-preview">{preview}</p>}
                               <div className={`session-actions ${pendingDeleteId === session.id ? 'confirming' : ''}`}>
