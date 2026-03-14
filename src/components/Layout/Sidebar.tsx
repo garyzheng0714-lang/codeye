@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { useUIStore } from '../../stores/uiStore';
 import { useSessionStore } from '../../stores/sessionStore';
 import { useChatStore } from '../../stores/chatStore';
+import { stopClaude } from '../../hooks/useClaudeChat';
 import { saveCurrentSession } from '../../utils/session';
 import SessionList from '../Session/SessionList';
 import SettingsPanel from '../Settings/SettingsPanel';
@@ -18,6 +19,8 @@ export default function Sidebar() {
   const setActiveSession = useSessionStore((s) => s.setActiveSession);
   const importClaudeSessions = useSessionStore((s) => s.importClaudeSessions);
   const markFolderSynced = useSessionStore((s) => s.markFolderSynced);
+  const isStreaming = useChatStore((s) => s.isStreaming);
+  const finishStreaming = useChatStore((s) => s.finishStreaming);
   const clearMessages = useChatStore((s) => s.clearMessages);
   const setSessionId = useChatStore((s) => s.setSessionId);
   const setClaudeSessionId = useChatStore((s) => s.setClaudeSessionId);
@@ -59,6 +62,10 @@ export default function Sidebar() {
 
   const focusFolderWorkspace = useCallback(
     (folder: SessionFolder) => {
+      if (isStreaming) {
+        stopClaude();
+        finishStreaming();
+      }
       saveCurrentSession();
       setActiveFolder(folder.id);
       setActiveSession(null);
@@ -67,7 +74,7 @@ export default function Sidebar() {
       setClaudeSessionId(null);
       setCwd(folder.path);
     },
-    [clearMessages, setActiveFolder, setActiveSession, setClaudeSessionId, setCwd, setSessionId]
+    [clearMessages, finishStreaming, isStreaming, setActiveFolder, setActiveSession, setClaudeSessionId, setCwd, setSessionId]
   );
 
   const handleAddFolder = useCallback(async () => {
@@ -89,11 +96,15 @@ export default function Sidebar() {
 
   const handleNewSession = useCallback(
     (folderId?: string) => {
+      if (isStreaming) {
+        stopClaude();
+        finishStreaming();
+      }
       saveCurrentSession();
       clearMessages();
       createSession(undefined, folderId);
     },
-    [clearMessages, createSession]
+    [clearMessages, createSession, finishStreaming, isStreaming]
   );
 
   return (

@@ -1,7 +1,8 @@
 import { useState, memo } from 'react';
 import { useChatStore } from '../../stores/chatStore';
 import type { ToolCallDisplay } from '../../types';
-import { getToolStatus, getSemanticName, getToolColor, ToolIcon, SpinnerIcon } from '../../data/toolIcons';
+import { getToolStatus, getSemanticName, getToolColor } from '../../data/toolMeta';
+import { ToolIcon, SpinnerIcon } from '../../data/toolIcons';
 import DiffViewer from './DiffViewer';
 
 function getFileName(tool: ToolCallDisplay): string | null {

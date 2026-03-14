@@ -38,6 +38,10 @@ export default function App() {
       // Cmd+N — new session
       if (mod && e.key === 'n') {
         e.preventDefault();
+        if (useChatStore.getState().isStreaming) {
+          stopClaude();
+          useChatStore.getState().finishStreaming();
+        }
         saveCurrentSession();
         useChatStore.getState().clearMessages();
         useSessionStore.getState().createSession();
@@ -55,6 +59,10 @@ export default function App() {
       // Cmd+K — clear conversation (like terminal)
       if (mod && e.key === 'k') {
         e.preventDefault();
+        if (useChatStore.getState().isStreaming) {
+          stopClaude();
+          useChatStore.getState().finishStreaming();
+        }
         useChatStore.getState().clearMessages();
       }
       // Cmd+/ — open slash command palette

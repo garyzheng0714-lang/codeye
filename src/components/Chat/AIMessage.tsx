@@ -4,7 +4,8 @@ import remarkGfm from 'remark-gfm';
 import type { DisplayMessage, ToolCallDisplay } from '../../types';
 import { useChatStore } from '../../stores/chatStore';
 import { useSessionStore } from '../../stores/sessionStore';
-import { getToolStatus, getToolColor, ToolIcon, SpinnerIcon } from '../../data/toolIcons';
+import { getToolStatus, getToolColor } from '../../data/toolMeta';
+import { ToolIcon, SpinnerIcon } from '../../data/toolIcons';
 import ToolCall from './ToolCall';
 import CodeBlock from './CodeBlock';
 

@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { classifySession, sortInboxEntries, groupByTier, type InboxEntry } from './sessionInbox';
 
 describe('sessionInbox', () => {

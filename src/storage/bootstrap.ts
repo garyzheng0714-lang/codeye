@@ -59,9 +59,8 @@ function syncAllFoldersFromCli(): void {
   if (!window.electronAPI?.projects.importClaudeHistory) return;
 
   const sessionStore = useSessionStore.getState();
-  const chatStore = useChatStore.getState();
-  let { folders } = sessionStore;
-  let localFolders = folders.filter((f) => f.kind === 'local' && f.path);
+  const { folders } = sessionStore;
+  const localFolders = folders.filter((f) => f.kind === 'local' && f.path);
 
   // Auto-create a folder for cwd if none exist
   if (localFolders.length === 0 && window.electronAPI?.getCwd) {
@@ -97,7 +96,7 @@ function syncChatToSession(): void {
   const { messages, cost, inputTokens, outputTokens, model, claudeSessionId, cwd } =
     useChatStore.getState();
   const { activeSessionId, saveSessionMessages } = useSessionStore.getState();
-  if (activeSessionId && messages.length > 0) {
+  if (activeSessionId) {
     saveSessionMessages(activeSessionId, messages, cost, inputTokens, outputTokens, {
       model,
       claudeSessionId,

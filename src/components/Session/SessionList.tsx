@@ -7,6 +7,7 @@ import {
 } from 'react';
 import { useSessionStore } from '../../stores/sessionStore';
 import { useChatStore } from '../../stores/chatStore';
+import { stopClaude } from '../../hooks/useClaudeChat';
 import type { SessionData, SessionFolder } from '../../types';
 
 interface Props {
@@ -75,6 +76,7 @@ export default function SessionList({
     getFolder,
   } = useSessionStore();
   const clearMessages = useChatStore((s) => s.clearMessages);
+  const finishStreaming = useChatStore((s) => s.finishStreaming);
   const setSessionId = useChatStore((s) => s.setSessionId);
   const setClaudeSessionId = useChatStore((s) => s.setClaudeSessionId);
   const setCwd = useChatStore((s) => s.setCwd);
@@ -171,9 +173,14 @@ export default function SessionList({
   const handleSelectSession = (session: SessionData) => {
     if (session.id === activeSessionId) return;
 
-    const chatState = useChatStore.getState();
+    let chatState = useChatStore.getState();
+    if (chatState.isStreaming) {
+      stopClaude();
+      finishStreaming();
+      chatState = useChatStore.getState();
+    }
 
-    if (activeSessionId && chatState.messages.length > 0) {
+    if (activeSessionId) {
       saveSessionMessages(activeSessionId, chatState.messages, chatState.cost, chatState.inputTokens, chatState.outputTokens, {
         model: chatState.model,
         claudeSessionId: chatState.claudeSessionId,

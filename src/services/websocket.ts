@@ -3,12 +3,20 @@ const INITIAL_RECONNECT_DELAY = 1000;
 const MAX_RECONNECT_DELAY = 30000;
 const HEARTBEAT_INTERVAL = 30000;
 
+type WsMessageListener = (event: MessageEvent) => void;
+
 let globalWs: WebSocket | null = null;
 let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 let heartbeatTimer: ReturnType<typeof setInterval> | null = null;
 let reconnectDelay = INITIAL_RECONNECT_DELAY;
-let reconnectCount = 0;
-let pendingMessages: string[] = [];
+const pendingMessages: string[] = [];
+const messageListeners = new Set<WsMessageListener>();
+
+function attachMessageListeners(ws: WebSocket) {
+  for (const listener of messageListeners) {
+    ws.addEventListener('message', listener);
+  }
+}
 
 function flushPending(ws: WebSocket) {
   while (pendingMessages.length > 0) {
@@ -41,10 +49,10 @@ function connectWs(): WebSocket {
 
   const ws = new WebSocket(WS_URL);
   globalWs = ws;
+  attachMessageListeners(ws);
 
   ws.onopen = () => {
     reconnectDelay = INITIAL_RECONNECT_DELAY;
-    reconnectCount = 0;
     startHeartbeat(ws);
     flushPending(ws);
   };
@@ -53,7 +61,6 @@ function connectWs(): WebSocket {
     stopHeartbeat();
     if (globalWs === ws) {
       reconnectDelay = Math.min(reconnectDelay * 2, MAX_RECONNECT_DELAY);
-      reconnectCount += 1;
       reconnectTimer = setTimeout(() => connectWs(), reconnectDelay);
     }
   };
@@ -73,6 +80,24 @@ export function getOrCreateWs(): WebSocket | null {
   return connectWs();
 }
 
+export function subscribeWsMessages(listener: WsMessageListener): () => void {
+  if (window.electronAPI) return () => {};
+
+  messageListeners.add(listener);
+  const ws = getOrCreateWs();
+  if (ws) {
+    ws.addEventListener('message', listener);
+  }
+
+  return () => {
+    messageListeners.delete(listener);
+    ws?.removeEventListener('message', listener);
+    if (globalWs && globalWs !== ws) {
+      globalWs.removeEventListener('message', listener);
+    }
+  };
+}
+
 export function sendMessage(payload: Record<string, unknown>) {
   if (window.electronAPI) return;
 
@@ -85,4 +110,3 @@ export function sendMessage(payload: Record<string, unknown>) {
     pendingMessages.push(data);
   }
 }
-

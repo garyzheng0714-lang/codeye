@@ -10,18 +10,18 @@ type AppFixtures = {
 };
 
 export const test = base.extend<AppFixtures>({
-  appPage: async ({ page }, use) => {
+  appPage: async ({ page }, fixtureDone) => {
     const appPage = new AppPage(page);
     await appPage.goto();
-    await use(appPage);
+    await fixtureDone(appPage);
   },
-  sidebarPage: async ({ appPage }, use) => {
+  sidebarPage: async ({ appPage }, fixtureDone) => {
     const sidebarPage = new SidebarPage(appPage.page);
-    await use(sidebarPage);
+    await fixtureDone(sidebarPage);
   },
-  chatPage: async ({ appPage }, use) => {
+  chatPage: async ({ appPage }, fixtureDone) => {
     const chatPage = new ChatPage(appPage.page);
-    await use(chatPage);
+    await fixtureDone(chatPage);
   },
 });
 

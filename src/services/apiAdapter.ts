@@ -1,5 +1,5 @@
 import type { ImportedClaudeSession } from '../types';
-import { sendMessage, getOrCreateWs } from './websocket';
+import { sendMessage } from './websocket';
 
 export type RuntimeMode = 'electron' | 'browser';
 

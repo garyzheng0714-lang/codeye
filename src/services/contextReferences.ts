@@ -7,7 +7,6 @@ interface ContextReference {
   resolved?: string;
 }
 
-const VALUE_TYPES = new Set<ContextType>(['file', 'folder', 'url', 'code']);
 const VALUE_PATTERN = /#(file|folder|url|code)\s+(\S+)/g;
 const STANDALONE_PATTERN = /#(codebase|git_diff|terminal)\b/g;
 

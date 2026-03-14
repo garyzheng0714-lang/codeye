@@ -4,11 +4,12 @@ import { getOrCreateWs } from '../../services/websocket';
 type Status = 'connected' | 'connecting' | 'disconnected';
 
 export default function ConnectionStatus() {
-  const [status, setStatus] = useState<Status>('connecting');
+  const [status, setStatus] = useState<Status>(
+    window.electronAPI ? 'connected' : 'connecting'
+  );
 
   useEffect(() => {
     if (window.electronAPI) {
-      setStatus('connected');
       return;
     }
 

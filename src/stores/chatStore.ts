@@ -95,6 +95,7 @@ export const useChatStore = create<ChatState>((set) => ({
 
   appendAssistantContent: (content) =>
     set((state) => {
+      if (!state.isStreaming) return state;
       const msgs = [...state.messages];
       const last = msgs[msgs.length - 1];
       if (last?.role === 'assistant') {
@@ -122,6 +123,7 @@ export const useChatStore = create<ChatState>((set) => ({
 
   addToolCall: (tool) =>
     set((state) => {
+      if (!state.isStreaming) return state;
       const msgs = [...state.messages];
       const last = msgs[msgs.length - 1];
       if (last?.role === 'assistant') {
@@ -176,4 +178,3 @@ export const useChatStore = create<ChatState>((set) => ({
       isStreaming: false,
     }),
 }));
-

@@ -15,6 +15,8 @@ export default memo(function MessageList() {
 
   const useVirtual = turns.length > VIRTUAL_THRESHOLD;
 
+  // TanStack virtualizer intentionally returns non-memoizable functions.
+  // eslint-disable-next-line react-hooks/incompatible-library
   const virtualizer = useVirtualizer({
     count: turns.length,
     getScrollElement: () => parentRef.current,

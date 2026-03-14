@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useChatStore } from '../stores/chatStore';
 import { handleClaudeMessage, type StoreActions } from '../services/messageHandler';
-import { getOrCreateWs, sendMessage } from '../services/websocket';
+import { subscribeWsMessages, sendMessage } from '../services/websocket';
 import { parseClaudeMessage } from '../types/protocol';
 import { parseStreamEvent } from '../types/streamEvent';
 import { finishStreamTrace, markStreamChunk } from '../observability/perfBaseline';
@@ -88,9 +88,6 @@ export function useClaudeChat() {
       return () => { textBatcher.destroy(); removeMessage(); removeComplete(); removeError(); };
     }
 
-    const ws = getOrCreateWs();
-    if (!ws) return () => { textBatcher.destroy(); };
-
     const handler = (event: MessageEvent) => {
       try {
         const raw = JSON.parse(event.data);
@@ -143,8 +140,8 @@ export function useClaudeChat() {
       }
     };
 
-    ws.addEventListener('message', handler);
-    return () => { textBatcher.destroy(); ws.removeEventListener('message', handler); };
+    const unsubscribe = subscribeWsMessages(handler);
+    return () => { textBatcher.destroy(); unsubscribe(); };
   }, []);
 
 }
