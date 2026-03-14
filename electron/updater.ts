@@ -74,6 +74,19 @@ function stringifyError(error: unknown): string {
   return 'Unknown update error';
 }
 
+function mapCheckErrorMessage(error: unknown): string {
+  const raw = stringifyError(error);
+  const lower = raw.toLowerCase();
+
+  if (lower.includes('404') || lower.includes('not found')) {
+    return 'No published GitHub Release was found. Please publish a new release first.';
+  }
+  if (lower.includes('latest') && lower.includes('release')) {
+    return 'No latest release is available yet. Publish a versioned release to enable updates.';
+  }
+  return `Unable to check for updates: ${raw}`;
+}
+
 function bindUpdaterEvents(): void {
   if (handlersBound) return;
   handlersBound = true;
@@ -138,11 +151,12 @@ export function registerUpdaterHandlers(
 
     try {
       isChecking = true;
+      setUpdaterState('checking', 'Checking for updates...');
       await autoUpdater.checkForUpdates();
       return state;
     } catch (error) {
       isChecking = false;
-      return setUpdaterState('error', `Unable to check for updates: ${stringifyError(error)}`);
+      return setUpdaterState('error', mapCheckErrorMessage(error));
     }
   });
 

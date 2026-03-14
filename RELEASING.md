@@ -21,7 +21,7 @@
    git push origin --tags
    ```
 4. 等待 GitHub Actions `Release DMG` 跑完。
-5. 在仓库 `Releases` 页面查看新版本，DMG 会自动挂载到该 Release。
+5. 在仓库 `Releases` 页面查看新版本，资产会自动挂载到该 Release（`.dmg` + `.zip` + `latest-mac.yml` + `.blockmap`）。
 
 ### 方式 B：手动触发构建（不自动发布）
 1. 打开 GitHub 仓库 -> `Actions` -> `Release DMG`。
@@ -30,8 +30,8 @@
 
 ## 说明
 
-- 只构建 macOS DMG（不会产出 Windows/Linux 包）。
+- 只构建 macOS 包（`.dmg` + `.zip`，不会产出 Windows/Linux 包）。
 - 工作流使用 `macos-14` 运行器。
 - 当前默认不做签名/公证（`CSC_IDENTITY_AUTO_DISCOVERY=false`），首次分发会有 macOS 安全提示，属于预期行为。
 - 如需正式分发（减少“无法验证开发者”提示），后续可以再接入 Apple Developer 签名和 notarization。
-- App 内「One-click Update」基于 GitHub Releases：发布时必须带上 `latest-mac.yml` 与 DMG（electron-builder 默认会生成）。
+- App 内「One-click Update」基于 GitHub Releases：必须有更高版本号的 Release，并包含 `latest-mac.yml`、`.zip`、`.dmg`、`.blockmap`。

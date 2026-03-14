@@ -51,6 +51,7 @@ export default function AboutTab() {
   const isUpdateButtonDisabled =
     !updater
     || isUpdateActionBusy
+    || updateState?.stage === 'unsupported'
     || updateState?.stage === 'checking'
     || updateState?.stage === 'available'
     || updateState?.stage === 'downloading';
@@ -61,9 +62,27 @@ export default function AboutTab() {
     setIsUpdateActionBusy(true);
     try {
       if (updateState?.stage === 'downloaded') {
-        await updater.quitAndInstall();
+        const willInstall = await updater.quitAndInstall();
+        if (!willInstall) {
+          setUpdateState((prev) => ({
+            stage: 'error',
+            message: 'Update is not ready to install yet. Please check again.',
+            currentVersion: prev?.currentVersion || 'unknown',
+            latestVersion: prev?.latestVersion,
+          }));
+        }
       } else {
-        await updater.checkForUpdates();
+        setUpdateState((prev) => ({
+          stage: 'checking',
+          message: 'Checking for updates...',
+          currentVersion: prev?.currentVersion || 'unknown',
+          latestVersion: prev?.latestVersion,
+          percent: prev?.percent,
+          transferred: prev?.transferred,
+          total: prev?.total,
+        }));
+        const nextState = await updater.checkForUpdates();
+        setUpdateState(nextState);
       }
     } finally {
       setIsUpdateActionBusy(false);
