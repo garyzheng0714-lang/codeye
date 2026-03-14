@@ -57,7 +57,7 @@
   left: -8px;
   top: 50%;
   transform: translateY(-50%);
-  width: 3px;
+  width: 2px;
   height: 20px;
   background: var(--accent);
   border-radius: 0 var(--radius-full) var(--radius-full) 0;
@@ -65,20 +65,19 @@
 
 .activity-btn.launcher-collapsed {
   color: var(--accent);
-  background: rgba(139, 92, 246, 0.10);
+  background: var(--accent-muted);
   box-shadow: none;
 }
 
 .activity-btn.launcher-collapsed:hover {
-  background: rgba(139, 92, 246, 0.16);
+  background: var(--accent-glow);
 }
 
 [data-theme="light"] .activity-btn.launcher-collapsed {
   color: var(--accent);
-  background: rgba(124, 58, 237, 0.08);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.78);
+  background: var(--accent-muted);
 }
 
 [data-theme="light"] .activity-btn.launcher-collapsed:hover {
-  background: rgba(124, 58, 237, 0.12);
+  background: var(--accent-glow);
 }
