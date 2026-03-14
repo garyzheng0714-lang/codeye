@@ -1,7 +1,7 @@
 {
   "name": "codeye",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A desktop GUI for Claude Code",
   "main": "dist-electron/main.js",
   "scripts": {
@@ -69,7 +69,10 @@
       "dist-electron/**/*"
     ],
     "mac": {
-      "target": ["dmg", "zip"],
+      "target": [
+        "dmg",
+        "zip"
+      ],
       "icon": "build/icon.icns",
       "category": "public.app-category.developer-tools"
     },
