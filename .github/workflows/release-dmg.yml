@@ -54,13 +54,14 @@ jobs:
 
       - name: Publish GitHub Release
         if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ github.ref_name }}
-          generate_release_notes: true
-          overwrite_files: true
-          files: |
-            release/*.dmg
-            release/*.zip
-            release/latest-mac.yml
-            release/*.blockmap
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG="${GITHUB_REF_NAME}"
+          FILES=(release/*.dmg release/*.zip release/latest-mac.yml release/*.blockmap)
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "${FILES[@]}" --clobber
+          else
+            gh release create "$TAG" "${FILES[@]}" --generate-notes
+          fi
