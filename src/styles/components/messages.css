@@ -435,12 +435,17 @@
   border-color: var(--border-subtle);
 }
 
-[data-theme="light"] .tool-block-header {
-  background: var(--bg-secondary);
+[data-theme="light"] .tool-block-header:hover {
+  background: var(--bg-hover);
 }
 
 [data-theme="light"] .tool-file-badge {
   background: var(--bg-secondary);
+}
+
+[data-theme="light"] .thinking-block {
+  background: var(--bg-secondary);
+  border-color: var(--border-subtle);
 }
 
 .text-success {

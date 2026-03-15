@@ -399,3 +399,20 @@
   white-space: pre-wrap;
   word-break: break-all;
 }
+
+/* ══════════════════════════════════════════
+   Light Theme Overrides
+   ══════════════════════════════════════════ */
+
+[data-theme="light"] .ai-steps-block {
+  background: white;
+  border-color: var(--border-subtle);
+}
+
+[data-theme="light"] .tool-card {
+  background: white;
+}
+
+[data-theme="light"] .tool-card--error {
+  background: var(--bg-danger);
+}
