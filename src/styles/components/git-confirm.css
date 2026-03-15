@@ -1,0 +1,329 @@
+.git-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 120ms ease-out;
+}
+
+.git-confirm-panel {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  width: min(440px, calc(100vw - 32px));
+  max-height: calc(100vh - 64px);
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
+  animation: slideUp 200ms ease-out;
+  overflow: hidden;
+}
+
+.git-confirm-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.git-confirm-header-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--text-primary);
+}
+
+.git-confirm-title {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  letter-spacing: var(--tracking-tight);
+}
+
+.git-confirm-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: background 100ms, color 100ms;
+}
+
+.git-confirm-close:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.git-confirm-body {
+  padding: var(--space-4);
+  overflow-y: auto;
+  flex: 1;
+}
+
+.git-confirm-loading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  padding: var(--space-4) 0;
+  justify-content: center;
+}
+
+.git-confirm-spinner {
+  animation: spin 800ms linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.git-confirm-diff-stat {
+  margin-bottom: var(--space-4);
+}
+
+.git-confirm-diff-summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  margin-bottom: var(--space-2);
+}
+
+.git-confirm-additions {
+  color: #4ade80;
+  font-size: var(--text-xs);
+  font-family: var(--font-mono);
+}
+
+.git-confirm-deletions {
+  color: #f87171;
+  font-size: var(--text-xs);
+  font-family: var(--font-mono);
+}
+
+.git-confirm-file-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-sm);
+  padding: var(--space-1);
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.git-confirm-file-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--text-xs);
+  border-radius: var(--radius-xs);
+}
+
+.git-confirm-file-row:hover {
+  background: var(--bg-hover);
+}
+
+.git-confirm-file-icon {
+  flex-shrink: 0;
+}
+
+.git-confirm-file-icon.added { color: #4ade80; }
+.git-confirm-file-icon.deleted { color: #f87171; }
+.git-confirm-file-icon.modified { color: #facc15; }
+
+.git-confirm-file-path {
+  flex: 1;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.git-confirm-file-stat {
+  display: flex;
+  gap: var(--space-1);
+  flex-shrink: 0;
+}
+
+.git-confirm-more-files {
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.git-confirm-diff-count {
+  color: var(--text-secondary);
+}
+
+.git-confirm-input-group {
+  margin-bottom: var(--space-3);
+}
+
+.git-confirm-label {
+  display: block;
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  margin-bottom: var(--space-1);
+  letter-spacing: var(--tracking-tight);
+}
+
+.git-confirm-input {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  font-family: var(--font-mono);
+  outline: none;
+  transition: border-color 100ms;
+}
+
+.git-confirm-input:focus {
+  border-color: var(--accent);
+}
+
+.git-confirm-textarea {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  font-family: var(--font-mono);
+  outline: none;
+  resize: vertical;
+  min-height: 60px;
+  transition: border-color 100ms;
+}
+
+.git-confirm-textarea:focus {
+  border-color: var(--accent);
+}
+
+.git-confirm-result {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+}
+
+.git-confirm-result.success {
+  background: rgba(74, 222, 128, 0.08);
+  color: #4ade80;
+}
+
+.git-confirm-result.error {
+  background: rgba(248, 113, 113, 0.08);
+  color: #f87171;
+}
+
+.git-confirm-result-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+
+.git-confirm-result-text code {
+  font-family: var(--font-mono);
+  background: var(--surface-glass);
+  padding: 1px 4px;
+  border-radius: var(--radius-xs);
+  font-size: var(--text-xs);
+}
+
+.git-confirm-result-text a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.git-confirm-result-text a:hover {
+  text-decoration: underline;
+}
+
+.git-confirm-retry-hint {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.git-confirm-manual-cmd {
+  margin-top: var(--space-2);
+}
+
+.git-confirm-manual-cmd code {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: var(--space-2);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  word-break: break-all;
+}
+
+.git-confirm-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.git-confirm-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 100ms, opacity 100ms;
+  border: none;
+}
+
+.git-confirm-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.git-confirm-btn.secondary {
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+}
+
+.git-confirm-btn.secondary:hover:not(:disabled) {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.git-confirm-btn.primary {
+  background: var(--accent);
+  color: #fff;
+}
+
+.git-confirm-btn.primary:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
