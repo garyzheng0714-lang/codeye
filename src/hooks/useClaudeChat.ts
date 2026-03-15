@@ -13,6 +13,7 @@ import { toCliPermissionMode } from '../services/permissionMode';
 import { applyServerFeatureFlagDocument, isEnabled } from '../services/featureFlags';
 import { activityStream } from '../services/activityStream';
 import { startApprovalTimeout, sendApprovalDecision, denyAllPending } from '../services/toolApproval';
+import { previewCache } from '../services/previewCache';
 import type { GitResultDisplay, InputAttachment } from '../types';
 
 function getActions(): StoreActions {
@@ -204,6 +205,10 @@ export function useClaudeChat() {
         } else if (streamEvent.type === 'tool_progress') {
           const p = streamEvent.payload as { toolId: string; lines: string[]; finished: boolean };
           useChatStore.getState().updateToolProgress(p.toolId, p.lines);
+        } else if (streamEvent.type === 'preview_response') {
+          const p = streamEvent.payload as { type: 'file' | 'diff'; content: string; path?: string };
+          const cacheKey = p.path || `__preview_${streamEvent.correlationId || 'anon'}`;
+          previewCache.set(cacheKey, { type: p.type, content: p.content, path: p.path });
         }
       } catch {
         // ignore malformed messages

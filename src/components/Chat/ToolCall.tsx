@@ -162,6 +162,14 @@ export default memo(function ToolCall({
 
       {isBash && <BashInline tool={tool} />}
 
+      {tool.progressLines && tool.progressLines.length > 0 && !isBash && (
+        <div className="tool-progress-lines">
+          {tool.progressLines.slice(-10).map((line, i) => (
+            <div key={i} className="tool-progress-line">{line}</div>
+          ))}
+        </div>
+      )}
+
       {isEdit && diffOpen && (
         <div className="tool-diff-body">
           <Suspense fallback={null}>
