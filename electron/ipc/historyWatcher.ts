@@ -2,12 +2,13 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 import { BrowserWindow } from 'electron';
+import chokidar, { type FSWatcher } from 'chokidar';
 
 const DEBOUNCE_MS = 2000;
 const PROJECTS_DIR = path.join(os.homedir(), '.claude', 'projects');
 
 interface WatcherEntry {
-  watcher: fs.FSWatcher;
+  watcher: FSWatcher;
   folderPath: string;
   encodedPath: string;
 }
@@ -49,8 +50,24 @@ export function watchProjectHistory(folderPath: string, encodedPath: string): vo
   }
 
   try {
-    const watcher = fs.watch(projectDir, { persistent: false }, (_eventType, filename) => {
-      if (filename && filename.endsWith('.jsonl')) {
+    const watcher = chokidar.watch(projectDir, {
+      persistent: true,
+      ignoreInitial: true,
+      awaitWriteFinish: {
+        stabilityThreshold: 500,
+        pollInterval: 100,
+      },
+      depth: 0,
+    });
+
+    watcher.on('add', (filePath) => {
+      if (filePath.endsWith('.jsonl')) {
+        debouncedNotify(encodedPath);
+      }
+    });
+
+    watcher.on('change', (filePath) => {
+      if (filePath.endsWith('.jsonl')) {
         debouncedNotify(encodedPath);
       }
     });
