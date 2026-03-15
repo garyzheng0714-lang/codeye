@@ -86,19 +86,27 @@ export default memo(function SessionRow({
     isOld && !isActive ? 'old' : '',
   ].filter(Boolean).join(' ');
 
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onSelect();
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      e.stopPropagation();
+      onSelect();
+    }
+  };
+
   return (
     <div
       className={rowClass}
       role="button"
       tabIndex={0}
       aria-current={isActive ? 'true' : undefined}
-      onClick={onSelect}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          onSelect();
-        }
-      }}
+      onClick={handleClick}
+      onKeyDown={handleKeyDown}
       onDoubleClick={handleDoubleClick}
     >
       <span className="session-title">{title}</span>
