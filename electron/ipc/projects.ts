@@ -373,22 +373,103 @@ function readGitStatusForPath(folderPath: string): GitStatusSnapshot {
   };
 }
 
+function discoverClaudeProjects(): { id: string; path: string; name: string; sessionCount: number }[] {
+  const projectsDir = path.join(os.homedir(), '.claude', 'projects');
+  if (!fs.existsSync(projectsDir)) return [];
+
+  return fs
+    .readdirSync(projectsDir)
+    .filter((encodedName) => {
+      const fullPath = path.join(projectsDir, encodedName);
+      return fs.statSync(fullPath).isDirectory();
+    })
+    .map((encodedName) => {
+      // Decode: the encoded name is the original absolute path with non-alnum chars replaced by '-'
+      // Try to find the actual directory by checking if a plausible path exists
+      const projectDir = path.join(projectsDir, encodedName);
+      const jsonlCount = fs.readdirSync(projectDir).filter((f) => f.endsWith('.jsonl')).length;
+      if (jsonlCount === 0) return null;
+
+      // Try to reconstruct the original path
+      // Convention: path starts with /, segments separated by /
+      // The encoded form is like -Users-simba-local-vibecoding-codeye
+      // We try the direct approach: replace leading - with /, then try common separators
+      const segments = encodedName.split('-').filter(Boolean);
+      let resolvedPath = '';
+
+      // Try building the path incrementally
+      for (let i = 0; i < segments.length; i++) {
+        const candidate = '/' + segments.slice(0, i + 1).join('/');
+        if (fs.existsSync(candidate) && fs.statSync(candidate).isDirectory()) {
+          resolvedPath = candidate;
+        }
+      }
+
+      // If we couldn't find a valid directory, try joining all segments with _
+      // Handle cases like local_vibecoding where _ was encoded as -
+      if (!resolvedPath || resolvedPath === '/' + segments[0]) {
+        // Brute-force: try each split point as / vs _ vs -
+        resolvedPath = tryDecodePath(segments);
+      }
+
+      if (!resolvedPath || !fs.existsSync(resolvedPath)) return null;
+
+      const folderName = path.basename(resolvedPath);
+      return { id: encodedName, path: resolvedPath, name: folderName, sessionCount: jsonlCount };
+    })
+    .filter(Boolean) as { id: string; path: string; name: string; sessionCount: number }[];
+}
+
+function tryDecodePath(segments: string[]): string {
+  // Try to reconstruct path by testing if directories exist
+  // Start from root, greedily match the longest existing directory at each level
+  let current = '';
+  let i = 0;
+
+  while (i < segments.length) {
+    let bestMatch = '';
+    let bestLen = 0;
+
+    // Try joining consecutive segments with common separators (-, _, .)
+    for (let j = i; j < segments.length; j++) {
+      const part = segments.slice(i, j + 1).join('-');
+      const candidates = [
+        current + '/' + segments.slice(i, j + 1).join('/'),
+        current + '/' + part,
+        current + '/' + segments.slice(i, j + 1).join('_'),
+        current + '/' + segments.slice(i, j + 1).join('.'),
+      ];
+
+      for (const candidate of candidates) {
+        try {
+          if (fs.existsSync(candidate) && fs.statSync(candidate).isDirectory()) {
+            if (j - i + 1 > bestLen) {
+              bestMatch = candidate;
+              bestLen = j - i + 1;
+            }
+          }
+        } catch {
+          // ignore
+        }
+      }
+    }
+
+    if (bestLen === 0) {
+      // No match found, append remaining as single segment
+      current += '/' + segments[i];
+      i++;
+    } else {
+      current = bestMatch;
+      i += bestLen;
+    }
+  }
+
+  return current;
+}
+
 export function registerProjectHandlers(ipcMain: IpcMain) {
   ipcMain.handle('projects:list', () => {
-    const projectsDir = path.join(os.homedir(), '.claude', 'projects');
-    if (!fs.existsSync(projectsDir)) return [];
-
-    return fs
-      .readdirSync(projectsDir)
-      .filter((name) => {
-        const fullPath = path.join(projectsDir, name);
-        return fs.statSync(fullPath).isDirectory();
-      })
-      .map((name) => ({
-        id: name,
-        path: name.replace(/-/g, '/'),
-        name: name.split('-').filter(Boolean).pop() || name,
-      }));
+    return discoverClaudeProjects();
   });
 
   ipcMain.handle('projects:select-directory', async (event) => {

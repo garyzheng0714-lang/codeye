@@ -1,7 +1,7 @@
 {
   "name": "codeye",
   "private": true,
-  "version": "0.17.6",
+  "version": "0.17.7",
   "description": "A desktop GUI for Claude Code",
   "main": "dist-electron/main.js",
   "scripts": {

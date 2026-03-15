@@ -66,15 +66,27 @@ function syncAllFoldersFromCli(): void {
   const { folders } = sessionStore;
   const localFolders = folders.filter((f) => f.kind === 'local' && f.path);
 
-  // Auto-create a folder for cwd if none exist
-  if (localFolders.length === 0 && window.electronAPI?.getCwd) {
-    window.electronAPI.getCwd().then((cwd) => {
-      if (!cwd) return;
+  // If no local folders, auto-discover from ~/.claude/projects/
+  if (localFolders.length === 0 && window.electronAPI?.projects.list) {
+    window.electronAPI.projects.list().then((projects) => {
+      if (projects.length === 0) return;
       const store = useSessionStore.getState();
-      const folder = store.createFolder(cwd);
-      store.setActiveFolder(folder.id);
-      useChatStore.getState().setCwd(cwd);
-      syncFolderFromCli(folder);
+      let firstFolder: { id: string; path: string } | null = null;
+
+      for (const project of projects) {
+        if (!project.path || project.path === '/') continue;
+        const folder = store.createFolder(project.path);
+        if (!firstFolder) firstFolder = folder;
+        syncFolderFromCli(folder);
+        if (window.electronAPI?.projects.watchHistory) {
+          window.electronAPI.projects.watchHistory(folder.path, encodeProjectPath(folder.path));
+        }
+      }
+
+      if (firstFolder) {
+        store.setActiveFolder(firstFolder.id);
+        useChatStore.getState().setCwd(firstFolder.path);
+      }
     }).catch(() => { /* silent */ });
     return;
   }

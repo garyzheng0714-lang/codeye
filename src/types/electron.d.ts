@@ -78,6 +78,7 @@ interface ProjectInfo {
   id: string;
   path: string;
   name: string;
+  sessionCount?: number;
 }
 
 interface ImportedClaudeSession {
