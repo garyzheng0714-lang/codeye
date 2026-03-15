@@ -9,6 +9,7 @@ import { getToolStatus, getToolColor } from '../../data/toolMeta';
 import { ToolIcon, SpinnerIcon } from '../../data/toolIcons';
 import ToolCall from './ToolCall';
 import CodeBlock from './CodeBlock';
+import GitResultCard from './GitResultCard';
 
 // ── Consecutive Read grouping ──────────────────────────────────────────
 
@@ -137,6 +138,16 @@ export default memo(function AIMessage({ message }: { message: DisplayMessage })
     if (!activeSessionId) return;
     useSessionStore.getState().forkSession(activeSessionId, idx);
   }, [message.id]);
+
+  if (message.gitResult) {
+    return (
+      <div className="message-row ai-message-row" data-message-id={message.id}>
+        <div className="ai-message">
+          <GitResultCard result={message.gitResult} />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="message-row ai-message-row" data-message-id={message.id}>

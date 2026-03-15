@@ -11,6 +11,7 @@ const ACTIVITY_LABELS: Record<ActivityType, string> = {
   file_modified: 'File',
   error_occurred: 'Error',
   git_action: 'Git',
+  git_result: 'Git',
 };
 
 const ACTIVITY_ICONS: Record<ActivityType, string> = {
@@ -22,6 +23,7 @@ const ACTIVITY_ICONS: Record<ActivityType, string> = {
   file_modified: '📝',
   error_occurred: '⚠️',
   git_action: '🔀',
+  git_result: '🔀',
 };
 
 const FILTER_OPTIONS: { label: string; value: ActivityType | 'all' }[] = [

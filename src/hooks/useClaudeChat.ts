@@ -10,8 +10,9 @@ import { getEffectiveEffort, normalizeModelId, toCliModelId } from '../data/mode
 import { setRuntimeSlashCommands } from '../data/slashCommands';
 import { useUIStore } from '../stores/uiStore';
 import { toCliPermissionMode } from '../services/permissionMode';
-import { applyServerFeatureFlagDocument } from '../services/featureFlags';
-import type { InputAttachment } from '../types';
+import { applyServerFeatureFlagDocument, isEnabled } from '../services/featureFlags';
+import { activityStream } from '../services/activityStream';
+import type { GitResultDisplay, InputAttachment } from '../types';
 
 function getActions(): StoreActions {
   const s = useChatStore.getState();
@@ -145,6 +146,33 @@ export function useClaudeChat() {
           finishStreamTrace('error');
         } else if (streamEvent.type === 'feature_flags') {
           applyServerFeatureFlagDocument(streamEvent.payload);
+        } else if (
+          streamEvent.type === 'git_commit_result' ||
+          streamEvent.type === 'git_push_result' ||
+          streamEvent.type === 'git_pr_result'
+        ) {
+          if (isEnabled('gitResultCards')) {
+            const actionMap: Record<string, 'commit' | 'push' | 'pr'> = {
+              git_commit_result: 'commit',
+              git_push_result: 'push',
+              git_pr_result: 'pr',
+            };
+            const action = actionMap[streamEvent.type];
+            const result: GitResultDisplay = {
+              action,
+              ...streamEvent.payload,
+            };
+            useChatStore.getState().addGitResult(result);
+            activityStream.push({
+              type: 'git_result',
+              sessionId: useChatStore.getState().sessionId || 'unknown',
+              sessionName: 'Current',
+              summary: result.success
+                ? `${action} succeeded${result.hash ? ': ' + result.hash : ''}`
+                : `${action} failed: ${result.error?.message || 'unknown'}`,
+              metadata: { action, operationId: result.operationId, success: result.success },
+            });
+          }
         }
       } catch {
         // ignore malformed messages

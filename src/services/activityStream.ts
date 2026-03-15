@@ -8,7 +8,8 @@ export type ActivityType =
   | 'tool_executed'
   | 'file_modified'
   | 'error_occurred'
-  | 'git_action';
+  | 'git_action'
+  | 'git_result';
 
 export interface ActivityEntry {
   id: string;

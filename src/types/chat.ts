@@ -21,6 +21,20 @@ export interface ToolCallDisplay {
   expanded: boolean;
 }
 
+export interface GitResultDisplay {
+  action: 'commit' | 'push' | 'pr';
+  operationId: string;
+  success: boolean;
+  hash?: string;
+  message?: string;
+  remote?: string;
+  branch?: string;
+  url?: string;
+  number?: number;
+  manualCommand?: string;
+  error?: { code: string; message: string; retryable?: boolean };
+}
+
 export interface DisplayMessage {
   id: string;
   role: 'user' | 'assistant';
@@ -28,4 +42,5 @@ export interface DisplayMessage {
   toolCalls: ToolCallDisplay[];
   timestamp: number;
   isStreaming?: boolean;
+  gitResult?: GitResultDisplay;
 }

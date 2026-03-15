@@ -6,20 +6,7 @@ import {
   CheckCircle2,
   AlertCircle,
 } from 'lucide-react';
-
-export interface GitResultDisplay {
-  action: 'commit' | 'push' | 'pr';
-  operationId: string;
-  success: boolean;
-  hash?: string;
-  message?: string;
-  remote?: string;
-  branch?: string;
-  url?: string;
-  number?: number;
-  manualCommand?: string;
-  error?: { code: string; message: string; retryable?: boolean };
-}
+import type { GitResultDisplay } from '../../types';
 
 const actionIcons = {
   commit: GitCommitHorizontal,

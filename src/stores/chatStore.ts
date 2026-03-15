@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import type {
   ChatMode,
   DisplayMessage,
+  GitResultDisplay,
   ToolCallDisplay,
   ModelId,
   EffortLevel,
@@ -43,6 +44,7 @@ interface ChatState {
   updateToolResult: (toolId: string, output: string) => void;
   toggleToolExpand: (messageId: string, toolId: string) => void;
   updateCost: (cost: number, input: number, output: number) => void;
+  addGitResult: (result: GitResultDisplay) => void;
   enqueueMessage: (message: PendingMessage) => void;
   dequeueMessage: () => PendingMessage | undefined;
   removeQueuedMessage: (index: number) => PendingMessage | undefined;
@@ -197,6 +199,21 @@ export const useChatStore = create<ChatState>()((set, get) => ({
       cost: state.cost + cost,
       inputTokens: state.inputTokens + input,
       outputTokens: state.outputTokens + output,
+    })),
+
+  addGitResult: (result) =>
+    set((state) => ({
+      messages: [
+        ...state.messages,
+        {
+          id: crypto.randomUUID(),
+          role: 'assistant' as const,
+          content: '',
+          toolCalls: [],
+          timestamp: Date.now(),
+          gitResult: result,
+        },
+      ],
     })),
 
   enqueueMessage: (message) =>
