@@ -7,54 +7,30 @@ import {
   Loader2,
   CheckCircle2,
   AlertCircle,
-  FileEdit,
-  FilePlus,
-  FileMinus,
+  Check,
+  GitBranch,
 } from 'lucide-react';
 import { useChatStore } from '../../stores/chatStore';
 import { subscribeWsMessages, sendMessage } from '../../services/websocket';
 import { parseStreamEvent } from '../../types/streamEvent';
 import {
   sendGitWriteRequest,
+  sendGitAddRequest,
   handleGitWriteResult,
-  type GitWriteAction,
   type GitWriteCompletedResult,
 } from '../../services/gitWrite';
-
-interface DiffStatFile {
-  path: string;
-  insertions: number;
-  deletions: number;
-}
+import { useGitStatus } from '../../hooks/useGitStatus';
 
 interface DiffStat {
-  files: DiffStatFile[];
+  files: Array<{ path: string; insertions: number; deletions: number }>;
   summary: { filesChanged: number; insertions: number; deletions: number };
 }
 
 type PanelPhase = 'loading' | 'preview' | 'executing' | 'success' | 'error';
+type NextStep = 'commit' | 'commit-push' | 'commit-push-pr';
 
 interface GitConfirmPanelProps {
-  action: GitWriteAction;
   onClose: () => void;
-}
-
-const actionLabels: Record<GitWriteAction, string> = {
-  commit: 'Commit Changes',
-  push: 'Push Branch',
-  pr: 'Create Pull Request',
-};
-
-const actionIcons: Record<GitWriteAction, typeof GitCommitHorizontal> = {
-  commit: GitCommitHorizontal,
-  push: ArrowUpFromLine,
-  pr: GitPullRequest,
-};
-
-function fileIcon(filePath: string, insertions: number, deletions: number) {
-  if (insertions > 0 && deletions === 0) return <FilePlus size={13} strokeWidth={1.6} className="git-confirm-file-icon added" />;
-  if (insertions === 0 && deletions > 0) return <FileMinus size={13} strokeWidth={1.6} className="git-confirm-file-icon deleted" />;
-  return <FileEdit size={13} strokeWidth={1.6} className="git-confirm-file-icon modified" />;
 }
 
 async function createWorkspaceFingerprint(
@@ -70,20 +46,34 @@ async function createWorkspaceFingerprint(
     .join('');
 }
 
-export default function GitConfirmPanel({ action, onClose }: GitConfirmPanelProps) {
+const STEP_OPTIONS: Array<{
+  value: NextStep;
+  icon: typeof GitCommitHorizontal;
+  label: string;
+}> = [
+  { value: 'commit', icon: GitCommitHorizontal, label: '\u63d0\u4ea4' },
+  { value: 'commit-push', icon: ArrowUpFromLine, label: '\u63d0\u4ea4\u5e76\u63a8\u9001' },
+  { value: 'commit-push-pr', icon: GitPullRequest, label: '\u63d0\u4ea4\u5e76\u521b\u5efa PR' },
+];
+
+export default function GitConfirmPanel({ onClose }: GitConfirmPanelProps) {
   const cwd = useChatStore((s) => s.cwd);
+  const { status: gitStatus } = useGitStatus();
+
   const [phase, setPhase] = useState<PanelPhase>('loading');
-  const [diffStat, setDiffStat] = useState<DiffStat | null>(null);
+  const [nextStep, setNextStep] = useState<NextStep>('commit');
+  const [includeUnstaged, setIncludeUnstaged] = useState(true);
   const [commitMessage, setCommitMessage] = useState('');
-  const [prTitle, setPrTitle] = useState('');
-  const [prBody, setPrBody] = useState('');
+  const [executionStep, setExecutionStep] = useState('');
   const [result, setResult] = useState<GitWriteCompletedResult | null>(null);
+  const [diffStat, setDiffStat] = useState<DiffStat | null>(null);
+
   const inputRef = useRef<HTMLInputElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const diffCorrelationRef = useRef<string | null>(null);
+  const executingRef = useRef(false);
 
   useEffect(() => {
-    if (!cwd || action !== 'commit') {
+    if (!cwd) {
       setPhase('preview');
       return;
     }
@@ -93,10 +83,9 @@ export default function GitConfirmPanel({ action, onClose }: GitConfirmPanelProp
 
     const fetchDiffStat = async () => {
       const normalizedCwd = cwd.replace(/[\\/]+$/, '');
-      const workspaceRoot = normalizedCwd;
       const requestId = crypto.randomUUID();
       const workspaceFingerprint = await createWorkspaceFingerprint(
-        workspaceRoot,
+        normalizedCwd,
         normalizedCwd
       );
 
@@ -107,7 +96,7 @@ export default function GitConfirmPanel({ action, onClose }: GitConfirmPanelProp
         payload: {
           requestId,
           cwd: normalizedCwd,
-          workspaceRoot,
+          workspaceRoot: normalizedCwd,
           workspaceFingerprint,
         },
       });
@@ -120,7 +109,7 @@ export default function GitConfirmPanel({ action, onClose }: GitConfirmPanelProp
     }, 5000);
 
     return () => window.clearTimeout(timeout);
-  }, [cwd, action]);
+  }, [cwd]);
 
   useEffect(() => {
     if (window.electronAPI) return;
@@ -142,11 +131,33 @@ export default function GitConfirmPanel({ action, onClose }: GitConfirmPanelProp
         }
 
         if (
+          streamEvent.type === 'git_add_result' &&
+          streamEvent.correlationId &&
+          executingRef.current
+        ) {
+          const payload = streamEvent.payload as unknown as {
+            success: boolean;
+            error?: { code: string; message: string; retryable?: boolean };
+          };
+          if (!payload.success) {
+            setResult({
+              action: 'commit',
+              operationId: '',
+              success: false,
+              error: payload.error ?? { code: 'ADD_FAILED', message: 'Failed to stage files' },
+            });
+            setPhase('error');
+            executingRef.current = false;
+          }
+          return;
+        }
+
+        if (
           streamEvent.type === 'git_commit_result' ||
           streamEvent.type === 'git_push_result' ||
           streamEvent.type === 'git_pr_result'
         ) {
-          const actionMap: Record<string, GitWriteAction> = {
+          const actionMap: Record<string, 'commit' | 'push' | 'pr'> = {
             git_commit_result: 'commit',
             git_push_result: 'push',
             git_pr_result: 'pr',
@@ -160,6 +171,7 @@ export default function GitConfirmPanel({ action, onClose }: GitConfirmPanelProp
             if (completed) {
               setResult(completed);
               setPhase(completed.success ? 'success' : 'error');
+              executingRef.current = false;
             }
           }
         }
@@ -173,38 +185,92 @@ export default function GitConfirmPanel({ action, onClose }: GitConfirmPanelProp
 
   useEffect(() => {
     if (phase === 'preview') {
-      if (action === 'commit') {
-        inputRef.current?.focus();
-      } else if (action === 'pr') {
-        inputRef.current?.focus();
-      }
+      inputRef.current?.focus();
     }
-  }, [phase, action]);
+  }, [phase]);
 
-  const handleConfirm = useCallback(async () => {
+  const handleSubmit = useCallback(async () => {
     if (!cwd) return;
+    executingRef.current = true;
     setPhase('executing');
 
-    await sendGitWriteRequest({
-      action,
-      cwd,
-      message: action === 'commit' ? commitMessage : undefined,
-      title: action === 'pr' ? prTitle : undefined,
-      body: action === 'pr' ? prBody : undefined,
-      onResult: (r) => {
-        setResult(r);
-        setPhase(r.success ? 'success' : 'error');
-      },
-    });
-  }, [action, cwd, commitMessage, prTitle, prBody]);
+    try {
+      if (includeUnstaged) {
+        setExecutionStep('\u6682\u5b58\u6587\u4ef6...');
+        await sendGitAddRequest({ cwd });
+        await new Promise((resolve) => setTimeout(resolve, 300));
+      }
 
-  const canConfirm = (() => {
-    if (action === 'commit') return commitMessage.trim().length > 0;
-    if (action === 'pr') return prTitle.trim().length > 0;
-    return true;
-  })();
+      setExecutionStep('\u63d0\u4ea4\u4e2d...');
+      const commitOp = await sendGitWriteRequest({
+        action: 'commit',
+        cwd,
+        message: commitMessage || undefined,
+        onResult: (commitResult) => {
+          if (!commitResult.success) {
+            setResult(commitResult);
+            setPhase('error');
+            executingRef.current = false;
+            return;
+          }
 
-  const Icon = actionIcons[action];
+          if (nextStep === 'commit') {
+            setResult(commitResult);
+            setPhase('success');
+            executingRef.current = false;
+            return;
+          }
+
+          setExecutionStep('\u63a8\u9001\u4e2d...');
+          void sendGitWriteRequest({
+            action: 'push',
+            cwd: cwd!,
+            onResult: (pushResult) => {
+              if (!pushResult.success) {
+                setResult(pushResult);
+                setPhase('error');
+                executingRef.current = false;
+                return;
+              }
+
+              if (nextStep === 'commit-push') {
+                setResult(pushResult);
+                setPhase('success');
+                executingRef.current = false;
+                return;
+              }
+
+              setExecutionStep('\u521b\u5efa PR...');
+              void sendGitWriteRequest({
+                action: 'pr',
+                cwd: cwd!,
+                onResult: (prResult) => {
+                  setResult(prResult);
+                  setPhase(prResult.success ? 'success' : 'error');
+                  executingRef.current = false;
+                },
+              });
+            },
+          });
+        },
+      });
+
+      void commitOp;
+    } catch {
+      setResult({
+        action: 'commit',
+        operationId: '',
+        success: false,
+        error: { code: 'UNEXPECTED', message: 'Unexpected error during execution' },
+      });
+      setPhase('error');
+      executingRef.current = false;
+    }
+  }, [cwd, includeUnstaged, commitMessage, nextStep]);
+
+  const fileCount = diffStat?.summary.filesChanged ?? 0;
+  const insertions = diffStat?.summary.insertions ?? 0;
+  const deletions = diffStat?.summary.deletions ?? 0;
 
   return (
     <div className="git-confirm-overlay" onClick={onClose}>
@@ -212,12 +278,13 @@ export default function GitConfirmPanel({ action, onClose }: GitConfirmPanelProp
         className="git-confirm-panel"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
-        aria-label={actionLabels[action]}
+        aria-label="Commit changes"
       >
+        {/* Header */}
         <div className="git-confirm-header">
           <div className="git-confirm-header-left">
-            <Icon size={16} strokeWidth={1.8} />
-            <span className="git-confirm-title">{actionLabels[action]}</span>
+            <GitCommitHorizontal size={14} strokeWidth={1.8} />
+            <span className="git-confirm-header-label">COMMIT</span>
           </div>
           <button
             type="button"
@@ -233,102 +300,120 @@ export default function GitConfirmPanel({ action, onClose }: GitConfirmPanelProp
           {phase === 'loading' && (
             <div className="git-confirm-loading">
               <Loader2 size={18} className="git-confirm-spinner" />
-              <span>Loading diff stats...</span>
+              <span>Loading...</span>
             </div>
           )}
 
           {phase === 'preview' && (
             <>
-              {diffStat && diffStat.files.length > 0 && (
-                <div className="git-confirm-diff-stat">
-                  <div className="git-confirm-diff-summary">
-                    <span className="git-confirm-diff-count">
-                      {diffStat.summary.filesChanged} file{diffStat.summary.filesChanged !== 1 ? 's' : ''} changed
-                    </span>
-                    {diffStat.summary.insertions > 0 && (
-                      <span className="git-confirm-additions">+{diffStat.summary.insertions}</span>
-                    )}
-                    {diffStat.summary.deletions > 0 && (
-                      <span className="git-confirm-deletions">-{diffStat.summary.deletions}</span>
-                    )}
-                  </div>
-                  <div className="git-confirm-file-list">
-                    {diffStat.files.slice(0, 15).map((file) => (
-                      <div key={file.path} className="git-confirm-file-row">
-                        {fileIcon(file.path, file.insertions, file.deletions)}
-                        <span className="git-confirm-file-path">{file.path}</span>
-                        <span className="git-confirm-file-stat">
-                          {file.insertions > 0 && <span className="git-confirm-additions">+{file.insertions}</span>}
-                          {file.deletions > 0 && <span className="git-confirm-deletions">-{file.deletions}</span>}
-                        </span>
-                      </div>
-                    ))}
-                    {diffStat.files.length > 15 && (
-                      <div className="git-confirm-more-files">
-                        ...and {diffStat.files.length - 15} more files
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
+              {/* Title */}
+              <h2 className="git-confirm-title">{'\u63d0\u4ea4\u66f4\u6539'}</h2>
 
-              {action === 'commit' && (
-                <div className="git-confirm-input-group">
-                  <label className="git-confirm-label" htmlFor="commit-msg">Commit message</label>
-                  <input
-                    ref={inputRef}
-                    id="commit-msg"
-                    type="text"
-                    className="git-confirm-input"
-                    placeholder="feat: describe your changes"
-                    value={commitMessage}
-                    onChange={(e) => setCommitMessage(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && canConfirm) void handleConfirm();
-                    }}
-                    autoComplete="off"
-                    spellCheck={false}
-                  />
+              {/* Branch row */}
+              <div className="git-confirm-info-row">
+                <span className="git-confirm-info-label">{'\u5206\u652f'}</span>
+                <div className="git-confirm-info-value">
+                  <GitBranch size={13} strokeWidth={1.8} />
+                  <span>{gitStatus.branch ?? 'unknown'}</span>
                 </div>
-              )}
+              </div>
 
-              {action === 'pr' && (
-                <>
-                  <div className="git-confirm-input-group">
-                    <label className="git-confirm-label" htmlFor="pr-title">PR title</label>
-                    <input
-                      ref={inputRef}
-                      id="pr-title"
-                      type="text"
-                      className="git-confirm-input"
-                      placeholder="feat: title of your pull request"
-                      value={prTitle}
-                      onChange={(e) => setPrTitle(e.target.value)}
-                      autoComplete="off"
-                      spellCheck={false}
-                    />
-                  </div>
-                  <div className="git-confirm-input-group">
-                    <label className="git-confirm-label" htmlFor="pr-body">Description (optional)</label>
-                    <textarea
-                      ref={textareaRef}
-                      id="pr-body"
-                      className="git-confirm-textarea"
-                      placeholder="Describe the changes..."
-                      value={prBody}
-                      onChange={(e) => setPrBody(e.target.value)}
-                      rows={3}
-                    />
-                  </div>
-                </>
-              )}
+              {/* Changes row */}
+              <div className="git-confirm-info-row">
+                <span className="git-confirm-info-label">{'\u66f4\u6539'}</span>
+                <div className="git-confirm-info-value">
+                  <span>{fileCount} file{fileCount !== 1 ? 's' : ''}</span>
+                  {insertions > 0 && (
+                    <span className="git-confirm-additions">+{insertions}</span>
+                  )}
+                  {deletions > 0 && (
+                    <span className="git-confirm-deletions">-{deletions}</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Unstaged toggle */}
+              <div className="git-confirm-toggle-row">
+                <div
+                  className={`git-confirm-toggle ${includeUnstaged ? 'on' : ''}`}
+                  onClick={() => setIncludeUnstaged((v) => !v)}
+                  role="switch"
+                  aria-checked={includeUnstaged}
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      setIncludeUnstaged((v) => !v);
+                    }
+                  }}
+                >
+                  <div className="git-confirm-toggle-thumb" />
+                </div>
+                <span className="git-confirm-toggle-label">
+                  {'\u5305\u542b\u672a\u6682\u5b58\u7684\u66f4\u6539'}
+                </span>
+              </div>
+
+              {/* Commit message */}
+              <div className="git-confirm-input-group">
+                <label className="git-confirm-label" htmlFor="commit-msg">
+                  {'\u63d0\u4ea4\u6d88\u606f'}
+                </label>
+                <input
+                  ref={inputRef}
+                  id="commit-msg"
+                  type="text"
+                  className="git-confirm-input"
+                  placeholder={'\u7559\u7a7a\u4ee5\u81ea\u52a8\u751f\u6210\u63d0\u4ea4\u6d88\u606f'}
+                  value={commitMessage}
+                  onChange={(e) => setCommitMessage(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') void handleSubmit();
+                  }}
+                  autoComplete="off"
+                  spellCheck={false}
+                />
+              </div>
+
+              {/* Next steps */}
+              <div className="git-confirm-steps-section">
+                <span className="git-confirm-label">{'\u540e\u7eed\u6b65\u9aa4'}</span>
+                <div className="git-confirm-steps-list">
+                  {STEP_OPTIONS.map((opt) => {
+                    const Icon = opt.icon;
+                    const selected = nextStep === opt.value;
+                    return (
+                      <div
+                        key={opt.value}
+                        className={`git-confirm-step-option ${selected ? 'selected' : ''}`}
+                        onClick={() => setNextStep(opt.value)}
+                        role="radio"
+                        aria-checked={selected}
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            setNextStep(opt.value);
+                          }
+                        }}
+                      >
+                        <Icon size={14} strokeWidth={1.8} />
+                        <span className="git-confirm-step-label">{opt.label}</span>
+                        {selected && (
+                          <Check size={14} strokeWidth={2} className="git-confirm-step-check" />
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             </>
           )}
 
           {phase === 'executing' && (
             <div className="git-confirm-loading">
               <Loader2 size={18} className="git-confirm-spinner" />
-              <span>Executing {action}...</span>
+              <span>{executionStep}</span>
             </div>
           )}
 
@@ -340,7 +425,7 @@ export default function GitConfirmPanel({ action, onClose }: GitConfirmPanelProp
                   <span>Committed <code>{result.hash}</code>: {result.message}</span>
                 )}
                 {result.action === 'push' && (
-                  <span>Pushed to {result.remote}/{result.branch || 'current branch'}</span>
+                  <span>Pushed to {result.remote}/{result.branch ?? 'current branch'}</span>
                 )}
                 {result.action === 'pr' && result.url && (
                   <span>PR created: <a href={result.url} target="_blank" rel="noopener noreferrer">#{result.number}</a></span>
@@ -353,7 +438,7 @@ export default function GitConfirmPanel({ action, onClose }: GitConfirmPanelProp
             <div className="git-confirm-result error">
               <AlertCircle size={20} strokeWidth={1.8} />
               <div className="git-confirm-result-text">
-                <span>{result.error?.message || 'Operation failed'}</span>
+                <span>{result.error?.message ?? 'Operation failed'}</span>
                 {result.error?.retryable && (
                   <span className="git-confirm-retry-hint">This error is retryable.</span>
                 )}
@@ -367,8 +452,9 @@ export default function GitConfirmPanel({ action, onClose }: GitConfirmPanelProp
           )}
         </div>
 
+        {/* Footer */}
         <div className="git-confirm-footer">
-          {(phase === 'success' || phase === 'error') ? (
+          {phase === 'success' || phase === 'error' ? (
             <button
               type="button"
               className="git-confirm-btn secondary"
@@ -377,31 +463,21 @@ export default function GitConfirmPanel({ action, onClose }: GitConfirmPanelProp
               Close
             </button>
           ) : (
-            <>
-              <button
-                type="button"
-                className="git-confirm-btn secondary"
-                onClick={onClose}
-                disabled={phase === 'executing'}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="git-confirm-btn primary"
-                onClick={() => void handleConfirm()}
-                disabled={!canConfirm || phase === 'loading' || phase === 'executing'}
-              >
-                {phase === 'executing' ? (
-                  <>
-                    <Loader2 size={13} className="git-confirm-spinner" />
-                    Executing...
-                  </>
-                ) : (
-                  `Confirm ${action === 'commit' ? 'Commit' : action === 'push' ? 'Push' : 'PR'}`
-                )}
-              </button>
-            </>
+            <button
+              type="button"
+              className="git-confirm-submit-btn"
+              onClick={() => void handleSubmit()}
+              disabled={phase === 'loading' || phase === 'executing'}
+            >
+              {phase === 'executing' ? (
+                <>
+                  <Loader2 size={13} className="git-confirm-spinner" />
+                  {executionStep}
+                </>
+              ) : (
+                '\u7ee7\u7eed'
+              )}
+            </button>
           )}
         </div>
       </div>

@@ -193,6 +193,36 @@ export function handleGitWriteResult(
   return result;
 }
 
+export async function sendGitAddRequest(params: {
+  cwd: string;
+  all?: boolean;
+}): Promise<{ correlationId: string; operationId: string }> {
+  const operationId = crypto.randomUUID();
+  const correlationId = crypto.randomUUID();
+  const requestId = crypto.randomUUID();
+  const normalizedCwd = normalizeWorkspacePath(params.cwd);
+  const workspaceFingerprint = await createWorkspaceFingerprint(
+    normalizedCwd,
+    normalizedCwd
+  );
+
+  sendMessage({
+    version: 1,
+    type: 'git_add_request',
+    correlationId,
+    payload: {
+      requestId,
+      cwd: normalizedCwd,
+      workspaceRoot: normalizedCwd,
+      workspaceFingerprint,
+      operationId,
+      all: params.all ?? true,
+    },
+  } as unknown as Record<string, unknown>);
+
+  return { correlationId, operationId };
+}
+
 export function getPendingOperation(
   correlationId: string
 ): GitWritePendingOperation | undefined {
