@@ -42,9 +42,9 @@ describe('featureFlags service', () => {
   });
 
   it('saves local overrides and keeps schema version', () => {
-    const doc = saveLocalFeatureFlags({ commandPalette: true }, adapter);
+    const doc = saveLocalFeatureFlags({ commandExperience: true }, adapter);
     expect(doc._schemaVersion).toBe(1);
-    expect(doc.flags.commandPalette).toBe(true);
+    expect(doc.flags.commandExperience).toBe(true);
   });
 
   it('falls back to defaults when stored document is invalid', () => {
@@ -58,7 +58,7 @@ describe('featureFlags service', () => {
   });
 
   it('computes effective flags using local && server', () => {
-    saveLocalFeatureFlags({ commandPalette: true, toolApproval: true }, adapter);
+    saveLocalFeatureFlags({ commandExperience: true, toolApprovalBlocking: true }, adapter);
     applyServerFeatureFlagDocument({
       _schemaVersion: 1,
       flags: {
@@ -66,20 +66,20 @@ describe('featureFlags service', () => {
         gitReadStatus: true,
         gitWriteFlow: true,
         gitResultCards: true,
-        toolApproval: false,
-        streamingMarkdown: false,
-        commandPalette: true,
+        toolApprovalBlocking: false,
+        streamingEnhancements: false,
+        commandExperience: true,
       },
       updatedAt: Date.now(),
     });
 
     const effective = getEffectiveFeatureFlags(adapter);
-    expect(effective.commandPalette).toBe(true);
-    expect(effective.toolApproval).toBe(false);
+    expect(effective.commandExperience).toBe(true);
+    expect(effective.toolApprovalBlocking).toBe(false);
   });
 
   it('isEnabled reads effective value', () => {
-    saveLocalFeatureFlags({ commandPalette: true }, adapter);
+    saveLocalFeatureFlags({ commandExperience: true }, adapter);
     applyServerFeatureFlagDocument({
       _schemaVersion: 1,
       flags: {
@@ -87,13 +87,13 @@ describe('featureFlags service', () => {
         gitReadStatus: true,
         gitWriteFlow: true,
         gitResultCards: true,
-        toolApproval: true,
-        streamingMarkdown: true,
-        commandPalette: false,
+        toolApprovalBlocking: true,
+        streamingEnhancements: true,
+        commandExperience: false,
       },
       updatedAt: Date.now(),
     });
 
-    expect(isEnabled('commandPalette', adapter)).toBe(false);
+    expect(isEnabled('commandExperience', adapter)).toBe(false);
   });
 });

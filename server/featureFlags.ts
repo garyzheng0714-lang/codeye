@@ -18,9 +18,9 @@ export function reconcileFlags(input: Partial<FeatureFlags>): FeatureFlags {
       gitReadStatus: false,
       gitWriteFlow: false,
       gitResultCards: false,
-      toolApproval: false,
-      streamingMarkdown: false,
-      commandPalette: false,
+      toolApprovalBlocking: false,
+      streamingEnhancements: false,
+      commandExperience: false,
     };
   }
 

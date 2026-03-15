@@ -5,9 +5,9 @@ export const featureFlagsSchema = z.object({
   gitReadStatus: z.boolean(),
   gitWriteFlow: z.boolean(),
   gitResultCards: z.boolean(),
-  toolApproval: z.boolean(),
-  streamingMarkdown: z.boolean(),
-  commandPalette: z.boolean(),
+  toolApprovalBlocking: z.boolean(),
+  streamingEnhancements: z.boolean(),
+  commandExperience: z.boolean(),
 });
 
 export type FeatureFlags = z.infer<typeof featureFlagsSchema>;
@@ -17,9 +17,9 @@ export const DEFAULT_SERVER_FLAGS: FeatureFlags = {
   gitReadStatus: true,
   gitWriteFlow: true,
   gitResultCards: true,
-  toolApproval: true,
-  streamingMarkdown: true,
-  commandPalette: true,
+  toolApprovalBlocking: false,
+  streamingEnhancements: true,
+  commandExperience: true,
 };
 
 export const DEFAULT_LOCAL_FLAGS: FeatureFlags = {
@@ -27,9 +27,9 @@ export const DEFAULT_LOCAL_FLAGS: FeatureFlags = {
   gitReadStatus: true,
   gitWriteFlow: true,
   gitResultCards: true,
-  toolApproval: false,
-  streamingMarkdown: false,
-  commandPalette: false,
+  toolApprovalBlocking: false,
+  streamingEnhancements: false,
+  commandExperience: false,
 };
 
 export const featureFlagDocumentV1Schema = z.object({
@@ -87,9 +87,9 @@ export function mergeEffectiveFlags(
     gitReadStatus: serverFlags.gitReadStatus && localFlags.gitReadStatus,
     gitWriteFlow: serverFlags.gitWriteFlow && localFlags.gitWriteFlow,
     gitResultCards: serverFlags.gitResultCards && localFlags.gitResultCards,
-    toolApproval: serverFlags.toolApproval && localFlags.toolApproval,
-    streamingMarkdown:
-      serverFlags.streamingMarkdown && localFlags.streamingMarkdown,
-    commandPalette: serverFlags.commandPalette && localFlags.commandPalette,
+    toolApprovalBlocking: serverFlags.toolApprovalBlocking && localFlags.toolApprovalBlocking,
+    streamingEnhancements:
+      serverFlags.streamingEnhancements && localFlags.streamingEnhancements,
+    commandExperience: serverFlags.commandExperience && localFlags.commandExperience,
   };
 }

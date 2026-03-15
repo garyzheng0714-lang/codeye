@@ -25,7 +25,7 @@ describe('featureFlags contracts', () => {
       updatedAt: Date.now(),
     });
     expect(parsed).not.toBeNull();
-    expect(parsed?.flags.toolApproval).toBe(false);
+    expect(parsed?.flags.toolApprovalBlocking).toBe(false);
   });
 
   it('rejects feature flag document with invalid schema version', () => {
@@ -76,5 +76,18 @@ describe('featureFlags contracts', () => {
       retryable: 'yes',
     });
     expect(parsed).toBeNull();
+  });
+
+  it('schema accepts toolApprovalBlocking instead of toolApproval', () => {
+    const parsed = parseFeatureFlagDocument({
+      _schemaVersion: 1,
+      flags: {
+        protocolV2: true, gitReadStatus: true, gitWriteFlow: true, gitResultCards: true,
+        toolApprovalBlocking: false, streamingEnhancements: false, commandExperience: false,
+      },
+      updatedAt: Date.now(),
+    });
+    expect(parsed).not.toBeNull();
+    expect(parsed!.flags.toolApprovalBlocking).toBe(false);
   });
 });

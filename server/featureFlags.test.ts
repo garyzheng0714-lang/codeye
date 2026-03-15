@@ -33,17 +33,27 @@ describe('server feature flags', () => {
   });
 
   it('applies updates and returns authoritative snapshot', () => {
-    setServerFlags({ commandPalette: false, streamingMarkdown: false });
+    setServerFlags({ commandExperience: false, streamingEnhancements: false });
     const snapshot = getServerFlags();
-    expect(snapshot.commandPalette).toBe(false);
-    expect(snapshot.streamingMarkdown).toBe(false);
+    expect(snapshot.commandExperience).toBe(false);
+    expect(snapshot.streamingEnhancements).toBe(false);
   });
 
   it('builds versioned feature flag document for websocket sync', () => {
-    setServerFlags({ toolApproval: false });
+    setServerFlags({ toolApprovalBlocking: false });
     const doc = getServerFeatureFlagDocument(1234);
     expect(doc._schemaVersion).toBe(1);
     expect(doc.updatedAt).toBe(1234);
-    expect(doc.flags.toolApproval).toBe(false);
+    expect(doc.flags.toolApprovalBlocking).toBe(false);
+  });
+
+  it('auto-disables toolApprovalBlocking when protocolV2 off', () => {
+    const out = reconcileFlags({ protocolV2: false, toolApprovalBlocking: true });
+    expect(out.toolApprovalBlocking).toBe(false);
+  });
+
+  it('auto-disables streamingEnhancements when protocolV2 off', () => {
+    const out = reconcileFlags({ protocolV2: false, streamingEnhancements: true });
+    expect(out.streamingEnhancements).toBe(false);
   });
 });
