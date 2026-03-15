@@ -1,12 +1,11 @@
-import { useCallback, memo, useState } from 'react';
-import { ChevronDown, ChevronRight, FileText, Search, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
+import { memo, useState } from 'react';
+import { ChevronDown, ChevronRight, Loader2 } from 'lucide-react';
 import type { DisplayMessage, ToolCallDisplay } from '../../types';
-import { useChatStore } from '../../stores/chatStore';
-import { useSessionStore } from '../../stores/sessionStore';
 import CodeyeMark from '../Brand/CodeyeMark';
 import CodeBlock from './CodeBlock';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { useStreamingTypewriter } from '../../hooks/useTypewriter';
 
 // Tool type mapping
 type ToolType = 'read' | 'search' | 'edit' | 'command';
@@ -28,32 +27,45 @@ function getToolLabel(type: ToolType): string {
   return labels[type];
 }
 
-function getToolIcon(type: ToolType) {
-  const icons = {
-    read: FileText,
-    search: Search,
-    edit: FileText,
-    command: FileText,
-  };
-  return icons[type];
+// Kiro-style status circle component
+function StepStatusCircle({ status }: { status: 'done' | 'running' | 'error' }) {
+  if (status === 'running') {
+    return (
+      <span className="kiro-status kiro-status--running">
+        <span className="kiro-status-dot" />
+      </span>
+    );
+  }
+  if (status === 'error') {
+    return (
+      <span className="kiro-status kiro-status--error">
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+          <path d="M5 3v2M5 6.5v1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        </svg>
+      </span>
+    );
+  }
+  return (
+    <span className="kiro-status kiro-status--done">
+      <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+        <path d="M2 5.5L4 7.5L8 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    </span>
+  );
 }
 
 // Simple ToolBlock component
 function ToolBlock({ tool, messageId }: { tool: ToolCallDisplay; messageId: string }) {
   const [isExpanded, setIsExpanded] = useState(true);
-  const toggleToolExpand = useChatStore((s) => s.toggleToolExpand);
 
   const toolType = getToolType(tool.name);
-  const ToolIcon = getToolIcon(toolType);
 
-  // Determine status
-  let status: 'idle' | 'loading' | 'success' | 'error' = 'idle';
+  // Determine status for Kiro-style circle
+  let status: 'done' | 'running' | 'error' = 'done';
   if (tool.output === undefined && !tool.progressLines) {
-    status = 'loading';
+    status = 'running';
   } else if (tool.output?.startsWith('Error:')) {
     status = 'error';
-  } else {
-    status = 'success';
   }
 
   const fileName = tool.input.file_path
@@ -76,24 +88,19 @@ function ToolBlock({ tool, messageId }: { tool: ToolCallDisplay; messageId: stri
           }
         }}
       >
-        <ToolIcon size={16} className="tool-block-icon" />
+        {/* Kiro-style status circle */}
+        <StepStatusCircle status={status} />
+
         <span className="tool-block-label">{getToolLabel(toolType)}</span>
 
         {fileName && (
-          <span className="tool-block-file">{fileName}</span>
+          <span className="tool-file-badge">{fileName}</span>
         )}
-
-        {/* Status icon */}
-        <span className="tool-block-status">
-          {status === 'loading' && <Loader2 size={16} className="animate-spin" />}
-          {status === 'success' && <CheckCircle2 size={16} className="text-success" />}
-          {status === 'error' && <XCircle size={16} className="text-danger" />}
-        </span>
 
         {/* Expand/collapse */}
         {tool.output && (
           <span className="tool-block-expand">
-            {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+            {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
           </span>
         )}
       </div>
@@ -110,6 +117,9 @@ function ToolBlock({ tool, messageId }: { tool: ToolCallDisplay; messageId: stri
 
 export default memo(function AIMessage({ message }: { message: DisplayMessage }) {
   const isThinking = message.isStreaming && !message.content && message.toolCalls.length === 0;
+
+  // Use typewriter effect for streaming content
+  const displayContent = useStreamingTypewriter(message.content || '', message.isStreaming ?? false);
 
   // Group consecutive Read tools
   const groupedTools: (ToolCallDisplay | { kind: 'group'; tools: ToolCallDisplay[] })[] = [];
@@ -133,8 +143,8 @@ export default memo(function AIMessage({ message }: { message: DisplayMessage })
   return (
     <div className="message-row ai-message-row" data-message-id={message.id}>
       {/* AI Avatar */}
-      <div className="message-avatar message-avatar--ai">
-        <CodeyeMark size={20} />
+      <div className={`message-avatar message-avatar--ai ${message.isStreaming ? 'streaming' : ''}`}>
+        <CodeyeMark size={20} animate={message.isStreaming ? 'thinking' : 'idle'} />
       </div>
 
       {/* Message content */}
@@ -151,7 +161,7 @@ export default memo(function AIMessage({ message }: { message: DisplayMessage })
               return (
                 <div key={`group-${idx}`} className="tool-block">
                   <div className="tool-block-header">
-                    <FileText size={16} className="tool-block-icon" />
+                    <StepStatusCircle status="done" />
                     <span className="tool-block-label">Read {item.tools.length > 1 ? 'files' : 'file'}</span>
                     <div className="tool-block-files">
                       {item.tools.slice(0, 4).map((t, i) => {
@@ -159,19 +169,18 @@ export default memo(function AIMessage({ message }: { message: DisplayMessage })
                           ? String(t.input.file_path).split('/').pop()
                           : 'file';
                         return (
-                          <span key={i} className="tool-block-file">{name}</span>
+                          <span key={i} className="tool-file-badge">{name}</span>
                         );
                       })}
                       {item.tools.length > 4 && (
                         <span className="tool-block-more">+{item.tools.length - 4}</span>
                       )}
                     </div>
-                    <CheckCircle2 size={16} className="text-success tool-block-status" />
                   </div>
                 </div>
               );
             }
-            return <ToolBlock key={item.id} tool={item} messageId={message.id} />;
+            return <ToolBlock key={(item as ToolCallDisplay).id} tool={item as ToolCallDisplay} messageId={message.id} />;
           })}
 
           {/* Thinking indicator */}
@@ -182,8 +191,8 @@ export default memo(function AIMessage({ message }: { message: DisplayMessage })
             </div>
           )}
 
-          {/* Message text */}
-          {message.content && (
+          {/* Message text with typewriter effect */}
+          {displayContent && (
             <div className="ai-message-text">
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
@@ -198,8 +207,9 @@ export default memo(function AIMessage({ message }: { message: DisplayMessage })
                   },
                 }}
               >
-                {message.content}
+                {displayContent}
               </ReactMarkdown>
+              {message.isStreaming && <span className="streaming-cursor" />}
             </div>
           )}
         </div>
