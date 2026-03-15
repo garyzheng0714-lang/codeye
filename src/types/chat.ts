@@ -19,6 +19,7 @@ export interface ToolCallDisplay {
   input: Record<string, unknown>;
   output?: string;
   expanded: boolean;
+  progressLines?: string[];
 }
 
 export interface GitResultDisplay {

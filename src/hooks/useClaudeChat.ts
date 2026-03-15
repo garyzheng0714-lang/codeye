@@ -201,6 +201,9 @@ export function useClaudeChat() {
             useChatStore.getState().resolveApproval(id, 'deny');
             sendApprovalDecision(id, 'deny', streamEvent.correlationId);
           });
+        } else if (streamEvent.type === 'tool_progress') {
+          const p = streamEvent.payload as { toolId: string; lines: string[]; finished: boolean };
+          useChatStore.getState().updateToolProgress(p.toolId, p.lines);
         }
       } catch {
         // ignore malformed messages

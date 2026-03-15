@@ -52,6 +52,7 @@ interface ChatState {
   dequeueMessage: () => PendingMessage | undefined;
   removeQueuedMessage: (index: number) => PendingMessage | undefined;
   clearQueue: () => void;
+  updateToolProgress: (toolId: string, lines: string[]) => void;
   addPendingApproval: (approval: PendingApproval) => void;
   resolveApproval: (approvalId: string, decision: 'allow' | 'deny') => void;
   clearMessages: () => void;
@@ -185,6 +186,23 @@ export const useChatStore = create<ChatState>()((set, get) => ({
       });
       return { messages: msgs };
     }),
+
+  updateToolProgress: (toolId, lines) =>
+    set((state) => ({
+      messages: state.messages.map((m) => {
+        if (m.role !== 'assistant') return m;
+        const hasTarget = m.toolCalls.some((t) => t.id === toolId);
+        if (!hasTarget) return m;
+        return {
+          ...m,
+          toolCalls: m.toolCalls.map((t) =>
+            t.id === toolId
+              ? { ...t, progressLines: [...(t.progressLines || []), ...lines] }
+              : t
+          ),
+        };
+      }),
+    })),
 
   toggleToolExpand: (messageId, toolId) =>
     set((state) => ({
