@@ -117,41 +117,35 @@
 }
 
 /* ══════════════════════════════════════════
-   Tool Card
+   Tool Card — Kiro Style
    ══════════════════════════════════════════ */
 
 .tool-card {
-  overflow: hidden;
-  transition: background var(--transition-fast);
-  animation: fadeIn 200ms both;
-  animation-delay: calc(var(--tool-index, 0) * 30ms);
-}
-
-/* Bash as standalone terminal block */
-.ai-message > .tool-card {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
+  background: var(--tool-card-bg);
+  border: 1px solid var(--tool-card-border);
+  border-radius: var(--tool-card-radius);
   overflow: hidden;
   animation: toolCardEnter var(--transition-slow) both;
 }
 
 .tool-card--error {
   background: var(--bg-danger);
+  border-color: var(--border-danger);
 }
 
-/* Main row */
+/* Main row — exact Kiro measurements */
 .tool-card-row {
   display: flex;
   align-items: center;
   gap: var(--space-2);
   padding: 7px var(--space-4);
-  min-height: 34px;
+  min-height: var(--tool-card-row-height);
 }
 
 .tool-card-row--clickable {
   cursor: pointer;
   user-select: none;
+  transition: background var(--transition-fast);
 }
 
 .tool-card-row--clickable:hover {
@@ -225,11 +219,11 @@
   to   { transform: rotate(360deg); }
 }
 
-/* Label */
+/* Label — Kiro style */
 .tool-card-label {
   font-size: var(--text-sm);
-  font-weight: 500;
-  color: var(--text-secondary);
+  font-weight: var(--tool-card-label-weight);
+  color: var(--tool-card-label-fg);
   flex-shrink: 0;
 }
 
@@ -243,14 +237,14 @@
   flex-wrap: wrap;
 }
 
-/* File pill */
+/* File badge — Kiro pill style */
 .tool-file-badge {
   font-family: var(--font-mono);
-  font-size: var(--text-2xs);
-  color: var(--text-muted);
-  background: var(--surface-pill);
-  padding: 2px 7px;
-  border-radius: var(--radius-xs);
+  font-size: var(--pill-font-size);
+  color: var(--pill-fg);
+  background: var(--pill-bg);
+  padding: var(--pill-padding);
+  border-radius: var(--pill-radius);
 }
 
 /* Count badge */
