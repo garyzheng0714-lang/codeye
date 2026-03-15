@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowUp, Square, X, MoreHorizontal } from 'lucide-react';
 import { stopClaude } from '../../hooks/useClaudeChat';
 import { useInputComposer } from '../../hooks/useInputComposer';
@@ -12,7 +12,7 @@ function truncateQueuePreview(input: string): string {
   return `${compact.slice(0, 42)}...`;
 }
 
-export default function InputArea() {
+export default memo(function InputArea() {
   const [queueMenuIndex, setQueueMenuIndex] = useState<number | null>(null);
   const queueMenuRef = useRef<HTMLDivElement>(null);
   const {
@@ -255,4 +255,4 @@ export default function InputArea() {
       </div>
     </div>
   );
-}
+});

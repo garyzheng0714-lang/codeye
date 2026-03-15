@@ -1,4 +1,5 @@
 import {
+  memo,
   useDeferredValue,
   useEffect,
   useMemo,
@@ -67,25 +68,23 @@ function getModelShort(model?: string): string {
   return model.replace('claude-', '').split('-')[0];
 }
 
-export default function SessionList({
+export default memo(function SessionList({
   searchQuery = '',
   syncingFolderIds = [],
   onCreateSession,
   onFocusFolder,
   onSyncFolder,
 }: Props) {
-  const {
-    folders,
-    sessions,
-    activeFolderId,
-    activeSessionId,
-    setActiveFolder,
-    setActiveSession,
-    deleteSession,
-    renameSession,
-    saveSessionMessages,
-    getFolder,
-  } = useSessionStore();
+  const folders = useSessionStore((s) => s.folders);
+  const sessions = useSessionStore((s) => s.sessions);
+  const activeFolderId = useSessionStore((s) => s.activeFolderId);
+  const activeSessionId = useSessionStore((s) => s.activeSessionId);
+  const setActiveFolder = useSessionStore((s) => s.setActiveFolder);
+  const setActiveSession = useSessionStore((s) => s.setActiveSession);
+  const deleteSession = useSessionStore((s) => s.deleteSession);
+  const renameSession = useSessionStore((s) => s.renameSession);
+  const saveSessionMessages = useSessionStore((s) => s.saveSessionMessages);
+  const getFolder = useSessionStore((s) => s.getFolder);
   const clearMessages = useChatStore((s) => s.clearMessages);
   const finishStreaming = useChatStore((s) => s.finishStreaming);
   const setSessionId = useChatStore((s) => s.setSessionId);
@@ -487,4 +486,4 @@ export default function SessionList({
       )}
     </>
   );
-}
+});

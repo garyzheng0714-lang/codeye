@@ -3,6 +3,7 @@ import { spawnSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
+import { watchProjectHistory, unwatchProjectHistory } from './historyWatcher';
 
 interface ImportedToolCall {
   id: string;
@@ -424,6 +425,16 @@ export function registerProjectHandlers(ipcMain: IpcMain) {
     }
 
     return readGitStatusForPath(folderPath);
+  });
+
+  ipcMain.handle('projects:watch-history', (_, folderPath: string, encodedPath: string) => {
+    if (typeof folderPath !== 'string' || typeof encodedPath !== 'string') return;
+    watchProjectHistory(folderPath, encodedPath);
+  });
+
+  ipcMain.handle('projects:unwatch-history', (_, encodedPath: string) => {
+    if (typeof encodedPath !== 'string') return;
+    unwatchProjectHistory(encodedPath);
   });
 
   ipcMain.handle('window:minimize', (event) => {

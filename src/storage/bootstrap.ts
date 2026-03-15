@@ -7,7 +7,11 @@ import {
 } from './sessionPersistence';
 
 const PERSIST_DEBOUNCE_MS = 250;
-const CHAT_SYNC_DEBOUNCE_MS = 500;
+const CHAT_SYNC_DEBOUNCE_MS = 1000;
+
+function encodeProjectPath(folderPath: string): string {
+  return folderPath.replace(/[^a-zA-Z0-9]/g, '-');
+}
 
 export function hydrateStoresFromPersistence(): void {
   const snapshot = loadSessionSnapshot();
@@ -78,6 +82,12 @@ function syncAllFoldersFromCli(): void {
   for (const folder of localFolders) {
     syncFolderFromCli(folder);
   }
+
+  for (const folder of localFolders) {
+    if (window.electronAPI?.projects.watchHistory && folder.path) {
+      window.electronAPI.projects.watchHistory(folder.path, encodeProjectPath(folder.path));
+    }
+  }
 }
 
 function syncFolderFromCli(folder: { id: string; path: string }): void {
@@ -90,6 +100,22 @@ function syncFolderFromCli(folder: { id: string; path: string }): void {
   }).catch(() => {
     // silent — don't block startup
   });
+}
+
+export function startHistoryChangeListener(): () => void {
+  if (!window.electronAPI?.projects.onHistoryChanged) return () => {};
+
+  const removeListener = window.electronAPI.projects.onHistoryChanged((encodedPath) => {
+    const { folders } = useSessionStore.getState();
+    const matchedFolder = folders.find(
+      (f) => f.kind === 'local' && f.path && encodeProjectPath(f.path) === encodedPath,
+    );
+    if (matchedFolder) {
+      syncFolderFromCli(matchedFolder);
+    }
+  });
+
+  return removeListener;
 }
 
 function syncChatToSession(): void {

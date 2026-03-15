@@ -15,7 +15,7 @@ import { useChatStore } from './stores/chatStore';
 import { useUIStore } from './stores/uiStore';
 import { stopClaude } from './hooks/useClaudeChat';
 import { saveCurrentSession } from './utils/session';
-import { hydrateStoresFromPersistence, startSessionAutoPersistence } from './storage/bootstrap';
+import { hydrateStoresFromPersistence, startSessionAutoPersistence, startHistoryChangeListener } from './storage/bootstrap';
 import { applyTheme, getStoredTheme } from './services/themeManager';
 import { initI18n } from './i18n';
 
@@ -37,7 +37,12 @@ export default function App() {
     initI18n();
     applyTheme(getStoredTheme());
     hydrateStoresFromPersistence();
-    return startSessionAutoPersistence();
+    const cleanupPersistence = startSessionAutoPersistence();
+    const cleanupHistoryListener = startHistoryChangeListener();
+    return () => {
+      cleanupPersistence();
+      cleanupHistoryListener();
+    };
   }, []);
 
   useEffect(() => {

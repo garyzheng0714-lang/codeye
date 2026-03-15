@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import MessageList from './MessageList';
 import InputArea from './InputArea';
 import WelcomeScreen from './WelcomeScreen';
@@ -5,7 +6,7 @@ import MessageSearch from './MessageSearch';
 import PendingApprovals from './PendingApprovals';
 import { useChatStore } from '../../stores/chatStore';
 
-export default function ChatPanel() {
+export default memo(function ChatPanel() {
   const hasMessages = useChatStore((s) => s.messages.length > 0);
 
   return (
@@ -16,4 +17,4 @@ export default function ChatPanel() {
       <InputArea />
     </div>
   );
-}
+});

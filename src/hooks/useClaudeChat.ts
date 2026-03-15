@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { unstable_batchedUpdates } from 'react-dom';
 import { useChatStore } from '../stores/chatStore';
 import { handleClaudeMessage, type StoreActions } from '../services/messageHandler';
 import { subscribeWsMessages, sendMessage } from '../services/websocket';
@@ -57,23 +58,26 @@ export function useClaudeChat() {
               textBatcher.push(block.text);
             }
           }
-          const actions = getActions();
-          for (const block of parsed.message.content) {
-            if (block.type === 'tool_use' && typeof block.name === 'string' && block.name.length > 0) {
-              textBatcher.flush();
-              const toolId = typeof block.tool_use_id === 'string' && block.tool_use_id.length > 0
-                ? block.tool_use_id : crypto.randomUUID();
-              const toolInput = block.input && typeof block.input === 'object' && !Array.isArray(block.input)
-                ? (block.input as Record<string, unknown>) : {};
-              actions.addToolCall({ id: toolId, name: block.name, input: toolInput, expanded: false });
+          const contentBlocks = parsed.message.content;
+          unstable_batchedUpdates(() => {
+            const actions = getActions();
+            for (const block of contentBlocks) {
+              if (block.type === 'tool_use' && typeof block.name === 'string' && block.name.length > 0) {
+                textBatcher.flush();
+                const toolId = typeof block.tool_use_id === 'string' && block.tool_use_id.length > 0
+                  ? block.tool_use_id : crypto.randomUUID();
+                const toolInput = block.input && typeof block.input === 'object' && !Array.isArray(block.input)
+                  ? (block.input as Record<string, unknown>) : {};
+                actions.addToolCall({ id: toolId, name: block.name, input: toolInput, expanded: false });
+              }
             }
-          }
-          const costUsd = parsed.total_cost_usd ?? parsed.cost_usd;
-          const inputToks = parsed.usage?.input_tokens ?? parsed.input_tokens;
-          const outputToks = parsed.usage?.output_tokens ?? parsed.output_tokens;
-          if (costUsd !== undefined) {
-            actions.updateCost(costUsd || 0, inputToks || 0, outputToks || 0);
-          }
+            const costUsd = parsed.total_cost_usd ?? parsed.cost_usd;
+            const inputToks = parsed.usage?.input_tokens ?? parsed.input_tokens;
+            const outputToks = parsed.usage?.output_tokens ?? parsed.output_tokens;
+            if (costUsd !== undefined) {
+              actions.updateCost(costUsd || 0, inputToks || 0, outputToks || 0);
+            }
+          });
         } else {
           if (import.meta.env.DEV) console.debug('[stream-debug] message (electron)', parsed.type, parsed.subtype);
           textBatcher.flush();
@@ -107,28 +111,31 @@ export function useClaudeChat() {
           markStreamChunk();
           const msg = streamEvent.payload.data;
           if (msg.type === 'assistant' && msg.message?.content) {
-            for (const block of msg.message.content) {
+            const wsContentBlocks = msg.message.content;
+            for (const block of wsContentBlocks) {
               if (block.type === 'text' && typeof block.text === 'string' && block.text.length > 0) {
                 textBatcher.push(block.text);
               }
             }
-            const actions = getActions();
-            for (const block of msg.message.content) {
-              if (block.type === 'tool_use' && typeof block.name === 'string' && block.name.length > 0) {
-                textBatcher.flush();
-                const toolId = typeof block.tool_use_id === 'string' && block.tool_use_id.length > 0
-                  ? block.tool_use_id : crypto.randomUUID();
-                const toolInput = block.input && typeof block.input === 'object' && !Array.isArray(block.input)
-                  ? (block.input as Record<string, unknown>) : {};
-                actions.addToolCall({ id: toolId, name: block.name, input: toolInput, expanded: false });
+            unstable_batchedUpdates(() => {
+              const actions = getActions();
+              for (const block of wsContentBlocks) {
+                if (block.type === 'tool_use' && typeof block.name === 'string' && block.name.length > 0) {
+                  textBatcher.flush();
+                  const toolId = typeof block.tool_use_id === 'string' && block.tool_use_id.length > 0
+                    ? block.tool_use_id : crypto.randomUUID();
+                  const toolInput = block.input && typeof block.input === 'object' && !Array.isArray(block.input)
+                    ? (block.input as Record<string, unknown>) : {};
+                  actions.addToolCall({ id: toolId, name: block.name, input: toolInput, expanded: false });
+                }
               }
-            }
-            const wsCost = msg.total_cost_usd ?? msg.cost_usd;
-            const wsInput = msg.usage?.input_tokens ?? msg.input_tokens;
-            const wsOutput = msg.usage?.output_tokens ?? msg.output_tokens;
-            if (wsCost !== undefined) {
-              actions.updateCost(wsCost || 0, wsInput || 0, wsOutput || 0);
-            }
+              const wsCost = msg.total_cost_usd ?? msg.cost_usd;
+              const wsInput = msg.usage?.input_tokens ?? msg.input_tokens;
+              const wsOutput = msg.usage?.output_tokens ?? msg.output_tokens;
+              if (wsCost !== undefined) {
+                actions.updateCost(wsCost || 0, wsInput || 0, wsOutput || 0);
+              }
+            });
           } else {
             if (import.meta.env.DEV) console.debug('[stream-debug] message (ws)', msg.type, msg.subtype);
             textBatcher.flush();
@@ -204,7 +211,9 @@ export function useClaudeChat() {
           });
         } else if (streamEvent.type === 'tool_progress') {
           const p = streamEvent.payload as { toolId: string; lines: string[]; finished: boolean };
-          useChatStore.getState().updateToolProgress(p.toolId, p.lines);
+          unstable_batchedUpdates(() => {
+            useChatStore.getState().updateToolProgress(p.toolId, p.lines);
+          });
         } else if (streamEvent.type === 'preview_response') {
           const p = streamEvent.payload as { type: 'file' | 'diff'; content: string; path?: string };
           const cacheKey = p.path || `__preview_${streamEvent.correlationId || 'anon'}`;

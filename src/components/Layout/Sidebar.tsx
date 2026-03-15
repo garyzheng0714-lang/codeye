@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useMemo, useState } from 'react';
+import { lazy, memo, Suspense, useCallback, useMemo, useState } from 'react';
 import { Search, FolderPlus, Package } from 'lucide-react';
 import { useUIStore } from '../../stores/uiStore';
 import { useSessionStore } from '../../stores/sessionStore';
@@ -11,7 +11,7 @@ import type { SessionFolder } from '../../types';
 const SettingsPanel = lazy(() => import('../Settings/SettingsPanel'));
 const ActivityStream = lazy(() => import('../Chat/ActivityStream'));
 
-export default function Sidebar() {
+export default memo(function Sidebar() {
   const activePanel = useUIStore((s) => s.activePanel);
   const folders = useSessionStore((s) => s.folders);
   const activeFolderId = useSessionStore((s) => s.activeFolderId);
@@ -87,6 +87,12 @@ export default function Sidebar() {
       const folder = createFolder(selectedPath);
       focusFolderWorkspace(folder);
       void syncFolder(folder);
+      if (window.electronAPI?.projects.watchHistory && folder.path) {
+        window.electronAPI.projects.watchHistory(
+          folder.path,
+          folder.path.replace(/[^a-zA-Z0-9]/g, '-'),
+        );
+      }
       return;
     }
 
@@ -158,4 +164,4 @@ export default function Sidebar() {
       )}
     </div>
   );
-}
+});

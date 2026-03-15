@@ -1,7 +1,7 @@
 import { useEffect, useRef, useMemo, memo } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useChatStore } from '../../stores/chatStore';
-import { groupMessagesIntoTurns } from '../../utils/turnGrouping';
+import { groupMessagesIntoTurns, updateLastTurn, type Turn } from '../../utils/turnGrouping';
 import TurnGroup from './TurnGroup';
 
 const VIRTUAL_THRESHOLD = 40;
@@ -10,8 +10,23 @@ export default memo(function MessageList() {
   const messages = useChatStore((s) => s.messages);
   const bottomRef = useRef<HTMLDivElement>(null);
   const parentRef = useRef<HTMLDivElement>(null);
+  const prevTurnsRef = useRef<Turn[]>([]);
+  const prevMsgLenRef = useRef(0);
 
-  const turns = useMemo(() => groupMessagesIntoTurns(messages), [messages]);
+  const turns = useMemo(() => {
+    if (messages.length >= prevMsgLenRef.current && prevTurnsRef.current.length > 0) {
+      const incremental = updateLastTurn(prevTurnsRef.current, messages);
+      if (incremental) {
+        prevTurnsRef.current = incremental;
+        prevMsgLenRef.current = messages.length;
+        return incremental;
+      }
+    }
+    const full = groupMessagesIntoTurns(messages);
+    prevTurnsRef.current = full;
+    prevMsgLenRef.current = messages.length;
+    return full;
+  }, [messages]);
 
   const useVirtual = turns.length > VIRTUAL_THRESHOLD;
 

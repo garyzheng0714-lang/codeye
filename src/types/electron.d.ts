@@ -25,6 +25,9 @@ interface ElectronAPI {
     selectDirectory: () => Promise<string | null>;
     importClaudeHistory: (folderPath: string) => Promise<ImportedClaudeSession[]>;
     getGitStatus: (cwd: string) => Promise<GitStatusSnapshot>;
+    watchHistory: (folderPath: string, encodedPath: string) => Promise<void>;
+    unwatchHistory: (encodedPath: string) => Promise<void>;
+    onHistoryChanged: (callback: (encodedPath: string) => void) => () => void;
   };
   secrets: {
     get: (key: string) => Promise<string | null>;
