@@ -1,9 +1,10 @@
-import { lazy, Suspense, useEffect } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
 import TitleBar from './components/Layout/TitleBar';
 import ActivityBar from './components/Layout/ActivityBar';
 import Sidebar from './components/Layout/Sidebar';
 import SidebarBoundaryToggle from './components/Layout/SidebarBoundaryToggle';
 import ChatPanel from './components/Chat/ChatPanel';
+import CommandPalette from './components/Chat/CommandPalette';
 import ConnectionStatus from './components/Chat/ConnectionStatus';
 
 const SplitPane = lazy(() => import('./components/Chat/SplitPane'));
@@ -19,11 +20,18 @@ import { applyTheme, getStoredTheme } from './services/themeManager';
 import { initI18n } from './i18n';
 
 const OPEN_SLASH_EVENT = 'codeye:open-slash-command';
+const CMD_PALETTE_SELECT_EVENT = 'codeye:cmd-palette-select';
 
 export default function App() {
   useClaudeChat();
   const sidebarCollapsed = useUIStore((s) => s.sidebarCollapsed);
   const splitEnabled = useUIStore((s) => s.splitEnabled);
+  const [cmdPaletteOpen, setCmdPaletteOpen] = useState(false);
+
+  const handlePaletteSelect = useCallback((command: { name: string; description: string; category: string }) => {
+    window.dispatchEvent(new CustomEvent(CMD_PALETTE_SELECT_EVENT, { detail: { name: command.name } }));
+    setCmdPaletteOpen(false);
+  }, []);
 
   useEffect(() => {
     initI18n();
@@ -57,14 +65,10 @@ export default function App() {
         e.preventDefault();
         useUIStore.getState().toggleSidebar();
       }
-      // Cmd+K — clear conversation (like terminal)
+      // Cmd+K — open command palette
       if (mod && e.key === 'k') {
         e.preventDefault();
-        if (useChatStore.getState().isStreaming) {
-          stopClaude();
-          useChatStore.getState().finishStreaming();
-        }
-        useChatStore.getState().clearMessages();
+        setCmdPaletteOpen((prev) => !prev);
       }
       // Cmd+/ — open slash command palette
       if (mod && (e.key === '/' || e.key === '?')) {
@@ -103,6 +107,11 @@ export default function App() {
 
   return (
     <ErrorBoundary>
+      <CommandPalette
+        open={cmdPaletteOpen}
+        onClose={() => setCmdPaletteOpen(false)}
+        onSelect={handlePaletteSelect}
+      />
       <div className="app">
         <TitleBar />
         <ConnectionStatus />

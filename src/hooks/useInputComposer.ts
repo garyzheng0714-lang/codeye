@@ -14,6 +14,7 @@ import {
 } from '../services/attachments';
 
 const OPEN_SLASH_EVENT = 'codeye:open-slash-command';
+const CMD_PALETTE_SELECT_EVENT = 'codeye:cmd-palette-select';
 const MAX_INPUT_HEIGHT = 200;
 const COMPACT_INPUT_HEIGHT = 26;
 const SLASH_SELECTION_GUARD_MS = 200;
@@ -331,6 +332,19 @@ export function useInputComposer() {
     window.addEventListener(OPEN_SLASH_EVENT, handleOpenSlashCommand);
     return () => window.removeEventListener(OPEN_SLASH_EVENT, handleOpenSlashCommand);
   }, [resizeTextarea]);
+
+  useEffect(() => {
+    const handleCmdPaletteSelect = (e: Event) => {
+      const name = (e as CustomEvent<{ name: string }>).detail?.name;
+      if (!name) return;
+      const command = getSlashCommandByName(name);
+      if (!command) return;
+      handleCommandSelect(command);
+    };
+
+    window.addEventListener(CMD_PALETTE_SELECT_EVENT, handleCmdPaletteSelect);
+    return () => window.removeEventListener(CMD_PALETTE_SELECT_EVENT, handleCmdPaletteSelect);
+  }, [handleCommandSelect]);
 
   const appendAttachments = useCallback((incoming: InputAttachment[]) => {
     if (incoming.length === 0) return;
