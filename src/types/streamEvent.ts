@@ -1,5 +1,20 @@
 import { z } from 'zod';
 import { claudeMessageSchema } from './protocol';
+import { featureFlagDocumentV1Schema } from './featureFlags';
+import {
+  gitCommitRequestPayloadSchema,
+  gitCommitResultPayloadSchema,
+  gitDiffStatPayloadSchema,
+  gitDiffStatRequestPayloadSchema,
+  gitOperationStatusPayloadSchema,
+  gitOperationStatusRequestPayloadSchema,
+  gitPrRequestPayloadSchema,
+  gitPrResultPayloadSchema,
+  gitPushRequestPayloadSchema,
+  gitPushResultPayloadSchema,
+  gitStatusPayloadSchema,
+  gitStatusRequestPayloadSchema,
+} from './git';
 
 export const STREAM_EVENT_VERSION = 1;
 
@@ -19,30 +34,74 @@ const authPayloadSchema = z.object({
   error: z.string().optional(),
 });
 
+const toolApprovalRequestPayloadSchema = z.object({
+  approvalId: z.uuid(),
+  toolName: z.string().min(1),
+  args: z.record(z.string(), z.unknown()),
+  requestId: z.uuid(),
+});
+
+const toolApprovalResponsePayloadSchema = z.object({
+  approvalId: z.uuid(),
+  decision: z.enum(['allow', 'deny']),
+});
+
+const previewResponsePayloadSchema = z.object({
+  type: z.enum(['file', 'diff']),
+  content: z.string(),
+  path: z.string().optional(),
+});
+
+const toolProgressPayloadSchema = z.object({
+  toolId: z.string().min(1),
+  requestId: z.uuid(),
+  lines: z.array(z.string()),
+  finished: z.boolean(),
+});
+
+const eventBaseSchema = z.object({
+  version: z.number().int().positive(),
+  correlationId: z.uuid().optional(),
+});
+
+function buildEventSchema<TType extends string, TPayload extends z.ZodTypeAny>(
+  type: TType,
+  payload: TPayload
+) {
+  return eventBaseSchema.extend({
+    type: z.literal(type),
+    payload,
+  });
+}
+
 const streamEventSchema = z.discriminatedUnion('type', [
-  z.object({
-    version: z.number(),
-    type: z.literal('message'),
-    payload: messagePayloadSchema,
-  }),
-  z.object({
-    version: z.number(),
-    type: z.literal('complete'),
-    payload: completePayloadSchema,
-  }),
-  z.object({
-    version: z.number(),
-    type: z.literal('error'),
-    payload: errorPayloadSchema,
-  }),
-  z.object({
-    version: z.number(),
-    type: z.literal('auth'),
-    payload: authPayloadSchema,
-  }),
+  buildEventSchema('message', messagePayloadSchema),
+  buildEventSchema('complete', completePayloadSchema),
+  buildEventSchema('error', errorPayloadSchema),
+  buildEventSchema('auth', authPayloadSchema),
+  buildEventSchema('feature_flags', featureFlagDocumentV1Schema),
+  buildEventSchema('git_status', gitStatusPayloadSchema),
+  buildEventSchema('git_diff_stat', gitDiffStatPayloadSchema),
+  buildEventSchema('git_commit_result', gitCommitResultPayloadSchema),
+  buildEventSchema('git_push_result', gitPushResultPayloadSchema),
+  buildEventSchema('git_pr_result', gitPrResultPayloadSchema),
+  buildEventSchema('git_operation_status', gitOperationStatusPayloadSchema),
+  buildEventSchema('tool_approval_request', toolApprovalRequestPayloadSchema),
+  buildEventSchema('tool_approval_response', toolApprovalResponsePayloadSchema),
+  buildEventSchema('preview_response', previewResponsePayloadSchema),
+  buildEventSchema('tool_progress', toolProgressPayloadSchema),
+  buildEventSchema('git_status_request', gitStatusRequestPayloadSchema),
+  buildEventSchema('git_diff_stat_request', gitDiffStatRequestPayloadSchema),
+  buildEventSchema('git_commit_request', gitCommitRequestPayloadSchema),
+  buildEventSchema('git_push_request', gitPushRequestPayloadSchema),
+  buildEventSchema('git_pr_request', gitPrRequestPayloadSchema),
+  buildEventSchema(
+    'git_operation_status_request',
+    gitOperationStatusRequestPayloadSchema
+  ),
 ]);
 
-type StreamEvent = z.infer<typeof streamEventSchema>;
+export type StreamEvent = z.infer<typeof streamEventSchema>;
 
 export function parseStreamEvent(raw: unknown): StreamEvent | null {
   if (typeof raw !== 'object' || raw === null) return null;

@@ -10,6 +10,7 @@ import { getEffectiveEffort, normalizeModelId, toCliModelId } from '../data/mode
 import { setRuntimeSlashCommands } from '../data/slashCommands';
 import { useUIStore } from '../stores/uiStore';
 import { toCliPermissionMode } from '../services/permissionMode';
+import { applyServerFeatureFlagDocument } from '../services/featureFlags';
 import type { InputAttachment } from '../types';
 
 function getActions(): StoreActions {
@@ -142,6 +143,8 @@ export function useClaudeChat() {
           a.appendAssistantContent(`\n\n**Error:** ${streamEvent.payload.error}`);
           a.finishStreaming();
           finishStreamTrace('error');
+        } else if (streamEvent.type === 'feature_flags') {
+          applyServerFeatureFlagDocument(streamEvent.payload);
         }
       } catch {
         // ignore malformed messages

@@ -109,4 +109,150 @@ describe('StreamEvent parsing', () => {
     expect(parseStreamEvent('bad')).toBeNull();
     expect(parseStreamEvent({ type: 'unknown_event' })).toBeNull();
   });
+
+  it('parses git_status event', () => {
+    const event = parseStreamEvent({
+      version: 1,
+      type: 'git_status',
+      payload: {
+        branch: 'main',
+        dirty: true,
+        ahead: 2,
+        behind: 1,
+        files: [{ path: 'src/a.ts', status: 'M' }],
+      },
+    });
+    expect(event?.type).toBe('git_status');
+  });
+
+  it('parses git_diff_stat event', () => {
+    const event = parseStreamEvent({
+      version: 1,
+      type: 'git_diff_stat',
+      payload: {
+        files: [{ path: 'src/a.ts', insertions: 10, deletions: 2 }],
+        summary: { filesChanged: 1, insertions: 10, deletions: 2 },
+      },
+    });
+    expect(event?.type).toBe('git_diff_stat');
+  });
+
+  it('parses git_commit_result with correlationId and error payload', () => {
+    const event = parseStreamEvent({
+      version: 1,
+      type: 'git_commit_result',
+      correlationId: '11111111-1111-4111-8111-111111111111',
+      payload: {
+        operationId: '22222222-2222-4222-8222-222222222222',
+        success: false,
+        error: {
+          code: 'LOCK_CONFLICT',
+          message: 'Another operation is running',
+          retryable: true,
+        },
+      },
+    });
+    expect(event?.type).toBe('git_commit_result');
+  });
+
+  it('parses git_status_request (parse-only request envelope)', () => {
+    const event = parseStreamEvent({
+      version: 1,
+      type: 'git_status_request',
+      payload: {
+        requestId: '876e219c-8a58-4f33-8c48-3c0186e3780c',
+        cwd: '/tmp/worktree',
+        workspaceRoot: '/tmp',
+        workspaceFingerprint:
+          '57f3e35f9cb5d7d50f7b8950f4f3095f4f2f8bff7b11524f6c4e54dbf34ca45d',
+      },
+    });
+    expect(event?.type).toBe('git_status_request');
+  });
+
+  it('parses tool approval request and response', () => {
+    const requestEvent = parseStreamEvent({
+      version: 1,
+      type: 'tool_approval_request',
+      payload: {
+        approvalId: '48ad9f9f-315f-4991-85c2-a3d89e4479fb',
+        toolName: 'bash',
+        args: { cmd: 'ls -la' },
+        requestId: '9b1821e5-42c4-45ec-a8f6-2100a0d2604b',
+      },
+    });
+    const responseEvent = parseStreamEvent({
+      version: 1,
+      type: 'tool_approval_response',
+      payload: {
+        approvalId: '48ad9f9f-315f-4991-85c2-a3d89e4479fb',
+        decision: 'allow',
+      },
+    });
+    expect(requestEvent?.type).toBe('tool_approval_request');
+    expect(responseEvent?.type).toBe('tool_approval_response');
+  });
+
+  it('parses preview_response and tool_progress', () => {
+    const preview = parseStreamEvent({
+      version: 1,
+      type: 'preview_response',
+      payload: {
+        type: 'file',
+        content: 'line 1\nline 2',
+        path: 'src/index.ts',
+      },
+    });
+    const progress = parseStreamEvent({
+      version: 1,
+      type: 'tool_progress',
+      payload: {
+        toolId: 'bash',
+        requestId: 'd0f31ace-97f8-46f2-9f6f-5badbf4065d0',
+        lines: ['running...', 'done'],
+        finished: true,
+      },
+    });
+    expect(preview?.type).toBe('preview_response');
+    expect(progress?.type).toBe('tool_progress');
+  });
+
+  it('parses feature_flags snapshot event', () => {
+    const event = parseStreamEvent({
+      version: 1,
+      type: 'feature_flags',
+      payload: {
+        _schemaVersion: 1,
+        flags: {
+          protocolV2: true,
+          gitReadStatus: true,
+          gitWriteFlow: false,
+          gitResultCards: false,
+          toolApproval: false,
+          streamingMarkdown: false,
+          commandPalette: false,
+        },
+        updatedAt: Date.now(),
+      },
+    });
+    expect(event?.type).toBe('feature_flags');
+  });
+
+  it('rejects invalid new-event payloads', () => {
+    const badCommitResult = parseStreamEvent({
+      version: 1,
+      type: 'git_commit_result',
+      payload: { operationId: 'not-uuid' },
+    });
+    const badApproval = parseStreamEvent({
+      version: 1,
+      type: 'tool_approval_response',
+      payload: {
+        approvalId: '48ad9f9f-315f-4991-85c2-a3d89e4479fb',
+        decision: 'maybe',
+      },
+    });
+    expect(badCommitResult).toBeNull();
+    expect(badApproval).toBeNull();
+  });
 });

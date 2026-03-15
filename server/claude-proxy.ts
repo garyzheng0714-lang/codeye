@@ -1,8 +1,14 @@
 import { WebSocketServer, WebSocket } from 'ws';
 import http from 'http';
-import { isQueryMessage, isStopMessage, isCheckAuthMessage } from './validators';
+import {
+  isQueryMessage,
+  isStopMessage,
+  isCheckAuthMessage,
+  parseClientRequestEvent,
+} from './validators';
 import { handleRealQuery, handleCheckAuth, clientProcesses } from './realHandler';
 import { wrapEvent } from './streamEvent';
+import { getServerFeatureFlagDocument } from './featureFlags';
 
 const PORT = 5174;
 
@@ -16,6 +22,8 @@ wss.on('connection', (ws: WebSocket, req: http.IncomingMessage) => {
     ws.close(1008, 'Forbidden origin');
     return;
   }
+
+  ws.send(wrapEvent('feature_flags', getServerFeatureFlagDocument()));
 
   ws.on('message', (data: Buffer) => {
     try {
@@ -32,6 +40,25 @@ wss.on('connection', (ws: WebSocket, req: http.IncomingMessage) => {
         ws.send(wrapEvent('complete', {}));
       } else if (isCheckAuthMessage(msg)) {
         handleCheckAuth(ws, false);
+      } else {
+        const requestEvent = parseClientRequestEvent(msg);
+        if (requestEvent?.type === 'tool_approval_response') {
+          // P4 will consume this message in realHandler's approval wait-queue.
+          return;
+        }
+
+        if (requestEvent) {
+          ws.send(
+            wrapEvent(
+              'error',
+              { error: `Unsupported request type: ${requestEvent.type}` },
+              requestEvent.correlationId
+            )
+          );
+          return;
+        }
+
+        ws.send(wrapEvent('error', { error: 'Unsupported message type' }));
       }
     } catch {
       ws.send(wrapEvent('error', { error: 'Invalid message format' }));
