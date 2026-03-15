@@ -35,16 +35,16 @@ function getToolLabel(name: string, type: ToolType): string {
   return labels[type];
 }
 
-function ToolBlock({ tool }: { tool: ToolCallDisplay }) {
+function getToolBlockStatus(tool: ToolCallDisplay, isStreaming?: boolean): 'done' | 'running' | 'error' {
+  if (tool.output?.startsWith('Error:') || tool.output?.startsWith('error:')) return 'error';
+  if (isStreaming && tool.output === undefined && !tool.progressLines) return 'running';
+  return 'done';
+}
+
+function ToolBlock({ tool, isStreaming }: { tool: ToolCallDisplay; isStreaming?: boolean }) {
   const [isExpanded, setIsExpanded] = useState(true);
   const toolType = getToolType(tool.name);
-
-  let status: 'done' | 'running' | 'error' = 'done';
-  if (tool.output === undefined && !tool.progressLines) {
-    status = 'running';
-  } else if (tool.output?.startsWith('Error:')) {
-    status = 'error';
-  }
+  const status = getToolBlockStatus(tool, isStreaming);
 
   const color = status === 'error'
     ? 'var(--danger)'
@@ -95,10 +95,10 @@ function ToolBlock({ tool }: { tool: ToolCallDisplay }) {
   );
 }
 
-function ReadGroup({ tools }: { tools: ToolCallDisplay[] }) {
-  const allDone = tools.every(t => t.output && !t.output.startsWith('Error:'));
-  const anyRunning = tools.some(t => t.output === undefined);
-  const status: 'done' | 'running' | 'error' = anyRunning ? 'running' : allDone ? 'done' : 'error';
+function ReadGroup({ tools, isStreaming }: { tools: ToolCallDisplay[]; isStreaming?: boolean }) {
+  const anyError = tools.some(t => t.output?.startsWith('Error:'));
+  const anyRunning = isStreaming && tools.some(t => t.output === undefined);
+  const status: 'done' | 'running' | 'error' = anyRunning ? 'running' : anyError ? 'error' : 'done';
 
   const color = status === 'error'
     ? 'var(--danger)'
@@ -131,8 +131,8 @@ function ReadGroup({ tools }: { tools: ToolCallDisplay[] }) {
   );
 }
 
-function TaskBlock({ tool }: { tool: ToolCallDisplay }) {
-  const isRunning = tool.output === undefined;
+function TaskBlock({ tool, isStreaming }: { tool: ToolCallDisplay; isStreaming?: boolean }) {
+  const isRunning = isStreaming === true && tool.output === undefined;
 
   const tasks = tool.progressLines?.map((line) => {
     const isDone = line.startsWith('[x]') || line.startsWith('[done]');
@@ -218,13 +218,13 @@ export default memo(function AIMessage({ message }: { message: DisplayMessage })
         <div className="ai-message-flat">
           {groupedTools.map((item, idx) => {
             if ('kind' in item && item.kind === 'group') {
-              return <ReadGroup key={`group-${idx}`} tools={item.tools} />;
+              return <ReadGroup key={`group-${idx}`} tools={item.tools} isStreaming={message.isStreaming} />;
             }
             const tool = item as ToolCallDisplay;
             if (tool.name === 'Agent' || tool.name === 'Task') {
-              return <TaskBlock key={tool.id} tool={tool} />;
+              return <TaskBlock key={tool.id} tool={tool} isStreaming={message.isStreaming} />;
             }
-            return <ToolBlock key={tool.id} tool={tool} />;
+            return <ToolBlock key={tool.id} tool={tool} isStreaming={message.isStreaming} />;
           })}
 
           {isThinking && (
