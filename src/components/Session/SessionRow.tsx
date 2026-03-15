@@ -1,5 +1,5 @@
 import { memo, useRef, useState } from 'react';
-import { Archive, Link } from 'lucide-react';
+import { Archive } from 'lucide-react';
 import { formatCompactTime, isOlderThan3Days } from '../../utils/timeFormat';
 import type { SessionData } from '../../types';
 
@@ -64,7 +64,7 @@ export default memo(function SessionRow({
         <input
           ref={inputRef}
           className="session-rename-input"
-          aria-label="Rename session"
+          aria-label="重命名会话"
           value={editName}
           onChange={(e) => setEditName(e.target.value)}
           onBlur={commitRename}
@@ -101,9 +101,6 @@ export default memo(function SessionRow({
       }}
       onDoubleClick={handleDoubleClick}
     >
-      {isActive && (
-        <Link size={13} strokeWidth={2} className="session-active-icon" />
-      )}
       <span className="session-title">{title}</span>
       {!isActive && !isConfirming && (
         <span className="session-time">{formatCompactTime(session.updatedAt)}</span>
@@ -117,8 +114,8 @@ export default memo(function SessionRow({
               e.stopPropagation();
               onArchiveClick();
             }}
-            title="Archive"
-            aria-label="Archive session"
+            title="归档"
+            aria-label="归档会话"
           >
             <Archive size={12} strokeWidth={2} />
           </button>
@@ -131,7 +128,7 @@ export default memo(function SessionRow({
               onConfirm();
             }}
           >
-            Confirm
+            确认
           </button>
         )}
       </div>

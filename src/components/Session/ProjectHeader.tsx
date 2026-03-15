@@ -41,7 +41,7 @@ export default memo(function ProjectHeader({
       {isSyncing && (
         <span className="project-sync">
           <span className="project-sync-dot" />
-          <span className="project-sync-label">syncing</span>
+          <span className="project-sync-label">同步中</span>
         </span>
       )}
       {!isOpen && !isSyncing && sessionCount > 0 && (

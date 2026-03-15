@@ -176,8 +176,8 @@ export default memo(function SessionList({
     return (
       <div className="empty-state">
         <SearchIcon size={28} strokeWidth={1.2} className="empty-state-icon" aria-hidden="true" />
-        <p>No folders yet</p>
-        <p>Add a workspace folder to get started</p>
+        <p>暂无文件夹</p>
+        <p>添加一个工作区文件夹以开始</p>
       </div>
     );
   }
@@ -186,8 +186,8 @@ export default memo(function SessionList({
     return (
       <div className="empty-state">
         <SearchIcon size={28} strokeWidth={1.2} className="empty-state-icon" aria-hidden="true" />
-        <p>No results</p>
-        <p>Try a different keyword</p>
+        <p>无结果</p>
+        <p>试试其他关键词</p>
       </div>
     );
   }

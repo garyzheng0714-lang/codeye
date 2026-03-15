@@ -83,12 +83,12 @@ export default memo(function Sidebar() {
       <div className="sidebar-header">
         {activePanel === 'sessions' ? (
           <>
-            <span className="sidebar-title">Sessions</span>
+            <span className="sidebar-title">会话</span>
             <div className="sidebar-actions">
-              <button className="sidebar-action-btn" onClick={handleNewSession} title="New Session" aria-label="New session">
+              <button className="sidebar-action-btn" onClick={handleNewSession} title="新建会话" aria-label="新建会话">
                 <Plus size={15} strokeWidth={2} />
               </button>
-              <button className="sidebar-action-btn" onClick={handleAddFolder} title="Add Folder" aria-label="Add folder">
+              <button className="sidebar-action-btn" onClick={handleAddFolder} title="添加文件夹" aria-label="添加文件夹">
                 <FolderPlus size={15} strokeWidth={1.8} />
               </button>
             </div>
@@ -104,8 +104,8 @@ export default memo(function Sidebar() {
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search..."
-              aria-label="Search sessions"
+              placeholder="搜索..."
+              aria-label="搜索会话"
             />
           </div>
         </div>
