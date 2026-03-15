@@ -25,6 +25,7 @@ const CMD_PALETTE_SELECT_EVENT = 'codeye:cmd-palette-select';
 export default function App() {
   useClaudeChat();
   const sidebarCollapsed = useUIStore((s) => s.sidebarCollapsed);
+  const sidebarWidth = useUIStore((s) => s.sidebarWidth);
   const splitEnabled = useUIStore((s) => s.splitEnabled);
   const [cmdPaletteOpen, setCmdPaletteOpen] = useState(false);
 
@@ -120,7 +121,10 @@ export default function App() {
       <div className="app">
         <TitleBar />
         <ConnectionStatus />
-        <div className={`app-body ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
+        <div
+          className={`app-body ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}
+          style={!sidebarCollapsed ? { '--sidebar-w': `${sidebarWidth}px` } as React.CSSProperties : undefined}
+        >
           <ActivityBar />
           <Sidebar />
           {!sidebarCollapsed && <SidebarBoundaryToggle />}

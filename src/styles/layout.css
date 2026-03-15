@@ -36,59 +36,22 @@
   background: var(--bg-base);
 }
 
-.sidebar-boundary-toggle {
+.sidebar-resize-handle {
   position: absolute;
-  left: calc(var(--activity-bar-w) + var(--sidebar-w) - 8px);
+  left: calc(var(--activity-bar-w) + var(--sidebar-w) - 3px);
   top: 0;
   bottom: 0;
-  width: 16px;
-  border: none;
+  width: 6px;
   background: transparent;
   cursor: col-resize;
   z-index: 11;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  transition: background 120ms ease-out;
 }
 
-.sidebar-boundary-handle {
-  width: var(--radius-2xs);
-  height: 28px;
-  border-radius: var(--radius-2xs);
-  background: transparent;
-  transition:
-    background var(--transition-fast),
-    height var(--transition-fast);
-}
-
-.sidebar-boundary-chevron {
-  position: absolute;
-  color: var(--text-muted);
-  opacity: 0;
-  transition: opacity var(--transition-fast);
-}
-
-.sidebar-boundary-toggle:hover {
-  cursor: pointer;
-}
-
-.sidebar-boundary-toggle:hover .sidebar-boundary-handle {
+.sidebar-resize-handle:hover,
+.sidebar-resize-handle:active {
   background: var(--accent);
-  height: 36px;
-}
-
-.sidebar-boundary-toggle:hover .sidebar-boundary-chevron {
-  opacity: 1;
-  color: var(--accent);
-}
-
-.sidebar-boundary-toggle:focus-visible .sidebar-boundary-handle {
-  background: var(--accent);
-}
-
-.sidebar-boundary-toggle:focus-visible .sidebar-boundary-chevron {
-  opacity: 1;
-  color: var(--accent);
+  opacity: 0.5;
 }
 
 /* ── Split Pane Layout ── */

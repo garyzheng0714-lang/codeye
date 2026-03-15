@@ -1,19 +1,41 @@
-import { ChevronLeft } from 'lucide-react';
+import { useCallback, useRef } from 'react';
 import { useUIStore } from '../../stores/uiStore';
 
 export default function SidebarBoundaryToggle() {
-  const toggleSidebar = useUIStore((state) => state.toggleSidebar);
+  const setSidebarWidth = useUIStore((s) => s.setSidebarWidth);
+  const isDragging = useRef(false);
+
+  const handlePointerDown = useCallback(
+    (e: React.PointerEvent) => {
+      e.preventDefault();
+      isDragging.current = true;
+      const activityBarWidth = 48;
+      const target = e.currentTarget as HTMLElement;
+      target.setPointerCapture(e.pointerId);
+
+      const handleMove = (ev: PointerEvent) => {
+        if (!isDragging.current) return;
+        const newWidth = ev.clientX - activityBarWidth;
+        setSidebarWidth(newWidth);
+      };
+
+      const handleUp = () => {
+        isDragging.current = false;
+        window.removeEventListener('pointermove', handleMove);
+        window.removeEventListener('pointerup', handleUp);
+      };
+
+      window.addEventListener('pointermove', handleMove);
+      window.addEventListener('pointerup', handleUp);
+    },
+    [setSidebarWidth],
+  );
 
   return (
-    <button
-      className="sidebar-boundary-toggle"
-      onClick={toggleSidebar}
-      aria-label="Collapse conversations"
-      title="Collapse conversations"
-      type="button"
-    >
-      <span className="sidebar-boundary-handle" aria-hidden="true" />
-      <ChevronLeft size={14} strokeWidth={1.8} className="sidebar-boundary-chevron" />
-    </button>
+    <div
+      className="sidebar-resize-handle"
+      onPointerDown={handlePointerDown}
+      aria-label="调整侧边栏宽度"
+    />
   );
 }

@@ -11,7 +11,7 @@
     pointer-events: none;
   }
 
-  .sidebar-boundary-toggle {
+  .sidebar-resize-handle {
     display: none;
   }
 
@@ -39,7 +39,7 @@
     display: none;
   }
 
-  .sidebar-boundary-toggle {
+  .sidebar-resize-handle {
     display: none;
   }
 
