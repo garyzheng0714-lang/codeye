@@ -124,6 +124,30 @@
   --transition-base: 200ms ease-out;
   --transition-slow: 300ms cubic-bezier(0.16, 1, 0.3, 1);
 
+  /* Tool card */
+  --tool-card-bg: var(--bg-secondary);
+  --tool-card-border: var(--border-subtle);
+  --tool-card-radius: var(--radius-lg);
+  --tool-card-row-height: 34px;
+  --tool-card-label-fg: var(--text-secondary);
+  --tool-card-label-weight: 500;
+
+  /* Kiro-style status circles */
+  --status-circle-size: 18px;
+  --status-circle-done-bg: var(--bg-success);
+  --status-circle-done-fg: var(--success);
+  --status-circle-running-bg: var(--accent-muted);
+  --status-circle-running-fg: var(--accent);
+  --status-circle-error-bg: var(--bg-danger);
+  --status-circle-error-fg: var(--danger);
+
+  /* Kiro-style file pill */
+  --pill-bg: var(--surface-pill);
+  --pill-fg: var(--text-muted);
+  --pill-font-size: 10px;
+  --pill-padding: 2px 7px;
+  --pill-radius: var(--radius-xs);
+
   /* Layout */
   --activity-bar-w: 48px;
   --sidebar-w: 280px;
@@ -203,6 +227,18 @@
   --shadow-lg:   0 8px 24px rgba(0, 0, 0, 0.12);
   --shadow-glow: 0 0 16px rgba(147, 51, 234, 0.1);
   --shadow-glow-lg: 0 0 32px rgba(147, 51, 234, 0.08);
+
+  /* Light theme status circles */
+  --status-circle-done-bg: rgba(22, 163, 74, 0.1);
+  --status-circle-done-fg: #16a34a;
+  --status-circle-running-bg: rgba(147, 51, 234, 0.1);
+  --status-circle-running-fg: #9333ea;
+  --status-circle-error-bg: rgba(220, 38, 38, 0.1);
+  --status-circle-error-fg: #dc2626;
+
+  /* Light theme pill */
+  --pill-bg: rgba(0, 0, 0, 0.05);
+  --pill-fg: #6b7280;
 
   color-scheme: light;
 }
