@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useChatStore } from '../stores/chatStore';
 import { subscribeWsMessages, sendMessage } from '../services/websocket';
 import { parseStreamEvent } from '../types/streamEvent';
@@ -47,6 +47,7 @@ export function useGitStatus() {
   const cwd = useChatStore((s) => s.cwd);
   const [status, setStatus] = useState<GitStatusSnapshot>(EMPTY_GIT_STATUS);
   const [loading, setLoading] = useState(false);
+  const latestCorrelationIdRef = useRef<string | null>(null);
 
   const refresh = useCallback(async () => {
     if (!cwd) {
@@ -84,6 +85,7 @@ export function useGitStatus() {
     const workspaceRoot = normalizedCwd;
     const requestId = crypto.randomUUID();
     const correlationId = crypto.randomUUID();
+    latestCorrelationIdRef.current = correlationId;
 
     setLoading(true);
 
@@ -105,6 +107,7 @@ export function useGitStatus() {
         },
       });
     } catch {
+      latestCorrelationIdRef.current = null;
       setLoading(false);
       setStatus({ ...EMPTY_GIT_STATUS, cwd });
     }
@@ -145,6 +148,12 @@ export function useGitStatus() {
         if (!streamEvent) return;
 
         if (streamEvent.type === 'git_status') {
+          if (
+            streamEvent.correlationId &&
+            streamEvent.correlationId !== latestCorrelationIdRef.current
+          ) {
+            return;
+          }
           setStatus({
             available: streamEvent.payload.available,
             cwd,
@@ -154,6 +163,7 @@ export function useGitStatus() {
             behind: streamEvent.payload.behind,
             files: streamEvent.payload.files,
           });
+          latestCorrelationIdRef.current = null;
           setLoading(false);
           return;
         }
@@ -167,7 +177,12 @@ export function useGitStatus() {
           return;
         }
 
-        if (streamEvent.type === 'error' && streamEvent.correlationId) {
+        if (
+          streamEvent.type === 'error' &&
+          streamEvent.correlationId &&
+          streamEvent.correlationId === latestCorrelationIdRef.current
+        ) {
+          latestCorrelationIdRef.current = null;
           setLoading(false);
         }
       } catch {
