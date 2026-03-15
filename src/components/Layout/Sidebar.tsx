@@ -1,5 +1,5 @@
 import { lazy, memo, Suspense, useCallback, useMemo, useState } from 'react';
-import { Search, FolderPlus, Package } from 'lucide-react';
+import { Search, FolderPlus, Plus, Package } from 'lucide-react';
 import { useUIStore } from '../../stores/uiStore';
 import { useSessionStore } from '../../stores/sessionStore';
 import { useChatStore } from '../../stores/chatStore';
@@ -17,22 +17,15 @@ export default memo(function Sidebar() {
   const activeFolderId = useSessionStore((s) => s.activeFolderId);
   const createFolder = useSessionStore((s) => s.createFolder);
   const createSession = useSessionStore((s) => s.createSession);
-  const setActiveFolder = useSessionStore((s) => s.setActiveFolder);
-  const setActiveSession = useSessionStore((s) => s.setActiveSession);
   const importClaudeSessions = useSessionStore((s) => s.importClaudeSessions);
   const markFolderSynced = useSessionStore((s) => s.markFolderSynced);
-  const isStreaming = useChatStore((s) => s.isStreaming);
-  const finishStreaming = useChatStore((s) => s.finishStreaming);
-  const clearMessages = useChatStore((s) => s.clearMessages);
-  const setSessionId = useChatStore((s) => s.setSessionId);
-  const setClaudeSessionId = useChatStore((s) => s.setClaudeSessionId);
-  const setCwd = useChatStore((s) => s.setCwd);
+
   const [search, setSearch] = useState('');
   const [syncingFolderIds, setSyncingFolderIds] = useState<string[]>([]);
 
   const activeFolder = useMemo(
-    () => folders.find((folder) => folder.id === activeFolderId),
-    [folders, activeFolderId]
+    () => folders.find((f) => f.id === activeFolderId),
+    [folders, activeFolderId],
   );
 
   const syncFolder = useCallback(
@@ -41,51 +34,27 @@ export default memo(function Sidebar() {
         markFolderSynced(folder.id);
         return;
       }
-
-      if (syncingFolderIds.includes(folder.id)) {
-        return;
-      }
+      if (syncingFolderIds.includes(folder.id)) return;
 
       setSyncingFolderIds((current) => [...current, folder.id]);
       try {
         const imported = await window.electronAPI.projects.importClaudeHistory(folder.path);
         importClaudeSessions(folder.id, imported);
-        if (imported.length === 0) {
-          markFolderSynced(folder.id);
-        }
+        if (imported.length === 0) markFolderSynced(folder.id);
       } catch (error) {
         console.error('Failed to import Claude history', error);
       } finally {
         setSyncingFolderIds((current) => current.filter((id) => id !== folder.id));
       }
     },
-    [importClaudeSessions, markFolderSynced, syncingFolderIds]
-  );
-
-  const focusFolderWorkspace = useCallback(
-    (folder: SessionFolder) => {
-      if (isStreaming) {
-        stopClaude();
-        finishStreaming();
-      }
-      saveCurrentSession();
-      setActiveFolder(folder.id);
-      setActiveSession(null);
-      clearMessages();
-      setSessionId(null);
-      setClaudeSessionId(null);
-      setCwd(folder.path);
-    },
-    [clearMessages, finishStreaming, isStreaming, setActiveFolder, setActiveSession, setClaudeSessionId, setCwd, setSessionId]
+    [importClaudeSessions, markFolderSynced, syncingFolderIds],
   );
 
   const handleAddFolder = useCallback(async () => {
     if (window.electronAPI?.projects.selectDirectory) {
       const selectedPath = await window.electronAPI.projects.selectDirectory();
       if (!selectedPath) return;
-
       const folder = createFolder(selectedPath);
-      focusFolderWorkspace(folder);
       void syncFolder(folder);
       if (window.electronAPI?.projects.watchHistory && folder.path) {
         window.electronAPI.projects.watchHistory(
@@ -95,54 +64,58 @@ export default memo(function Sidebar() {
       }
       return;
     }
+    const nextIdx = folders.filter((f) => f.kind === 'virtual' && f.name.startsWith('Workspace')).length + 1;
+    createFolder('', `Workspace ${nextIdx}`, 'virtual');
+  }, [createFolder, folders, syncFolder]);
 
-    const nextWorkspaceIndex =
-      folders.filter((folder) => folder.kind === 'virtual' && folder.name.startsWith('Workspace')).length + 1;
-    const folder = createFolder('', `Workspace ${nextWorkspaceIndex}`, 'virtual');
-    focusFolderWorkspace(folder);
-  }, [createFolder, focusFolderWorkspace, folders, syncFolder]);
-
-  const handleNewSession = useCallback(
-    (folderId?: string) => {
-      if (isStreaming) {
-        stopClaude();
-        finishStreaming();
-      }
-      saveCurrentSession();
-      clearMessages();
-      createSession(undefined, folderId);
-    },
-    [clearMessages, createSession, finishStreaming, isStreaming]
-  );
+  const handleNewSession = useCallback(() => {
+    if (useChatStore.getState().isStreaming) {
+      stopClaude();
+      useChatStore.getState().finishStreaming();
+    }
+    saveCurrentSession();
+    useChatStore.getState().clearMessages();
+    createSession();
+  }, [createSession]);
 
   return (
     <div className="sidebar">
       <div className="sidebar-header">
-        <div className="sidebar-search">
-          <Search size={14} strokeWidth={1.8} className="sidebar-search-icon" />
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search..."
-            aria-label="Search sessions"
-          />
-        </div>
-        {activePanel === 'sessions' && (
-          <div className="sidebar-actions">
-            <button className="sidebar-action-btn" onClick={handleAddFolder} title="Add Folder">
-              <FolderPlus size={15} strokeWidth={1.8} />
-            </button>
-          </div>
+        {activePanel === 'sessions' ? (
+          <>
+            <span className="sidebar-title">Sessions</span>
+            <div className="sidebar-actions">
+              <button className="sidebar-action-btn" onClick={handleNewSession} title="New Session" aria-label="New session">
+                <Plus size={15} strokeWidth={2} />
+              </button>
+              <button className="sidebar-action-btn" onClick={handleAddFolder} title="Add Folder" aria-label="Add folder">
+                <FolderPlus size={15} strokeWidth={1.8} />
+              </button>
+            </div>
+          </>
+        ) : (
+          <div style={{ flex: 1 }} />
         )}
       </div>
+      {activePanel === 'sessions' && (
+        <div className="sidebar-search-wrapper">
+          <div className="sidebar-search">
+            <Search size={12} strokeWidth={2} className="sidebar-search-icon" />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search..."
+              aria-label="Search sessions"
+            />
+          </div>
+        </div>
+      )}
       <div className="sidebar-content">
         {activePanel === 'sessions' && (
           <SessionList
             searchQuery={search}
-            onCreateSession={handleNewSession}
-            onFocusFolder={focusFolderWorkspace}
-            onSyncFolder={syncFolder}
             syncingFolderIds={syncingFolderIds}
+            onSyncFolder={syncFolder}
           />
         )}
         {activePanel === 'settings' && (

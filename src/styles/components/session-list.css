@@ -1,195 +1,132 @@
 /* ============================================
-   Session List — Two-line rows with dot indicator
+   Session List — Codex-style flat layout
    ============================================ */
 
 .session-list {
   display: flex;
   flex-direction: column;
-  padding: 0 var(--space-1);
+  padding: 0 var(--space-2);
 }
 
 /* ═══════════════════════════════════════
-   Folder Section
+   Project Group (folder section)
    ═══════════════════════════════════════ */
 
-.folder-section + .folder-section {
-  margin-top: var(--space-1);
+.project-group + .project-group .project-header {
+  margin-top: var(--space-2);
 }
 
-.folder-header {
+.project-header {
   width: 100%;
   border: none;
   background: transparent;
-  padding: var(--space-2) var(--space-3);
+  padding: 10px var(--space-2) var(--space-1);
   display: flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: 7px;
   cursor: pointer;
   text-align: left;
-  border-radius: var(--radius-sm);
   user-select: none;
-  transition: background var(--transition-fast);
 }
 
-.folder-header:hover {
-  background: var(--interactive-hover-soft);
-}
-
-.folder-header:focus-visible {
+.project-header:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: -2px;
+  border-radius: var(--radius-sm);
 }
 
-.folder-chevron {
-  color: var(--text-disabled);
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  transition:
-    transform 250ms cubic-bezier(0.16, 1, 0.3, 1),
-    color var(--transition-fast);
-}
-
-.folder-chevron.open {
-  transform: rotate(90deg);
-}
-
-.folder-section.active .folder-chevron {
+.project-header-icon {
   color: var(--text-muted);
+  flex-shrink: 0;
 }
 
-.folder-name {
-  font-size: var(--text-xs);
-  font-weight: 600;
-  color: var(--text-disabled);
+.project-header-name {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--text-muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   flex: 1;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  transition: color var(--transition-fast);
+  transition: color 120ms ease-out;
 }
 
-.folder-section.active .folder-name {
+.project-header-name.open {
   color: var(--text-secondary);
 }
 
-.folder-sync-dot {
-  width: var(--space-1);
-  height: var(--space-1);
-  border-radius: var(--radius-full);
+.project-count {
+  font-size: var(--text-2xs);
+  color: var(--border-strong);
+  font-variant-numeric: tabular-nums;
   flex-shrink: 0;
 }
 
-.folder-sync-dot.syncing {
-  background: var(--accent);
-  animation: pulse 1.2s ease-in-out infinite;
-}
+/* ── Sync indicator ── */
 
-.folder-sync-dot.idle {
-  background: var(--warning);
-}
-
-.folder-header-actions {
+.project-sync {
   display: flex;
   align-items: center;
-  flex-shrink: 0;
+  gap: 5px;
   margin-left: auto;
+  flex-shrink: 0;
 }
 
-.folder-count {
-  font-size: var(--text-2xs);
-  color: var(--text-disabled);
-  font-variant-numeric: tabular-nums;
-  min-width: 14px;
-  text-align: center;
+.project-sync-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: var(--radius-full);
+  background: var(--accent);
+  animation: syncPulse 1.2s ease-in-out infinite;
 }
 
-.folder-header:hover .folder-count {
-  display: none;
-}
-
-.folder-new-session {
-  width: 20px;
-  height: 20px;
-  border: none;
-  background: transparent;
+.project-sync-label {
+  font-size: 9.5px;
   color: var(--text-muted);
-  border-radius: var(--radius-xs);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition:
-    background var(--transition-fast),
-    color var(--transition-fast);
 }
 
-.folder-header:hover .folder-new-session {
-  display: inline-flex;
+@keyframes syncPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
 }
 
-.folder-new-session:hover {
-  background: var(--accent-muted);
-  color: var(--accent);
-}
+/* ── Collapse animation ── */
 
-/* ── Collapse ── */
-
-.folder-session-shell {
+.project-sessions-shell {
   display: grid;
   grid-template-rows: 0fr;
-  transition: grid-template-rows 300ms cubic-bezier(0.16, 1, 0.3, 1);
+  transition: grid-template-rows 200ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.folder-session-shell.open {
+.project-sessions-shell.open {
   grid-template-rows: 1fr;
 }
 
-.folder-session-list {
+.project-sessions {
   min-height: 0;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  padding: var(--space-1) 0;
 }
 
 /* ═══════════════════════════════════════
-   Session Row — [dot] [body: title + subtitle]
+   Session Row — flat: [title] [time]
    ═══════════════════════════════════════ */
 
 .session-row {
   position: relative;
   display: flex;
-  align-items: flex-start;
-  gap: var(--space-3);
-  padding: var(--space-2) var(--space-3);
+  align-items: center;
+  padding: 9px var(--space-3) 9px 28px;
   cursor: pointer;
-  border-radius: var(--radius-sm);
+  border-radius: 8px;
   background: transparent;
-  transition: background 150ms ease-out;
-}
-
-/* Staggered entrance */
-.folder-session-shell.open .session-row {
-  animation: rowReveal 250ms cubic-bezier(0.16, 1, 0.3, 1) both;
-  animation-delay: calc(var(--session-idx, 0) * 30ms);
-}
-
-@keyframes rowReveal {
-  from {
-    opacity: 0;
-    transform: translateY(4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  margin: 1px 0;
+  transition: background 120ms ease-out;
 }
 
 .session-row:hover {
-  background: var(--interactive-hover);
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .session-row:focus-visible {
@@ -197,66 +134,36 @@
   outline-offset: -2px;
 }
 
-/* ── Dot indicator ── */
+/* ── Active state ── */
 
-.session-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: var(--radius-full);
-  background: var(--border-strong);
-  flex-shrink: 0;
-  margin-top: 7px;
-  transition:
-    background 200ms ease-out,
-    transform 200ms cubic-bezier(0.16, 1, 0.3, 1),
-    box-shadow 200ms ease-out;
-}
-
-.session-row:hover .session-dot {
-  background: var(--text-muted);
-  transform: scale(1.2);
-}
-
-/* Active — dot becomes accent with glow */
 .session-row.active {
-  background: var(--accent-muted);
-}
-
-.session-row.active .session-dot {
-  background: var(--accent);
-  box-shadow: 0 0 6px var(--accent-glow);
-  animation: dotPulseIn 400ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-@keyframes dotPulseIn {
-  0% { transform: scale(0.5); opacity: 0; }
-  60% { transform: scale(1.4); }
-  100% { transform: scale(1); opacity: 1; }
+  background: rgba(168, 85, 247, 0.08);
 }
 
 .session-row.active:hover {
-  background: var(--accent-glow);
+  background: rgba(168, 85, 247, 0.12);
 }
 
-/* ── Body: title + subtitle ── */
-
-.session-body {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
+.session-active-icon {
+  position: absolute;
+  left: 10px;
+  color: var(--accent);
+  flex-shrink: 0;
 }
+
+/* ── Title ── */
 
 .session-title {
-  font-size: var(--text-sm);
-  font-weight: 500;
+  font-size: var(--text-base);
+  font-weight: 400;
   color: var(--text-secondary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  flex: 1;
+  min-width: 0;
   line-height: 1.4;
-  transition: color 150ms ease-out;
+  transition: color 120ms ease-out;
 }
 
 .session-row:hover .session-title {
@@ -265,19 +172,28 @@
 
 .session-row.active .session-title {
   color: var(--text-primary);
-  font-weight: 550;
+  font-weight: 500;
 }
 
-.session-subtitle {
-  font-size: var(--text-2xs);
+.session-row.old .session-title {
+  color: var(--text-muted);
+}
+
+.session-row.old:hover .session-title {
+  color: var(--text-primary);
+}
+
+/* ── Time ── */
+
+.session-time {
+  font-size: var(--text-xs);
   color: var(--text-disabled);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  line-height: 1.4;
+  flex-shrink: 0;
+  margin-left: var(--space-3);
+  font-variant-numeric: tabular-nums;
 }
 
-/* ── Delete ── */
+/* ── Archive actions ── */
 
 .session-actions {
   position: absolute;
@@ -286,7 +202,6 @@
   transform: translateY(-50%) translateX(4px);
   display: flex;
   align-items: center;
-  gap: var(--space-1);
   opacity: 0;
   pointer-events: none;
   transition:
@@ -301,10 +216,18 @@
   transform: translateY(-50%) translateX(0);
 }
 
-.session-delete,
-.session-confirm-delete {
+/* Hide time when actions visible */
+.session-row:hover .session-time {
+  visibility: hidden;
+}
+
+.session-archive {
+  width: 24px;
+  height: 24px;
   border: none;
-  border-radius: var(--radius-xs);
+  background: var(--bg-secondary);
+  color: var(--text-disabled);
+  border-radius: 5px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -314,45 +237,33 @@
     color var(--transition-fast);
 }
 
-.session-delete {
-  width: 22px;
-  height: 22px;
-  background: var(--bg-secondary);
-  color: var(--text-disabled);
-}
-
-.session-delete:hover {
+.session-archive:hover {
   background: var(--interactive-danger);
   color: var(--danger);
 }
 
-.session-confirm-delete {
-  height: 22px;
-  padding: 0 var(--space-2);
-  background: var(--danger);
-  color: var(--bg-base);
+.session-confirm-archive {
+  height: 24px;
+  padding: 0 10px;
+  background: rgba(248, 113, 113, 0.12);
+  color: var(--danger);
   font-size: var(--text-2xs);
   font-weight: 600;
   font-family: var(--font-body);
-  border-radius: var(--radius-xs);
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background var(--transition-fast);
 }
 
-.session-confirm-delete:hover {
-  background: var(--danger-strong);
-}
-
-.session-actions:not(.confirming) .session-confirm-delete {
-  display: none;
-}
-
-.session-actions.confirming .session-delete {
-  display: none;
+.session-confirm-archive:hover {
+  background: rgba(248, 113, 113, 0.2);
 }
 
 /* ── Rename ── */
 
 .session-rename-input {
-  font-size: var(--text-sm);
+  font-size: var(--text-base);
   font-weight: 500;
   background: var(--bg-base);
   color: var(--text-primary);
@@ -365,80 +276,7 @@
   box-shadow: 0 0 0 2px var(--accent-muted);
 }
 
-/* ── Context menu ── */
-
-.session-context-menu {
-  position: fixed;
-  z-index: 9999;
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-lg);
-  min-width: 148px;
-  padding: var(--space-1);
-  animation: contextMenuEnter var(--transition-fast) cubic-bezier(0.16, 1, 0.3, 1) both;
-  transform-origin: top left;
-}
-
-.context-menu-item {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-3);
-  border: none;
-  background: transparent;
-  color: var(--text-primary);
-  font-size: var(--text-base);
-  font-family: var(--font-body);
-  border-radius: var(--radius-xs);
-  cursor: pointer;
-  text-align: left;
-  transition: background var(--transition-fast);
-}
-
-.context-menu-item:hover {
-  background: var(--interactive-hover);
-}
-
-.context-menu-item.danger {
-  color: var(--danger);
-}
-
-.context-menu-item.danger:hover {
-  background: var(--interactive-danger);
-}
-
-.context-menu-divider {
-  height: 1px;
-  background: var(--border-subtle);
-  margin: var(--space-1) 0;
-}
-
 /* ── Empty states ── */
-
-.folder-empty {
-  padding: var(--space-5) var(--space-3);
-  color: var(--text-disabled);
-  font-size: var(--text-xs);
-  text-align: center;
-}
-
-.folder-empty button {
-  border: none;
-  background: transparent;
-  color: var(--accent);
-  font-size: var(--text-xs);
-  font-weight: 500;
-  cursor: pointer;
-  padding: 0;
-  margin-left: var(--space-1);
-}
-
-.folder-empty button:hover {
-  color: var(--accent-hover);
-  text-decoration: underline;
-}
 
 .empty-state {
   display: flex;
@@ -448,7 +286,6 @@
   padding: var(--space-10) var(--space-5);
   gap: var(--space-2);
   text-align: center;
-  animation: fadeIn var(--transition-slow);
 }
 
 .empty-state-icon {
