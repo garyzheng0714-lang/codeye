@@ -102,7 +102,7 @@ export default memo(function SessionRow({
       onDoubleClick={handleDoubleClick}
     >
       <span className="session-title">{title}</span>
-      {!isActive && !isConfirming && (
+      {!isActive && (
         <span className="session-time">{formatCompactTime(session.updatedAt)}</span>
       )}
       <div className={`session-actions ${isConfirming ? 'confirming' : ''}`}>

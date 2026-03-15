@@ -117,7 +117,7 @@
   position: relative;
   display: flex;
   align-items: center;
-  padding: 9px 40px 9px 28px;
+  padding: 9px var(--space-3) 9px 28px;
   cursor: pointer;
   border-radius: 8px;
   background: transparent;
@@ -184,17 +184,19 @@
   flex-shrink: 0;
   margin-left: var(--space-3);
   font-variant-numeric: tabular-nums;
+  min-width: 36px;
+  text-align: right;
 }
 
 /* ── Archive actions ── */
 
 .session-actions {
-  position: absolute;
-  right: var(--space-2);
-  top: 50%;
-  transform: translateY(-50%);
+  flex-shrink: 0;
+  margin-left: var(--space-3);
+  min-width: 36px;
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   opacity: 0;
   pointer-events: none;
   transition: opacity 120ms ease-out;
@@ -208,7 +210,7 @@
 
 /* Hide time when actions visible */
 .session-row:hover .session-time {
-  visibility: hidden;
+  display: none;
 }
 
 .session-archive {
