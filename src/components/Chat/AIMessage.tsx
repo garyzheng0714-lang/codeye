@@ -1,214 +1,190 @@
 import { useCallback, memo, useState } from 'react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import { Copy, Check, GitFork, Zap } from 'lucide-react';
+import { ChevronDown, ChevronRight, FileText, Search, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
 import type { DisplayMessage, ToolCallDisplay } from '../../types';
 import { useChatStore } from '../../stores/chatStore';
 import { useSessionStore } from '../../stores/sessionStore';
-import { getToolStatus, getToolColor } from '../../data/toolMeta';
-import { ToolIcon, SpinnerIcon } from '../../data/toolIcons';
-import ToolCall from './ToolCall';
+import CodeyeMark from '../Brand/CodeyeMark';
 import CodeBlock from './CodeBlock';
-import GitResultCard from './GitResultCard';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
-// ── Consecutive Read grouping ──────────────────────────────────────────
+// Tool type mapping
+type ToolType = 'read' | 'search' | 'edit' | 'command';
 
-type GroupedTool =
-  | { kind: 'single'; tool: ToolCallDisplay }
-  | { kind: 'reads'; files: string[]; running: boolean; error: boolean };
-
-function groupToolCalls(tools: ToolCallDisplay[], isStreaming: boolean): GroupedTool[] {
-  const out: GroupedTool[] = [];
-  let i = 0;
-  while (i < tools.length) {
-    const t = tools[i];
-    if (t.name === 'Read') {
-      const files: string[] = [];
-      let running = false;
-      let error = false;
-      while (i < tools.length && tools[i].name === 'Read') {
-        const fp = tools[i].input.file_path ? String(tools[i].input.file_path) : '';
-        const fname = fp.split('/').pop() || fp;
-        if (fname) files.push(fname);
-        const s = getToolStatus(tools[i], { isStreaming });
-        if (s === 'running' || s === 'pending') running = true;
-        if (s === 'error') error = true;
-        i++;
-      }
-      out.push({ kind: 'reads', files, running, error });
-    } else {
-      out.push({ kind: 'single', tool: t });
-      i++;
-    }
-  }
-  return out;
+function getToolType(name: string): ToolType {
+  if (name === 'Read' || name === 'Edit') return 'read';
+  if (name === 'Glob' || name === 'Grep') return 'search';
+  if (name === 'Bash') return 'command';
+  return 'read';
 }
 
-// ── Steps block status ───────────────────────────────────────────────
-
-function getStepsStatus(grouped: GroupedTool[], isStreaming: boolean): 'running' | 'error' | 'completed' {
-  for (const g of grouped) {
-    if (g.kind === 'reads') {
-      if (g.running) return 'running';
-      if (g.error) return 'error';
-    } else {
-      const s = getToolStatus(g.tool, { isStreaming });
-      if (s === 'running' || s === 'pending') return 'running';
-      if (s === 'error') return 'error';
-    }
-  }
-  return 'completed';
+function getToolLabel(type: ToolType): string {
+  const labels: Record<ToolType, string> = {
+    read: 'Read',
+    search: 'Searched',
+    edit: 'Accepted edits to',
+    command: 'Ran command',
+  };
+  return labels[type];
 }
 
-// ── Grouped Read row (inside steps block) ────────────────────────────
+function getToolIcon(type: ToolType) {
+  const icons = {
+    read: FileText,
+    search: Search,
+    edit: FileText,
+    command: FileText,
+  };
+  return icons[type];
+}
 
-function StepStatusCircle({ status }: { status: 'done' | 'running' | 'error' }) {
-  if (status === 'running') {
-    return (
-      <span className="step-circle step-circle--running">
-        <span className="step-circle-inner" />
-      </span>
-    );
+// Simple ToolBlock component
+function ToolBlock({ tool, messageId }: { tool: ToolCallDisplay; messageId: string }) {
+  const [isExpanded, setIsExpanded] = useState(true);
+  const toggleToolExpand = useChatStore((s) => s.toggleToolExpand);
+
+  const toolType = getToolType(tool.name);
+  const ToolIcon = getToolIcon(toolType);
+
+  // Determine status
+  let status: 'idle' | 'loading' | 'success' | 'error' = 'idle';
+  if (tool.output === undefined && !tool.progressLines) {
+    status = 'loading';
+  } else if (tool.output?.startsWith('Error:')) {
+    status = 'error';
+  } else {
+    status = 'success';
   }
-  if (status === 'error') {
-    return <span className="step-circle step-circle--error">!</span>;
-  }
+
+  const fileName = tool.input.file_path
+    ? String(tool.input.file_path).split('/').pop()
+    : null;
+
   return (
-    <span className="step-circle step-circle--done">
-      <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-        <path d="M2 5.5L4 7.5L8 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    </span>
-  );
-}
+    <div className="tool-block">
+      {/* Tool header */}
+      <div
+        className="tool-block-header"
+        onClick={() => tool.output && setIsExpanded(!isExpanded)}
+        role="button"
+        aria-expanded={isExpanded}
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            tool.output && setIsExpanded(!isExpanded);
+          }
+        }}
+      >
+        <ToolIcon size={16} className="tool-block-icon" />
+        <span className="tool-block-label">{getToolLabel(toolType)}</span>
 
-function ReadGroupRow({ files, running, error, index = 0 }: { files: string[]; running: boolean; error: boolean; index?: number }) {
-  return (
-    <div className="step-row" style={{ '--tool-index': index } as React.CSSProperties}>
-      <div className="step-row-left">
-        <StepStatusCircle status={error ? 'error' : running ? 'running' : 'done'} />
-        <span className="step-label">Read {files.length > 1 ? 'files' : 'file'}</span>
-        <div className="step-badges">
-          {files.slice(0, 4).map((f, i) => (
-            <code key={i} className="step-file-pill">{f}</code>
-          ))}
-          {files.length > 4 && (
-            <span className="step-count">+{files.length - 4}</span>
-          )}
-        </div>
+        {fileName && (
+          <span className="tool-block-file">{fileName}</span>
+        )}
+
+        {/* Status icon */}
+        <span className="tool-block-status">
+          {status === 'loading' && <Loader2 size={16} className="animate-spin" />}
+          {status === 'success' && <CheckCircle2 size={16} className="text-success" />}
+          {status === 'error' && <XCircle size={16} className="text-danger" />}
+        </span>
+
+        {/* Expand/collapse */}
+        {tool.output && (
+          <span className="tool-block-expand">
+            {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+          </span>
+        )}
       </div>
+
+      {/* Tool content */}
+      {isExpanded && tool.output && (
+        <div className="tool-block-content">
+          <pre className="tool-block-output">{tool.output}</pre>
+        </div>
+      )}
     </div>
   );
 }
 
-// ── Main component ────────────────────────────────────────────────────
-
 export default memo(function AIMessage({ message }: { message: DisplayMessage }) {
-  const [copied, setCopied] = useState(false);
   const isThinking = message.isStreaming && !message.content && message.toolCalls.length === 0;
-  const messageIsStreaming = Boolean(message.isStreaming);
 
-  const grouped = groupToolCalls(message.toolCalls, messageIsStreaming);
+  // Group consecutive Read tools
+  const groupedTools: (ToolCallDisplay | { kind: 'group'; tools: ToolCallDisplay[] })[] = [];
+  let currentGroup: ToolCallDisplay[] = [];
 
-  // Split into step tools vs bash tools
-  const stepTools = grouped.filter((g) =>
-    g.kind === 'reads' || (g.kind === 'single' && g.tool.name !== 'Bash')
-  );
-  const bashTools = grouped.filter((g) =>
-    g.kind === 'single' && g.tool.name === 'Bash'
-  ) as { kind: 'single'; tool: ToolCallDisplay }[];
-
-  const stepsStatus = stepTools.length > 0 ? getStepsStatus(stepTools, messageIsStreaming) : null;
-
-  const handleCopy = useCallback(async () => {
-    try {
-      await navigator.clipboard.writeText(message.content);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    } catch {
-      // ignore
+  for (const tool of message.toolCalls) {
+    if (tool.name === 'Read') {
+      currentGroup.push(tool);
+    } else {
+      if (currentGroup.length > 0) {
+        groupedTools.push({ kind: 'group', tools: currentGroup });
+        currentGroup = [];
+      }
+      groupedTools.push(tool);
     }
-  }, [message.content]);
-
-  const handleFork = useCallback(() => {
-    const messages = useChatStore.getState().messages;
-    const idx = messages.findIndex((m) => m.id === message.id);
-    if (idx < 0) return;
-    const activeSessionId = useSessionStore.getState().activeSessionId;
-    if (!activeSessionId) return;
-    useSessionStore.getState().forkSession(activeSessionId, idx);
-  }, [message.id]);
-
-  if (message.gitResult) {
-    return (
-      <div className="message-row ai-message-row" data-message-id={message.id}>
-        <div className="ai-message">
-          <GitResultCard result={message.gitResult} />
-        </div>
-      </div>
-    );
+  }
+  if (currentGroup.length > 0) {
+    groupedTools.push({ kind: 'group', tools: currentGroup });
   }
 
   return (
     <div className="message-row ai-message-row" data-message-id={message.id}>
-      <div className="ai-message">
-        {/* Thinking state */}
-        {isThinking && (
-          <div className="thinking-row">
-            <div className="thinking-dots" aria-hidden="true">
-              <div className="thinking-dot" />
-              <div className="thinking-dot" />
-              <div className="thinking-dot" />
-            </div>
-            <span className="thinking-text">Thinking</span>
-          </div>
-        )}
+      {/* AI Avatar */}
+      <div className="message-avatar message-avatar--ai">
+        <CodeyeMark size={20} />
+      </div>
 
-        {/* Steps taken block */}
-        {stepTools.length > 0 && (
-          <div className="ai-steps-block">
-            <div className="steps-header">
-              <span className="steps-header-label">
-                <Zap size={12} strokeWidth={2} />
-                Steps
-              </span>
-              <span className={`steps-status steps-status--${stepsStatus}`} aria-live="polite">
-                {stepsStatus === 'running' ? 'In Progress' : stepsStatus === 'error' ? 'Error' : `Completed (${stepTools.length})`}
-              </span>
-            </div>
-            <div className="steps-list">
-              {stepTools.map((g, i) =>
-                g.kind === 'reads' ? (
-                  <ReadGroupRow key={`reads-${i}`} files={g.files} running={g.running} error={g.error} index={i} />
-                ) : (
-                  <ToolCall
-                    key={g.tool.id}
-                    tool={g.tool}
-                    messageId={message.id}
-                    index={i}
-                    isStreaming={messageIsStreaming}
-                  />
-                )
-              )}
-            </div>
-          </div>
-        )}
+      {/* Message content */}
+      <div className="message-content-wrapper">
+        <div className="message-header">
+          <span className="message-sender">Codeye</span>
+        </div>
 
-        {/* Terminal output blocks (Bash) */}
-        {bashTools.map((g, i) => (
-          <ToolCall
-            key={g.tool.id}
-            tool={g.tool}
-            messageId={message.id}
-            index={i}
-            isStreaming={messageIsStreaming}
-          />
-        ))}
+        <div className="ai-message-flat">
+          {/* Tool blocks */}
+          {groupedTools.map((item, idx) => {
+            if ('kind' in item && item.kind === 'group') {
+              // Read group
+              return (
+                <div key={`group-${idx}`} className="tool-block">
+                  <div className="tool-block-header">
+                    <FileText size={16} className="tool-block-icon" />
+                    <span className="tool-block-label">Read {item.tools.length > 1 ? 'files' : 'file'}</span>
+                    <div className="tool-block-files">
+                      {item.tools.slice(0, 4).map((t, i) => {
+                        const name = t.input.file_path
+                          ? String(t.input.file_path).split('/').pop()
+                          : 'file';
+                        return (
+                          <span key={i} className="tool-block-file">{name}</span>
+                        );
+                      })}
+                      {item.tools.length > 4 && (
+                        <span className="tool-block-more">+{item.tools.length - 4}</span>
+                      )}
+                    </div>
+                    <CheckCircle2 size={16} className="text-success tool-block-status" />
+                  </div>
+                </div>
+              );
+            }
+            return <ToolBlock key={item.id} tool={item} messageId={message.id} />;
+          })}
 
-        {/* AI text */}
-        {message.content && (
-          <div className="ai-text-body">
-            <div className="ai-message-content">
+          {/* Thinking indicator */}
+          {isThinking && (
+            <div className="thinking-row">
+              <Loader2 size={16} className="animate-spin" />
+              <span className="thinking-text">Thinking</span>
+            </div>
+          )}
+
+          {/* Message text */}
+          {message.content && (
+            <div className="ai-message-text">
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 components={{
@@ -225,21 +201,8 @@ export default memo(function AIMessage({ message }: { message: DisplayMessage })
                 {message.content}
               </ReactMarkdown>
             </div>
-{message.isStreaming && <span className="streaming-cursor" />}
-            <div className="ai-message-actions">
-              <button className="ai-action-btn" onClick={handleCopy} title={copied ? 'Copied!' : 'Copy'} aria-label={copied ? 'Copied' : 'Copy message'}>
-                {copied ? (
-                  <Check size={13} strokeWidth={2} style={{ color: 'var(--success)' }} />
-                ) : (
-                  <Copy size={13} strokeWidth={1.8} />
-                )}
-              </button>
-              <button className="ai-action-btn" onClick={handleFork} title="Fork from here" aria-label="Fork conversation from here">
-                <GitFork size={13} strokeWidth={1.8} />
-              </button>
-            </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

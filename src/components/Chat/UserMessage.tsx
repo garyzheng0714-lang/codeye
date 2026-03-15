@@ -1,23 +1,29 @@
 import { memo } from 'react';
+import { User } from 'lucide-react';
 import type { DisplayMessage } from '../../types';
-import CodeyeMark from '../Brand/CodeyeMark';
 
 export default memo(function UserMessage({ message }: { message: DisplayMessage }) {
-  const time = new Date(message.timestamp).toLocaleTimeString('zh-CN', {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  const formatTime = (timestamp: number) => {
+    return new Date(timestamp).toLocaleTimeString('zh-CN', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
 
   return (
     <div className="message-row user-message-row" data-message-id={message.id}>
-      <div className="user-message-shell">
-        <div className="user-message-wrapper">
-          <div className="user-bubble">{message.content}</div>
-          <div className="user-avatar">
-            <CodeyeMark size={28} />
-          </div>
+      {/* 用户头像 */}
+      <div className="message-avatar message-avatar--user">
+        <User size={16} />
+      </div>
+
+      {/* 消息内容 */}
+      <div className="message-content-wrapper">
+        <div className="message-header">
+          <span className="message-sender">You</span>
+          <span className="message-timestamp">{formatTime(message.timestamp)}</span>
         </div>
-        <span className="user-timestamp">{time}</span>
+        <div className="user-message-content">{message.content}</div>
       </div>
     </div>
   );

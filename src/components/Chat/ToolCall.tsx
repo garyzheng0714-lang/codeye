@@ -37,7 +37,7 @@ function ToolStatusIcon({ name, status }: { name: string; status: ReturnType<typ
   const isError = status === 'error';
   const isBash = name === 'Bash';
 
-  // Bash uses original icon style, step tools use Kiro-style circles
+  // Bash uses original icon style, step tools use Codeye-style circles
   if (isBash) {
     const color = isError ? 'var(--danger)' : isRunning ? 'var(--text-muted)' : getToolColor(name);
     return (

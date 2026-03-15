@@ -1,5 +1,5 @@
 /* ══════════════════════════════════════════
-   Steps Taken Block — Kiro-inspired task card
+   Steps Taken Block — Codeye-style task card
    ══════════════════════════════════════════ */
 
 .ai-steps-block {
@@ -158,7 +158,7 @@
   background: var(--interactive-hover-soft);
 }
 
-/* ── Kiro-style status circles ── */
+/* ── Codeye-style status circles ── */
 
 .step-circle {
   width: 18px;
