@@ -35,6 +35,15 @@ export interface GitResultDisplay {
   error?: { code: string; message: string; retryable?: boolean };
 }
 
+export interface PendingApproval {
+  approvalId: string;
+  toolName: string;
+  args: Record<string, unknown>;
+  requestId: string;
+  timeoutSec: number;
+  receivedAt: number;
+}
+
 export interface DisplayMessage {
   id: string;
   role: 'user' | 'assistant';

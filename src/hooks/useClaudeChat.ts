@@ -12,6 +12,7 @@ import { useUIStore } from '../stores/uiStore';
 import { toCliPermissionMode } from '../services/permissionMode';
 import { applyServerFeatureFlagDocument, isEnabled } from '../services/featureFlags';
 import { activityStream } from '../services/activityStream';
+import { startApprovalTimeout, sendApprovalDecision } from '../services/toolApproval';
 import type { GitResultDisplay, InputAttachment } from '../types';
 
 function getActions(): StoreActions {
@@ -173,6 +174,26 @@ export function useClaudeChat() {
               metadata: { action, operationId: result.operationId, success: result.success },
             });
           }
+        } else if (streamEvent.type === 'tool_approval_request') {
+          const p = streamEvent.payload as {
+            approvalId: string;
+            toolName: string;
+            args: Record<string, unknown>;
+            requestId: string;
+            timeoutSec?: number;
+          };
+          useChatStore.getState().addPendingApproval({
+            approvalId: p.approvalId,
+            toolName: p.toolName,
+            args: p.args,
+            requestId: p.requestId,
+            timeoutSec: p.timeoutSec ?? 120,
+            receivedAt: Date.now(),
+          });
+          startApprovalTimeout(p.approvalId, p.timeoutSec ?? 120, (id) => {
+            useChatStore.getState().resolveApproval(id, 'deny');
+            sendApprovalDecision(id, 'deny', streamEvent.correlationId);
+          });
         }
       } catch {
         // ignore malformed messages

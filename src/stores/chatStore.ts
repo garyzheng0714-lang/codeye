@@ -7,6 +7,7 @@ import type {
   ModelId,
   EffortLevel,
   PendingMessage,
+  PendingApproval,
 } from '../types';
 import {
   DEFAULT_MODEL,
@@ -29,6 +30,7 @@ interface ChatState {
   inputTokens: number;
   outputTokens: number;
   pendingMessages: PendingMessage[];
+  pendingApprovals: Record<string, PendingApproval>;
 
   setMode: (mode: ChatMode) => void;
   setModel: (model: ModelId) => void;
@@ -49,6 +51,8 @@ interface ChatState {
   dequeueMessage: () => PendingMessage | undefined;
   removeQueuedMessage: (index: number) => PendingMessage | undefined;
   clearQueue: () => void;
+  addPendingApproval: (approval: PendingApproval) => void;
+  resolveApproval: (approvalId: string, decision: 'allow' | 'deny') => void;
   clearMessages: () => void;
   loadSession: (data: { messages: DisplayMessage[]; cost: number; inputTokens: number; outputTokens: number; claudeSessionId?: string | null; model?: ModelId }) => void;
 }
@@ -66,6 +70,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
   inputTokens: 0,
   outputTokens: 0,
   pendingMessages: [],
+  pendingApprovals: {},
 
   setMode: (mode) => set({ mode }),
   setModel: (model) => set({ model: normalizeModelId(model) }),
@@ -238,7 +243,19 @@ export const useChatStore = create<ChatState>()((set, get) => ({
 
   clearQueue: () => set({ pendingMessages: [] }),
 
-  clearMessages: () => set({ messages: [], cost: 0, inputTokens: 0, outputTokens: 0, isStreaming: false, claudeSessionId: null, pendingMessages: [] }),
+  addPendingApproval: (approval) =>
+    set((state) => ({
+      pendingApprovals: { ...state.pendingApprovals, [approval.approvalId]: approval },
+    })),
+
+  resolveApproval: (approvalId, _decision) =>
+    set((state) => {
+      if (!(approvalId in state.pendingApprovals)) return state;
+      const { [approvalId]: _, ...rest } = state.pendingApprovals;
+      return { pendingApprovals: rest };
+    }),
+
+  clearMessages: () => set({ messages: [], cost: 0, inputTokens: 0, outputTokens: 0, isStreaming: false, claudeSessionId: null, pendingMessages: [], pendingApprovals: {} }),
 
   loadSession: (data) =>
     set({
@@ -247,6 +264,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
       inputTokens: data.inputTokens,
       outputTokens: data.outputTokens,
       pendingMessages: [],
+      pendingApprovals: {},
       claudeSessionId: data.claudeSessionId ?? null,
       model: normalizeModelId(data.model),
       isStreaming: false,
