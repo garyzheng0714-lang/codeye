@@ -1,0 +1,75 @@
+/* ══════════════════════════════════════════
+   Git Result Card — inline chat result block
+   ══════════════════════════════════════════ */
+
+.git-result-card {
+  background: var(--surface-glass);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  margin: var(--space-1) 0;
+  border: 1px solid var(--surface-glass-border);
+  border-left-width: 2px;
+}
+
+.git-result-card--success {
+  border-left-color: #4ade80;
+}
+
+.git-result-card--error {
+  border-left-color: #f87171;
+}
+
+.git-result-card-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.git-result-icon.success {
+  color: #4ade80;
+}
+
+.git-result-icon.error {
+  color: #f87171;
+}
+
+.git-result-label {
+  font-weight: 500;
+}
+
+.git-result-card-body {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  margin-top: var(--space-1);
+}
+
+.git-result-card-body code {
+  font-family: var(--font-mono);
+  background: var(--surface-glass);
+  padding: 1px 4px;
+  border-radius: var(--radius-xs);
+}
+
+.git-result-card-body a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.git-result-card-body a:hover {
+  color: var(--accent-hover);
+  text-decoration: underline;
+}
+
+.git-result-error-msg {
+  color: #f87171;
+}
+
+.git-result-manual {
+  display: block;
+  font-family: var(--font-mono);
+  margin-top: var(--space-1);
+  word-break: break-all;
+  color: var(--text-muted);
+}

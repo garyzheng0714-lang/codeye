@@ -23,4 +23,5 @@
 @import "./components/message-search.css";
 @import "./components/tool-approval.css";
 @import "./components/git-confirm.css";
+@import "./components/git-result-card.css";
 @import "./responsive.css";
