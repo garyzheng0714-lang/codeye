@@ -228,7 +228,8 @@ function makeError(code: string, message: string, retryable = false): ErrorPaylo
 }
 
 function executeCommit(req: GitWriteRequest): GitWriteResult {
-  const { cwd, operationId, message } = req;
+  const { cwd, operationId } = req;
+  let { message } = req;
 
   const statusCheck = spawnSync(
     'git',
@@ -243,9 +244,13 @@ function executeCommit(req: GitWriteRequest): GitWriteResult {
     };
   }
 
+  if (!message) {
+    message = generateCommitMessage(getDiffStat(cwd));
+  }
+
   const result = spawnSync(
     'git',
-    ['-C', cwd, 'commit', '-m', message || 'Untitled commit'],
+    ['-C', cwd, 'commit', '-m', message],
     { encoding: 'utf8', timeout: GIT_WRITE_TIMEOUT_MS }
   );
 
@@ -269,7 +274,7 @@ function executeCommit(req: GitWriteRequest): GitWriteResult {
     operationId,
     success: true,
     hash,
-    message: message || 'Untitled commit',
+    message,
   };
 }
 
@@ -409,6 +414,27 @@ export function getOperationStatus(
     updatedAt: record.updatedAt,
     error: record.result.error,
   };
+}
+
+export function executeGitAdd(cwd: string): { success: boolean; error?: ErrorPayload } {
+  const result = spawnSync('git', ['-C', cwd, 'add', '-A'], {
+    encoding: 'utf8',
+    timeout: GIT_COMMAND_TIMEOUT_MS,
+  });
+  if (result.error || (result.status !== null && result.status !== 0)) {
+    const stderr = (result.stderr || '').toString().trim();
+    return { success: false, error: makeError('ADD_FAILED', stderr || 'git add failed') };
+  }
+  return { success: true };
+}
+
+export function generateCommitMessage(diffStat: { summary: { filesChanged: number; insertions: number; deletions: number } }): string {
+  const { summary } = diffStat;
+  const fileWord = summary.filesChanged === 1 ? '1 file' : `${summary.filesChanged} files`;
+  const parts = [`update ${fileWord}`];
+  if (summary.insertions > 0) parts.push(`+${summary.insertions}`);
+  if (summary.deletions > 0) parts.push(`-${summary.deletions}`);
+  return `chore: ${parts.join(' ')}`;
 }
 
 export function resetWriteStateForTests(): void {

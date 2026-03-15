@@ -12,6 +12,8 @@ import {
   getOperationStatus,
   resetWriteStateForTests,
   GIT_WRITE_TIMEOUT_MS,
+  executeGitAdd,
+  generateCommitMessage,
 } from './gitHandler';
 import type { GitWriteRequest, GitWriteResult } from './gitHandler';
 
@@ -221,5 +223,36 @@ describe('gitHandler — write core', () => {
   it('returns null status for unknown operationId', () => {
     const status = getOperationStatus(crypto.randomUUID());
     expect(status).toBeNull();
+  });
+});
+
+describe('gitHandler — git add', () => {
+  it('stages all files with git add -A', () => {
+    const dir = makeGitRepo();
+    fs.writeFileSync(path.join(dir, 'new.txt'), 'new file');
+    const result = executeGitAdd(dir);
+    expect(result.success).toBe(true);
+  });
+
+  it('returns success even when nothing to add', () => {
+    const dir = makeGitRepo();
+    const result = executeGitAdd(dir);
+    expect(result.success).toBe(true);
+  });
+});
+
+describe('gitHandler — auto commit message', () => {
+  it('generates message from single file diff', () => {
+    const msg = generateCommitMessage({
+      summary: { filesChanged: 1, insertions: 10, deletions: 3 },
+    });
+    expect(msg).toBe('chore: update 1 file +10 -3');
+  });
+
+  it('handles multiple files', () => {
+    const msg = generateCommitMessage({
+      summary: { filesChanged: 5, insertions: 42, deletions: 0 },
+    });
+    expect(msg).toBe('chore: update 5 files +42');
   });
 });

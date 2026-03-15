@@ -2,6 +2,8 @@ import { z } from 'zod';
 import { claudeMessageSchema } from './protocol';
 import { featureFlagDocumentV1Schema } from './featureFlags';
 import {
+  gitAddRequestPayloadSchema,
+  gitAddResultPayloadSchema,
   gitCommitRequestPayloadSchema,
   gitCommitResultPayloadSchema,
   gitDiffStatPayloadSchema,
@@ -100,6 +102,8 @@ const streamEventSchema = z.discriminatedUnion('type', [
     'git_operation_status_request',
     gitOperationStatusRequestPayloadSchema
   ),
+  buildEventSchema('git_add_request', gitAddRequestPayloadSchema),
+  buildEventSchema('git_add_result', gitAddResultPayloadSchema),
 ]);
 
 export type StreamEvent = z.infer<typeof streamEventSchema>;

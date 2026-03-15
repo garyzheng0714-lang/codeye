@@ -82,7 +82,7 @@ export type GitDiffStatRequestPayload = z.infer<
 
 export const gitCommitRequestPayloadSchema = connectionContextSchema.extend({
   operationId: z.uuid(),
-  message: z.string().min(1),
+  message: z.string().optional(),
 });
 
 export type GitCommitRequestPayload = z.infer<typeof gitCommitRequestPayloadSchema>;
@@ -124,3 +124,18 @@ export const gitOperationStatusPayloadSchema = z.object({
 export type GitOperationStatusPayload = z.infer<
   typeof gitOperationStatusPayloadSchema
 >;
+
+export const gitAddRequestPayloadSchema = connectionContextSchema.extend({
+  operationId: z.uuid(),
+  all: z.boolean().optional().default(true),
+});
+
+export type GitAddRequestPayload = z.infer<typeof gitAddRequestPayloadSchema>;
+
+export const gitAddResultPayloadSchema = z.object({
+  operationId: z.uuid(),
+  success: z.boolean(),
+  error: errorPayloadSchema.optional(),
+});
+
+export type GitAddResultPayload = z.infer<typeof gitAddResultPayloadSchema>;

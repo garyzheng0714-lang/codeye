@@ -16,6 +16,7 @@ import {
   getDiffStat,
   handleGitWriteRequest,
   getOperationStatus,
+  executeGitAdd,
 } from './gitHandler';
 
 const PORT = 5174;
@@ -109,6 +110,23 @@ wss.on('connection', (ws: WebSocket, req: http.IncomingMessage) => {
           ws.send(
             wrapEvent('git_diff_stat', diffStat, validated.value.correlationId)
           );
+          return;
+        }
+
+        if (requestEvent?.type === 'git_add_request') {
+          const validated = validateGitRequestEvent(msg, {
+            boundWorkspaceRoot: wsWorkspaceRootByConnection.get(ws),
+          });
+          if (!validated.ok) {
+            ws.send(wrapEvent('error', { error: `${validated.error.code}: ${validated.error.message}` }, requestEvent.correlationId));
+            return;
+          }
+          if (!wsWorkspaceRootByConnection.has(ws)) {
+            wsWorkspaceRootByConnection.set(ws, validated.value.payload.workspaceRoot);
+          }
+          const addResult = executeGitAdd(validated.value.payload.cwd);
+          const payload = validated.value.payload as Record<string, unknown>;
+          ws.send(wrapEvent('git_add_result', { operationId: payload.operationId, ...addResult } as unknown as Record<string, unknown>, validated.value.correlationId));
           return;
         }
 

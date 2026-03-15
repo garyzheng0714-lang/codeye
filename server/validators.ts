@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { z } from 'zod';
 import {
+  gitAddRequestPayloadSchema,
   gitCommitRequestPayloadSchema,
   gitDiffStatRequestPayloadSchema,
   gitOperationStatusRequestPayloadSchema,
@@ -92,6 +93,11 @@ const gitOperationStatusRequestEventSchema = requestEnvelopeBaseSchema.extend({
   payload: gitOperationStatusRequestPayloadSchema,
 });
 
+const gitAddRequestEventSchema = requestEnvelopeBaseSchema.extend({
+  type: z.literal('git_add_request'),
+  payload: gitAddRequestPayloadSchema,
+});
+
 const toolApprovalResponseEventSchema = requestEnvelopeBaseSchema.extend({
   type: z.literal('tool_approval_response'),
   payload: toolApprovalResponsePayloadSchema,
@@ -104,6 +110,7 @@ const clientRequestEventSchema = z.discriminatedUnion('type', [
   gitPushRequestEventSchema,
   gitPrRequestEventSchema,
   gitOperationStatusRequestEventSchema,
+  gitAddRequestEventSchema,
   toolApprovalResponseEventSchema,
 ]);
 
@@ -118,7 +125,8 @@ type GitRequestEvent = Extract<
       | 'git_commit_request'
       | 'git_push_request'
       | 'git_pr_request'
-      | 'git_operation_status_request';
+      | 'git_operation_status_request'
+      | 'git_add_request';
   }
 >;
 
@@ -150,6 +158,7 @@ const GIT_REQUEST_TYPES = new Set<GitRequestEvent['type']>([
   'git_push_request',
   'git_pr_request',
   'git_operation_status_request',
+  'git_add_request',
 ]);
 
 function reject<T>(

@@ -15,7 +15,9 @@ export type ServerStreamEventType =
   | 'tool_approval_request'
   | 'tool_approval_response'
   | 'preview_response'
-  | 'tool_progress';
+  | 'tool_progress'
+  | 'git_add_request'
+  | 'git_add_result';
 
 export function wrapEvent(
   type: ServerStreamEventType,
