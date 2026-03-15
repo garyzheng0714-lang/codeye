@@ -4,7 +4,7 @@
   padding: var(--space-6) var(--space-5);
   display: flex;
   flex-direction: column;
-  gap: var(--space-6);
+  gap: var(--space-5);
 }
 
 .message-list > .message-list-spacer {
@@ -14,7 +14,7 @@
 .turn-group {
   display: flex;
   flex-direction: column;
-  gap: var(--space-6);
+  gap: var(--space-5);
 }
 
 .turn-collapse-btn {
@@ -129,6 +129,17 @@
   flex-direction: column;
   gap: var(--space-3);
   min-width: 0;
+}
+
+/* Tool blocks gap within AI message */
+.ai-message-flat > .tool-block + .tool-block {
+  margin-top: 0;
+}
+
+.ai-message-flat > .tool-block + .thinking-block,
+.ai-message-flat > .thinking-block + .ai-message-text,
+.ai-message-flat > .tool-block + .ai-message-text {
+  margin-top: var(--space-2);
 }
 
 /* ── Tool Blocks (Kiro style) ── */
@@ -275,6 +286,92 @@
 .ai-message-text pre code {
   background: none;
   padding: 0;
+}
+
+/* ── Streaming Typewriter Cursor ── */
+
+.streaming-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1.2em;
+  background: var(--accent);
+  margin-left: 2px;
+  animation: streamingCursor 1s ease-in-out infinite;
+  vertical-align: text-bottom;
+}
+
+@keyframes streamingCursor {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 6px var(--accent-glow), 0 0 12px var(--accent);
+  }
+  50% {
+    opacity: 0.3;
+    box-shadow: 0 0 2px transparent;
+  }
+}
+
+/* ── AI Avatar Glow (Thinking State) ── */
+
+.message-avatar--ai.streaming {
+  animation: avatarBreath 2s ease-in-out infinite;
+}
+
+@keyframes avatarBreath {
+  0%, 100% {
+    box-shadow:
+      0 0 0 1px var(--accent),
+      0 0 8px var(--accent-glow),
+      0 0 16px rgba(168, 85, 247, 0.2);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px var(--accent),
+      0 0 16px var(--accent-glow),
+      0 0 32px rgba(168, 85, 247, 0.4),
+      0 0 48px rgba(168, 85, 247, 0.15);
+  }
+}
+
+/* ── Message Entrance Animation ── */
+
+.message-row {
+  display: flex;
+  gap: var(--space-4);
+  max-width: 100%;
+  width: 100%;
+  animation: slideUp var(--transition-base);
+  align-items: flex-start;
+}
+
+/* ── Message Avatar ── */
+
+.message-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-subtle);
+}
+
+.message-avatar--user {
+  background: var(--bg-tertiary);
+}
+
+.message-avatar--ai {
+  background: var(--bg-base);
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  transition: box-shadow var(--transition-base);
+}
+
+[data-theme="light"] .message-avatar--ai {
+  background: white;
 }
 
 /* ── Thinking Row ── */
