@@ -5,12 +5,15 @@ import {
   isStopMessage,
   isCheckAuthMessage,
   parseClientRequestEvent,
+  validateGitRequestEvent,
 } from './validators';
 import { handleRealQuery, handleCheckAuth, clientProcesses } from './realHandler';
 import { wrapEvent } from './streamEvent';
 import { getServerFeatureFlagDocument } from './featureFlags';
+import { getGitStatusSnapshot } from './gitHandler';
 
 const PORT = 5174;
+const wsWorkspaceRootByConnection = new WeakMap<WebSocket, string>();
 
 const server = http.createServer();
 const wss = new WebSocketServer({ server });
@@ -44,6 +47,38 @@ wss.on('connection', (ws: WebSocket, req: http.IncomingMessage) => {
         const requestEvent = parseClientRequestEvent(msg);
         if (requestEvent?.type === 'tool_approval_response') {
           // P4 will consume this message in realHandler's approval wait-queue.
+          return;
+        }
+
+        if (requestEvent?.type === 'git_status_request') {
+          const validated = validateGitRequestEvent(msg, {
+            boundWorkspaceRoot: wsWorkspaceRootByConnection.get(ws),
+          });
+
+          if (!validated.ok) {
+            ws.send(
+              wrapEvent(
+                'error',
+                {
+                  error: `${validated.error.code}: ${validated.error.message}`,
+                },
+                requestEvent.correlationId
+              )
+            );
+            return;
+          }
+
+          if (!wsWorkspaceRootByConnection.has(ws)) {
+            wsWorkspaceRootByConnection.set(
+              ws,
+              validated.value.payload.workspaceRoot
+            );
+          }
+
+          const snapshot = getGitStatusSnapshot(validated.value.payload.cwd);
+          ws.send(
+            wrapEvent('git_status', snapshot, validated.value.correlationId)
+          );
           return;
         }
 

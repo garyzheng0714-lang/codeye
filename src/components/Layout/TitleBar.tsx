@@ -1,6 +1,10 @@
+import { GitBranch } from 'lucide-react';
 import GitActionMenu from './GitActionMenu';
+import { useGitStatus } from '../../hooks/useGitStatus';
 
 export default function TitleBar() {
+  const { status, loading, refresh } = useGitStatus();
+
   return (
     <div className="title-bar">
       <div className="title-bar-content">
@@ -16,7 +20,24 @@ export default function TitleBar() {
           </span>
           <span className="title-bar-name">Codeye</span>
         </div>
-        <div className="title-bar-center" />
+        <div className="title-bar-center">
+          {status.available ? (
+            <button
+              type="button"
+              className="title-git-chip"
+              onClick={() => void refresh()}
+              title="Refresh git status"
+            >
+              <GitBranch size={12} strokeWidth={2} />
+              <span className="title-git-branch">{status.branch || 'detached'}</span>
+              {status.dirty && <span className="title-git-dirty" aria-hidden="true" />}
+              {(status.ahead > 0 || status.behind > 0) && (
+                <span className="title-git-sync">↑{status.ahead} ↓{status.behind}</span>
+              )}
+              {loading && <span className="title-git-loading">Syncing</span>}
+            </button>
+          ) : null}
+        </div>
         <div className="title-bar-actions">
           <GitActionMenu />
         </div>

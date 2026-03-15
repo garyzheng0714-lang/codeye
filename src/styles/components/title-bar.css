@@ -76,6 +76,44 @@
   align-items: center;
 }
 
+.title-git-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: 26px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.title-git-chip:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.title-git-branch {
+  font-weight: 560;
+  color: var(--text-primary);
+}
+
+.title-git-dirty {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: #facc15;
+}
+
+.title-git-sync,
+.title-git-loading {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
 .title-glass-cluster {
   display: flex;
   align-items: center;
@@ -378,5 +416,8 @@
   .git-pill-trigger {
     min-width: 92px;
   }
-}
 
+  .title-git-sync {
+    display: none;
+  }
+}

@@ -9,6 +9,7 @@ export const gitFileStatusSchema = z.object({
 export type GitFileStatus = z.infer<typeof gitFileStatusSchema>;
 
 export const gitStatusPayloadSchema = z.object({
+  available: z.boolean().optional().default(true),
   branch: z.string().nullable(),
   dirty: z.boolean(),
   ahead: z.number().int().nonnegative(),

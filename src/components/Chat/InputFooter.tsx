@@ -1,9 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
-import { ChevronDown, Check, GitBranch } from 'lucide-react';
+import { ChevronDown, Check } from 'lucide-react';
 import ModelConfigSelector from './ModelConfigSelector';
 import SessionStats from './SessionStats';
 import { useUIStore, type PermissionMode } from '../../stores/uiStore';
-import { useGitStatus } from '../../hooks/useGitStatus';
 
 const permissionOptions: { id: PermissionMode; label: string; description: string; color: string }[] = [
   { id: 'default', label: 'Default', description: 'Ask before risky actions', color: 'var(--text-muted)' },
@@ -14,7 +13,6 @@ const permissionOptions: { id: PermissionMode; label: string; description: strin
 export default function InputFooter() {
   const permissionMode = useUIStore((s) => s.permissionMode);
   const setPermissionMode = useUIStore((s) => s.setPermissionMode);
-  const { status, loading, refresh } = useGitStatus();
 
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -82,20 +80,6 @@ export default function InputFooter() {
             </div>
           )}
         </div>
-
-        {status.available ? (
-          <button className="git-status-chip" onClick={() => void refresh()} title="Refresh git status" type="button">
-            <GitBranch size={11} strokeWidth={2} />
-            <span>{status.branch || 'detached'}</span>
-            {status.dirty && <span className="git-dirty-dot" aria-hidden="true" />}
-            {(status.ahead > 0 || status.behind > 0) && (
-              <span className="git-sync-counter">+{status.ahead}/-{status.behind}</span>
-            )}
-          </button>
-        ) : (
-          <span className="footer-chip git-status-empty">No Git</span>
-        )}
-        {loading && <span className="footer-chip footer-chip-muted">Syncing</span>}
       </div>
       <div className="input-footer-right">
         <ModelConfigSelector />
