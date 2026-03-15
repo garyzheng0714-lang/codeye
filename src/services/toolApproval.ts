@@ -46,6 +46,13 @@ export function clearApprovalTimeout(approvalId: string) {
   }
 }
 
+export function denyAllPending(onDeny: (approvalId: string) => void) {
+  for (const approvalId of [...timeoutTimers.keys()]) {
+    clearApprovalTimeout(approvalId);
+    onDeny(approvalId);
+  }
+}
+
 export function clearAllForTests() {
   for (const timer of timeoutTimers.values()) {
     clearTimeout(timer);

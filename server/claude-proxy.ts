@@ -10,6 +10,7 @@ import {
 import { handleRealQuery, handleCheckAuth, clientProcesses } from './realHandler';
 import { wrapEvent } from './streamEvent';
 import { getServerFeatureFlagDocument } from './featureFlags';
+import { resolveApprovalResponse } from './approvalQueue';
 import {
   getGitStatusSnapshot,
   getDiffStat,
@@ -51,7 +52,8 @@ wss.on('connection', (ws: WebSocket, req: http.IncomingMessage) => {
       } else {
         const requestEvent = parseClientRequestEvent(msg);
         if (requestEvent?.type === 'tool_approval_response') {
-          // P4 will consume this message in realHandler's approval wait-queue.
+          const payload = requestEvent.payload as { approvalId: string; decision: 'allow' | 'deny' };
+          resolveApprovalResponse(payload.approvalId, payload.decision);
           return;
         }
 

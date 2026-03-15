@@ -12,7 +12,7 @@ import { useUIStore } from '../stores/uiStore';
 import { toCliPermissionMode } from '../services/permissionMode';
 import { applyServerFeatureFlagDocument, isEnabled } from '../services/featureFlags';
 import { activityStream } from '../services/activityStream';
-import { startApprovalTimeout, sendApprovalDecision } from '../services/toolApproval';
+import { startApprovalTimeout, sendApprovalDecision, denyAllPending } from '../services/toolApproval';
 import type { GitResultDisplay, InputAttachment } from '../types';
 
 function getActions(): StoreActions {
@@ -201,7 +201,13 @@ export function useClaudeChat() {
     };
 
     const unsubscribe = subscribeWsMessages(handler);
-    return () => { textBatcher.destroy(); unsubscribe(); };
+    return () => {
+      textBatcher.destroy();
+      unsubscribe();
+      denyAllPending((id) => {
+        useChatStore.getState().resolveApproval(id, 'deny');
+      });
+    };
   }, []);
 
 }

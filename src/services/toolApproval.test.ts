@@ -4,6 +4,7 @@ import {
   startApprovalTimeout,
   clearApprovalTimeout,
   clearAllForTests,
+  denyAllPending,
 } from './toolApproval';
 
 vi.mock('./websocket', () => ({
@@ -45,6 +46,21 @@ describe('toolApproval service', () => {
     clearApprovalTimeout('test-id');
     vi.advanceTimersByTime(5000);
     expect(cb).not.toHaveBeenCalled();
+    vi.useRealTimers();
+  });
+
+  it('denyAllPending invokes callback for each tracked approval', async () => {
+    vi.useFakeTimers();
+    const cb = vi.fn();
+    startApprovalTimeout('a1', 120, cb);
+    startApprovalTimeout('a2', 120, cb);
+
+    const denyCb = vi.fn();
+    denyAllPending(denyCb);
+
+    expect(denyCb).toHaveBeenCalledTimes(2);
+    expect(denyCb).toHaveBeenCalledWith('a1');
+    expect(denyCb).toHaveBeenCalledWith('a2');
     vi.useRealTimers();
   });
 });
