@@ -39,6 +39,7 @@ const toolApprovalRequestPayloadSchema = z.object({
   toolName: z.string().min(1),
   args: z.record(z.string(), z.unknown()),
   requestId: z.uuid(),
+  timeoutSec: z.number().int().positive().default(120),
 });
 
 const toolApprovalResponsePayloadSchema = z.object({

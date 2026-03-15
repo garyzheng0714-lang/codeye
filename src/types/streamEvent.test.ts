@@ -238,6 +238,24 @@ describe('StreamEvent parsing', () => {
     expect(event?.type).toBe('feature_flags');
   });
 
+  it('parses tool_approval_request with timeoutSec', () => {
+    const event = parseStreamEvent({
+      version: 1,
+      type: 'tool_approval_request',
+      correlationId: '11111111-1111-4111-a111-111111111111',
+      payload: {
+        approvalId: '22222222-2222-4222-a222-222222222222',
+        toolName: 'Bash',
+        args: { command: 'rm -rf /tmp/test' },
+        requestId: '33333333-3333-4333-a333-333333333333',
+        timeoutSec: 120,
+      },
+    });
+    expect(event).not.toBeNull();
+    expect(event!.type).toBe('tool_approval_request');
+    expect((event!.payload as any).timeoutSec).toBe(120);
+  });
+
   it('rejects invalid new-event payloads', () => {
     const badCommitResult = parseStreamEvent({
       version: 1,
