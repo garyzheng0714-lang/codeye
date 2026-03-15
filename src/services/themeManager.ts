@@ -79,7 +79,7 @@ export function getStoredTheme(): ThemeId {
   } catch {
     // ignore
   }
-  return 'dark';
+  return 'light';
 }
 
 function setStoredTheme(id: ThemeId): void {
