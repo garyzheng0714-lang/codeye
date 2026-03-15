@@ -40,6 +40,10 @@ const slashCommands: SlashCommand[] = [
   { name: 'new', description: 'Start a new session', category: 'action', icon: 'new' },
   { name: 'help', description: 'Show available commands and shortcuts', category: 'action', icon: 'help' },
   { name: 'compact', description: 'Compress conversation context', category: 'action', icon: 'compact' },
+  { name: 'review', description: 'Review current changes and suggest improvements', category: 'action', icon: 'review' },
+  { name: 'doctor', description: 'Diagnose project issues and suggest fixes', category: 'action', icon: 'help' },
+  { name: 'bug', description: 'Report and analyze a bug with context', category: 'action', icon: 'build' },
+  { name: 'config', description: 'Show and edit project configuration', category: 'action', icon: 'plan' },
 ];
 
 export const slashCommandCategoryOrder: SlashCommand['category'][] = [
@@ -69,7 +73,7 @@ let cachedRuntimeCommandNames: string[] | null = null;
 const MODE_COMMANDS = new Set(['chat', 'code', 'plan']);
 const MODEL_COMMANDS = new Set(['opus', 'sonnet', 'haiku']);
 const EFFORT_COMMANDS = new Set(['think-low', 'think-med', 'think-high']);
-const ACTION_COMMANDS = new Set(['clear', 'new', 'help', 'compact']);
+const ACTION_COMMANDS = new Set(['clear', 'new', 'help', 'compact', 'review', 'doctor', 'bug', 'config']);
 
 function loadCustomCommands(): SlashCommand[] {
   if (cachedCustomCommands) {
