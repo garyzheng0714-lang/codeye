@@ -15,16 +15,22 @@ function getFileName(tool: ToolCallDisplay): string | null {
 function StepStatusCircle({ status }: { status: 'done' | 'running' | 'error' }) {
   if (status === 'running') {
     return (
-      <span className="step-circle step-circle--running">
-        <span className="step-circle-inner" />
+      <span className="kiro-status kiro-status--running">
+        <span className="kiro-status-dot" />
       </span>
     );
   }
   if (status === 'error') {
-    return <span className="step-circle step-circle--error">!</span>;
+    return (
+      <span className="kiro-status kiro-status--error">
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+          <path d="M5 3v2M5 6.5v1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        </svg>
+      </span>
+    );
   }
   return (
-    <span className="step-circle step-circle--done">
+    <span className="kiro-status kiro-status--done">
       <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
         <path d="M2 5.5L4 7.5L8 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
