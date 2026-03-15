@@ -1,6 +1,5 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useChatStore } from '../../stores/chatStore';
-import { useSessionStore } from '../../stores/sessionStore';
 import { normalizeModelId, toCliModelId } from '../../data/models';
 
 const CONTEXT_WINDOWS: Record<'opus' | 'sonnet' | 'haiku', number> = {
@@ -15,16 +14,10 @@ function formatCompactTokens(value: number): string {
   return `${value}`;
 }
 
-function formatCost(value: number): string {
-  if (value >= 1) return `$${value.toFixed(2)}`;
-  if (value >= 0.01) return `$${value.toFixed(3)}`;
-  return `$${value.toFixed(4)}`;
-}
-
 const RING_R = 8;
 const RING_C = 2 * Math.PI * RING_R;
 
-function ContextRing({ usedPercent, cost }: { usedPercent: number; cost: number }) {
+function ContextRing({ usedPercent }: { usedPercent: number }) {
   const clamped = Math.min(Math.max(usedPercent, 0), 100);
   const offset = RING_C * (1 - clamped / 100);
 
@@ -54,47 +47,14 @@ function ContextRing({ usedPercent, cost }: { usedPercent: number; cost: number 
           transform="rotate(-90 11 11)"
         />
       </svg>
-      <span className="context-ring-cost">{formatCost(cost)}</span>
     </span>
   );
-}
-
-function useUsageSummary() {
-  const sessions = useSessionStore((s) => s.sessions);
-  const currentCost = useChatStore((s) => s.cost);
-
-  return useMemo(() => {
-    const nowMs = Date.now();
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
-    const weekStart = new Date(todayStart);
-    weekStart.setDate(weekStart.getDate() - weekStart.getDay());
-
-    let dayCost = 0;
-    let weekCost = 0;
-
-    for (const session of sessions) {
-      if (session.updatedAt >= todayStart.getTime()) {
-        dayCost += session.cost;
-      }
-      if (session.updatedAt >= weekStart.getTime()) {
-        weekCost += session.cost;
-      }
-    }
-
-    // Add current unsaved session cost
-    dayCost += currentCost;
-    weekCost += currentCost;
-
-    return { dayCost, weekCost, asOf: nowMs };
-  }, [sessions, currentCost]);
 }
 
 export default function SessionStats() {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const model = useChatStore((s) => s.model);
-  const cost = useChatStore((s) => s.cost);
   const inputTokens = useChatStore((s) => s.inputTokens);
   const outputTokens = useChatStore((s) => s.outputTokens);
   const pendingCount = useChatStore((s) => s.pendingMessages.length);
@@ -107,7 +67,6 @@ export default function SessionStats() {
   const lowContext = usedPercent >= 80;
 
   const tooltipText = `${formatCompactTokens(usedTokens)} / ${formatCompactTokens(contextWindow)}`;
-  const { dayCost, weekCost } = useUsageSummary();
 
   useEffect(() => {
     if (!open) return;
@@ -133,9 +92,10 @@ export default function SessionStats() {
         className="session-stats-trigger has-activity"
         onClick={() => setOpen(!open)}
         type="button"
+        title={tooltipText}
       >
         <span className="context-ring-wrapper">
-          <ContextRing usedPercent={usedPercent} cost={cost} />
+          <ContextRing usedPercent={usedPercent} />
           <span className="context-ring-tooltip">{tooltipText}</span>
         </span>
         {pendingCount > 0 && <span className="session-stats-queue">+{pendingCount}</span>}
@@ -156,20 +116,6 @@ export default function SessionStats() {
             <span className={`session-stats-value ${lowContext ? 'low' : ''}`}>
               {formatCompactTokens(remainingTokens)} left ({100 - usedPercent}%)
             </span>
-          </div>
-          <div className="session-stats-row">
-            <span className="session-stats-label">Cost</span>
-            <span className="session-stats-value accent">{formatCost(cost)}</span>
-          </div>
-          <div className="session-stats-divider" />
-          <div className="session-stats-section-title">Usage</div>
-          <div className="session-stats-row">
-            <span className="session-stats-label">Today</span>
-            <span className="session-stats-value">{formatCost(dayCost)}</span>
-          </div>
-          <div className="session-stats-row">
-            <span className="session-stats-label">This week</span>
-            <span className="session-stats-value">{formatCost(weekCost)}</span>
           </div>
         </div>
       )}
