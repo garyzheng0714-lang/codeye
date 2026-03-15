@@ -1,5 +1,5 @@
 import { lazy, Suspense, useState, memo } from 'react';
-import { ChevronDown } from 'lucide-react';
+import { CaretDown } from '@phosphor-icons/react';
 import { useChatStore } from '../../stores/chatStore';
 import type { ToolCallDisplay } from '../../types';
 import { getToolStatus, getSemanticName, getToolColor } from '../../data/toolMeta';
@@ -12,48 +12,16 @@ function getFileName(tool: ToolCallDisplay): string | null {
   return null;
 }
 
-function StepStatusCircle({ status }: { status: 'done' | 'running' | 'error' }) {
-  if (status === 'running') {
-    return (
-      <span className="kiro-status kiro-status--running">
-        <span className="kiro-status-dot" />
-      </span>
-    );
-  }
-  if (status === 'error') {
-    return (
-      <span className="kiro-status kiro-status--error">
-        <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-          <path d="M5 3v2M5 6.5v1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-        </svg>
-      </span>
-    );
-  }
-  return (
-    <span className="kiro-status kiro-status--done">
-      <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-        <path d="M2 5.5L4 7.5L8 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    </span>
-  );
-}
-
 function ToolStatusIcon({ name, status }: { name: string; status: ReturnType<typeof getToolStatus> }) {
   const isRunning = status === 'running' || status === 'pending';
   const isError = status === 'error';
-  const isBash = name === 'Bash';
+  const color = isError ? 'var(--danger)' : isRunning ? 'var(--text-muted)' : getToolColor(name);
 
-  // Bash uses original icon style, step tools use Codeye-style circles
-  if (isBash) {
-    const color = isError ? 'var(--danger)' : isRunning ? 'var(--text-muted)' : getToolColor(name);
-    return (
-      <span className="tool-icon" style={{ color }}>
-        {isRunning ? <SpinnerIcon size={14} /> : <ToolIcon name={name} size={14} />}
-      </span>
-    );
-  }
-
-  return <StepStatusCircle status={isError ? 'error' : isRunning ? 'running' : 'done'} />;
+  return (
+    <span className={`tool-icon ${isRunning ? 'tool-icon--spinning' : ''}`} style={{ color }}>
+      {isRunning ? <SpinnerIcon size={15} /> : <ToolIcon name={name} size={15} />}
+    </span>
+  );
 }
 
 function BashInline({ tool }: { tool: ToolCallDisplay }) {
@@ -155,13 +123,13 @@ export default memo(function ToolCall({
             aria-label={diffOpen ? 'Hide diff' : 'Show diff'}
             aria-expanded={diffOpen}
           >
-            <ChevronDown size={11} strokeWidth={2} />
+            <CaretDown size={11} weight="bold" />
           </button>
         )}
 
         {isSearch && tool.output && (
           <span className={`tool-expand-icon ${tool.expanded ? 'open' : ''}`}>
-            <ChevronDown size={11} strokeWidth={2} />
+            <CaretDown size={11} weight="bold" />
           </span>
         )}
       </div>

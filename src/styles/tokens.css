@@ -132,16 +132,7 @@
   --tool-card-label-fg: var(--text-secondary);
   --tool-card-label-weight: 500;
 
-  /* Kiro-style status circles */
-  --status-circle-size: 18px;
-  --status-circle-done-bg: var(--bg-success);
-  --status-circle-done-fg: var(--success);
-  --status-circle-running-bg: var(--accent-muted);
-  --status-circle-running-fg: var(--accent);
-  --status-circle-error-bg: var(--bg-danger);
-  --status-circle-error-fg: var(--danger);
-
-  /* Kiro-style file pill */
+  /* File pill */
   --pill-bg: var(--surface-pill);
   --pill-fg: var(--text-muted);
   --pill-font-size: 10px;

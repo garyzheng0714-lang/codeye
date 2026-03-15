@@ -1,66 +1,40 @@
 import { memo, useState } from 'react';
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { CaretDown, CaretRight, CircleNotch, CheckCircle } from '@phosphor-icons/react';
 import type { DisplayMessage, ToolCallDisplay } from '../../types';
 import CodeyeMark from '../Brand/CodeyeMark';
 import CodeBlock from './CodeBlock';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useStreamingTypewriter } from '../../hooks/useTypewriter';
+import { ToolIcon, SpinnerIcon } from '../../data/toolIcons';
+import { getToolColor } from '../../data/toolMeta';
 
-// Tool type mapping
-type ToolType = 'read' | 'search' | 'edit' | 'command';
+type ToolType = 'read' | 'search' | 'edit' | 'command' | 'agent';
 
 function getToolType(name: string): ToolType {
-  if (name === 'Read' || name === 'Edit') return 'read';
-  if (name === 'Glob' || name === 'Grep') return 'search';
+  if (name === 'Read') return 'read';
+  if (name === 'Edit' || name === 'Write') return 'edit';
+  if (name === 'Glob' || name === 'Grep' || name === 'WebSearch') return 'search';
   if (name === 'Bash') return 'command';
+  if (name === 'Agent' || name === 'Task') return 'agent';
   return 'read';
 }
 
-function getToolLabel(type: ToolType): string {
+function getToolLabel(name: string, type: ToolType): string {
   const labels: Record<ToolType, string> = {
     read: 'Read',
     search: 'Searched',
-    edit: 'Accepted edits to',
+    edit: name === 'Write' ? 'Created' : 'Edited',
     command: 'Ran command',
+    agent: 'Agent',
   };
   return labels[type];
 }
 
-// Kiro-style status circle component
-function StepStatusCircle({ status }: { status: 'done' | 'running' | 'error' }) {
-  if (status === 'running') {
-    return (
-      <span className="kiro-status kiro-status--running">
-        <span className="kiro-status-dot" />
-      </span>
-    );
-  }
-  if (status === 'error') {
-    return (
-      <span className="kiro-status kiro-status--error">
-        <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-          <path d="M5 3v2M5 6.5v1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-        </svg>
-      </span>
-    );
-  }
-  return (
-    <span className="kiro-status kiro-status--done">
-      <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-        <path d="M2 5.5L4 7.5L8 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    </span>
-  );
-}
-
-// Simple ToolBlock component
-function ToolBlock({ tool, messageId }: { tool: ToolCallDisplay; messageId: string }) {
+function ToolBlock({ tool }: { tool: ToolCallDisplay }) {
   const [isExpanded, setIsExpanded] = useState(true);
-
   const toolType = getToolType(tool.name);
 
-  // Determine status for Kiro-style circle
   let status: 'done' | 'running' | 'error' = 'done';
   if (tool.output === undefined && !tool.progressLines) {
     status = 'running';
@@ -68,13 +42,18 @@ function ToolBlock({ tool, messageId }: { tool: ToolCallDisplay; messageId: stri
     status = 'error';
   }
 
+  const color = status === 'error'
+    ? 'var(--danger)'
+    : status === 'running'
+      ? 'var(--text-muted)'
+      : getToolColor(tool.name);
+
   const fileName = tool.input.file_path
     ? String(tool.input.file_path).split('/').pop()
     : null;
 
   return (
     <div className="tool-block">
-      {/* Tool header */}
       <div
         className="tool-block-header"
         onClick={() => tool.output && setIsExpanded(!isExpanded)}
@@ -88,24 +67,21 @@ function ToolBlock({ tool, messageId }: { tool: ToolCallDisplay; messageId: stri
           }
         }}
       >
-        {/* Kiro-style status circle */}
-        <StepStatusCircle status={status} />
+        <span className={`tool-icon ${status === 'running' ? 'tool-icon--spinning' : ''}`} style={{ color }}>
+          {status === 'running' ? <SpinnerIcon size={15} /> : <ToolIcon name={tool.name} size={15} />}
+        </span>
 
-        <span className="tool-block-label">{getToolLabel(toolType)}</span>
+        <span className="tool-block-label">{getToolLabel(tool.name, toolType)}</span>
 
-        {fileName && (
-          <span className="tool-file-badge">{fileName}</span>
-        )}
+        {fileName && <span className="tool-file-badge">{fileName}</span>}
 
-        {/* Expand/collapse */}
         {tool.output && (
           <span className="tool-block-expand">
-            {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+            {isExpanded ? <CaretDown size={14} weight="bold" /> : <CaretRight size={14} weight="bold" />}
           </span>
         )}
       </div>
 
-      {/* Tool content */}
       {isExpanded && tool.output && (
         <div className="tool-block-content">
           <pre className="tool-block-output">{tool.output}</pre>
@@ -115,13 +91,97 @@ function ToolBlock({ tool, messageId }: { tool: ToolCallDisplay; messageId: stri
   );
 }
 
+function ReadGroup({ tools }: { tools: ToolCallDisplay[] }) {
+  const allDone = tools.every(t => t.output && !t.output.startsWith('Error:'));
+  const anyRunning = tools.some(t => t.output === undefined);
+  const status: 'done' | 'running' | 'error' = anyRunning ? 'running' : allDone ? 'done' : 'error';
+
+  const color = status === 'error'
+    ? 'var(--danger)'
+    : status === 'running'
+      ? 'var(--text-muted)'
+      : getToolColor('Read');
+
+  return (
+    <div className="tool-block">
+      <div className="tool-block-header">
+        <span className={`tool-icon ${status === 'running' ? 'tool-icon--spinning' : ''}`} style={{ color }}>
+          {status === 'running' ? <SpinnerIcon size={15} /> : <ToolIcon name="Read" size={15} />}
+        </span>
+        <span className="tool-block-label">
+          {tools.length > 1 ? `Read ${tools.length} files` : 'Read file'}
+        </span>
+        <div className="tool-block-files">
+          {tools.slice(0, 4).map((t, i) => {
+            const name = t.input.file_path
+              ? String(t.input.file_path).split('/').pop()
+              : 'file';
+            return <span key={i} className="tool-file-badge">{name}</span>;
+          })}
+          {tools.length > 4 && (
+            <span className="tool-block-more">+{tools.length - 4}</span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TaskBlock({ tool }: { tool: ToolCallDisplay }) {
+  const isRunning = tool.output === undefined;
+
+  const tasks = tool.progressLines?.map((line) => {
+    const isDone = line.startsWith('[x]') || line.startsWith('[done]');
+    return { label: line.replace(/^\[(x|done|pending|\s)\]\s*/, ''), done: isDone };
+  });
+
+  if (!tasks || tasks.length === 0) {
+    return (
+      <div className="task-module">
+        <div className="task-module-header">
+          <span className={`tool-icon ${isRunning ? 'tool-icon--spinning' : ''}`} style={{ color: '#818cf8' }}>
+            {isRunning ? <SpinnerIcon size={15} /> : <ToolIcon name="Agent" size={15} />}
+          </span>
+          <span className="task-module-title">Agent</span>
+          {isRunning && <span className="task-module-status">running...</span>}
+        </div>
+      </div>
+    );
+  }
+
+  const doneCount = tasks.filter(t => t.done).length;
+
+  return (
+    <div className="task-module">
+      <div className="task-module-header">
+        <span className={`tool-icon ${isRunning ? 'tool-icon--spinning' : ''}`} style={{ color: '#818cf8' }}>
+          {isRunning ? <SpinnerIcon size={15} /> : <ToolIcon name="Agent" size={15} />}
+        </span>
+        <span className="task-module-title">Agent Task</span>
+        <span className="task-module-count">{doneCount}/{tasks.length}</span>
+      </div>
+      <div className="task-module-list">
+        {tasks.map((task, i) => (
+          <div key={i} className={`task-item ${task.done ? 'task-item--done' : ''}`}>
+            {task.done ? (
+              <CheckCircle size={15} weight="fill" className="task-item-check" />
+            ) : isRunning && i === doneCount ? (
+              <CircleNotch size={15} weight="bold" className="task-item-spinner tool-spinner" />
+            ) : (
+              <span className="task-item-circle" />
+            )}
+            <span className="task-item-label">{task.label}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default memo(function AIMessage({ message }: { message: DisplayMessage }) {
   const isThinking = message.isStreaming && !message.content && message.toolCalls.length === 0;
-
-  // Use typewriter effect for streaming content
   const displayContent = useStreamingTypewriter(message.content || '', message.isStreaming ?? false);
 
-  // Group consecutive Read tools
   const groupedTools: (ToolCallDisplay | { kind: 'group'; tools: ToolCallDisplay[] })[] = [];
   let currentGroup: ToolCallDisplay[] = [];
 
@@ -142,62 +202,34 @@ export default memo(function AIMessage({ message }: { message: DisplayMessage })
 
   return (
     <div className="message-row ai-message-row" data-message-id={message.id}>
-      {/* AI Avatar */}
       <div className={`message-avatar message-avatar--ai ${message.isStreaming ? 'streaming' : ''}`}>
         <CodeyeMark size={20} animate={message.isStreaming ? 'thinking' : 'idle'} />
       </div>
 
-      {/* Message content */}
       <div className="message-content-wrapper">
         <div className="message-header">
           <span className="message-sender">Codeye</span>
         </div>
 
         <div className="ai-message-flat">
-          {/* Tool blocks */}
           {groupedTools.map((item, idx) => {
             if ('kind' in item && item.kind === 'group') {
-              // Calculate group status
-              const allSuccess = item.tools.every(t => t.output && !t.output.startsWith('Error:'));
-              const anyRunning = item.tools.some(t => t.output === undefined);
-              const groupStatus: 'done' | 'running' | 'error' = anyRunning ? 'running' : allSuccess ? 'done' : 'error';
-
-              return (
-                <div key={`group-${idx}`} className="tool-block">
-                  <div className="tool-block-header">
-                    <StepStatusCircle status={groupStatus} />
-                    <span className="tool-block-label">
-                      {item.tools.length > 1 ? `Read ${item.tools.length} files` : 'Read file'}
-                    </span>
-                    <div className="tool-block-files">
-                      {item.tools.slice(0, 4).map((t, i) => {
-                        const name = t.input.file_path
-                          ? String(t.input.file_path).split('/').pop()
-                          : 'file';
-                        return (
-                          <span key={i} className="tool-file-badge">{name}</span>
-                        );
-                      })}
-                      {item.tools.length > 4 && (
-                        <span className="tool-block-more">+{item.tools.length - 4}</span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
+              return <ReadGroup key={`group-${idx}`} tools={item.tools} />;
             }
-            return <ToolBlock key={(item as ToolCallDisplay).id} tool={item as ToolCallDisplay} messageId={message.id} />;
+            const tool = item as ToolCallDisplay;
+            if (tool.name === 'Agent' || tool.name === 'Task') {
+              return <TaskBlock key={tool.id} tool={tool} />;
+            }
+            return <ToolBlock key={tool.id} tool={tool} />;
           })}
 
-          {/* Thinking indicator */}
           {isThinking && (
             <div className="thinking-block">
-              <StepStatusCircle status="running" />
+              <SpinnerIcon size={15} />
               <span className="thinking-text">Thinking</span>
             </div>
           )}
 
-          {/* Message text with typewriter effect */}
           {displayContent && (
             <div className="ai-message-text">
               <ReactMarkdown

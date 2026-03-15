@@ -1,7 +1,7 @@
 .message-list {
   flex: 1;
   overflow-y: auto;
-  padding: var(--space-6) var(--space-5);
+  padding: var(--space-6);
   display: flex;
   flex-direction: column;
   gap: var(--space-5);
@@ -182,15 +182,6 @@
   flex-wrap: wrap;
   flex: 1;
   min-width: 0;
-}
-
-.tool-file-badge {
-  font-family: var(--font-mono);
-  font-size: var(--pill-font-size);
-  color: var(--pill-fg);
-  background: var(--pill-bg);
-  padding: var(--pill-padding);
-  border-radius: var(--pill-radius);
 }
 
 .tool-block-more {
@@ -386,22 +377,6 @@
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
-}
-
-/* ── Light Theme Overrides ── */
-
-[data-theme="light"] .tool-block {
-  background: white;
-  border-color: var(--border-subtle);
-}
-
-[data-theme="light"] .tool-block-header:hover {
-  background: var(--bg-hover);
-}
-
-[data-theme="light"] .thinking-block {
-  background: var(--bg-secondary);
-  border-color: var(--border-subtle);
 }
 
 .text-success {

@@ -1,42 +1,35 @@
 import { useState } from 'react';
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { CaretDown, CaretRight, CheckCircle, CircleNotch } from '@phosphor-icons/react';
 import CodeBlock from '../Chat/CodeBlock';
+import { ToolIcon, SpinnerIcon } from '../../data/toolIcons';
+import { getToolColor } from '../../data/toolMeta';
 
-// Kiro-style status circle component
-function StepStatusCircle({ status }: { status: 'done' | 'running' | 'error' }) {
-  if (status === 'running') {
-    return (
-      <span className="kiro-status kiro-status--running">
-        <span className="kiro-status-dot" />
-      </span>
-    );
-  }
-  if (status === 'error') {
-    return (
-      <span className="kiro-status kiro-status--error">
-        <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-          <path d="M5 3v2M5 6.5v1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-        </svg>
-      </span>
-    );
-  }
+type ToolName = 'Read' | 'Write' | 'Edit' | 'Bash' | 'Grep' | 'Glob' | 'WebSearch' | 'WebFetch' | 'Agent';
+type Status = 'done' | 'running' | 'error';
+
+function ToolStatusIcon({ name, status }: { name: ToolName; status: Status }) {
+  const color = status === 'error'
+    ? 'var(--danger)'
+    : status === 'running'
+      ? 'var(--text-muted)'
+      : getToolColor(name);
+
   return (
-    <span className="kiro-status kiro-status--done">
-      <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-        <path d="M2 5.5L4 7.5L8 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
+    <span className={`tool-icon ${status === 'running' ? 'tool-icon--spinning' : ''}`} style={{ color }}>
+      {status === 'running' ? <SpinnerIcon size={15} /> : <ToolIcon name={name} size={15} />}
     </span>
   );
 }
 
-// Demo tool block
 function DemoToolBlock({
+  name,
   status,
   label,
   fileName,
-  output
+  output,
 }: {
-  status: 'done' | 'running' | 'error';
+  name: ToolName;
+  status: Status;
   label: string;
   fileName?: string;
   output?: string;
@@ -46,12 +39,12 @@ function DemoToolBlock({
   return (
     <div className="tool-block">
       <div className="tool-block-header" onClick={() => output && setExpanded(!expanded)}>
-        <StepStatusCircle status={status} />
+        <ToolStatusIcon name={name} status={status} />
         <span className="tool-block-label">{label}</span>
         {fileName && <span className="tool-file-badge">{fileName}</span>}
         {output && (
           <span className="tool-block-expand">
-            {expanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+            {expanded ? <CaretDown size={14} weight="bold" /> : <CaretRight size={14} weight="bold" />}
           </span>
         )}
       </div>
@@ -64,12 +57,15 @@ function DemoToolBlock({
   );
 }
 
-// Demo read file group
-function DemoReadGroup({ count, status }: { count: number; status: 'done' | 'running' | 'error' }) {
+function DemoReadGroup({ count, status }: { count: number; status: Status }) {
+  const color = status === 'running' ? 'var(--text-muted)' : getToolColor('Read');
+
   return (
     <div className="tool-block">
       <div className="tool-block-header">
-        <StepStatusCircle status={status} />
+        <span className={`tool-icon ${status === 'running' ? 'tool-icon--spinning' : ''}`} style={{ color }}>
+          {status === 'running' ? <SpinnerIcon size={15} /> : <ToolIcon name="Read" size={15} />}
+        </span>
         <span className="tool-block-label">Read {count} files</span>
         <div className="tool-block-files">
           {Array.from({ length: Math.min(count, 4) }).map((_, i) => (
@@ -82,24 +78,24 @@ function DemoReadGroup({ count, status }: { count: number; status: 'done' | 'run
   );
 }
 
-// Demo thinking block
 function DemoThinkingBlock() {
   return (
     <div className="thinking-block">
-      <StepStatusCircle status="running" />
+      <SpinnerIcon size={15} />
       <span className="thinking-text">Thinking</span>
     </div>
   );
 }
 
-// Demo tool card (from ToolCall.tsx)
 function DemoToolCard({
+  name,
   status,
   label,
   fileName,
-  count
+  count,
 }: {
-  status: 'done' | 'running' | 'error';
+  name: ToolName;
+  status: Status;
   label: string;
   fileName?: string;
   count?: number;
@@ -107,7 +103,7 @@ function DemoToolCard({
   return (
     <div className={`tool-card tool-card--${status}`}>
       <div className="tool-card-row">
-        <StepStatusCircle status={status} />
+        <ToolStatusIcon name={name} status={status} />
         <span className="tool-card-label">{label}</span>
         {fileName && <span className="tool-file-badge">{fileName}</span>}
         {count !== undefined && <span className="tool-count-badge">{count} results</span>}
@@ -116,8 +112,47 @@ function DemoToolCard({
   );
 }
 
+function DemoTaskModule() {
+  const tasks = [
+    { label: 'Read project structure', done: true },
+    { label: 'Search for existing patterns', done: true },
+    { label: 'Analyze dependencies', done: true },
+    { label: 'Generate implementation plan', done: false, running: true },
+    { label: 'Write test cases', done: false },
+  ];
+  const doneCount = tasks.filter(t => t.done).length;
+
+  return (
+    <div className="task-module">
+      <div className="task-module-header">
+        <span className="tool-icon" style={{ color: '#818cf8' }}>
+          <ToolIcon name="Agent" size={15} />
+        </span>
+        <span className="task-module-title">Agent Task</span>
+        <span className="task-module-count">{doneCount}/{tasks.length}</span>
+      </div>
+      <div className="task-module-list">
+        {tasks.map((task, i) => (
+          <div key={i} className={`task-item ${task.done ? 'task-item--done' : ''}`}>
+            {task.done ? (
+              <CheckCircle size={15} weight="fill" className="task-item-check" />
+            ) : task.running ? (
+              <CircleNotch size={15} weight="bold" className="task-item-spinner tool-spinner" />
+            ) : (
+              <span className="task-item-circle" />
+            )}
+            <span className="task-item-label">{task.label}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function KiroStyleDemo() {
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+    return (document.documentElement.getAttribute('data-theme') as 'dark' | 'light') || 'dark';
+  });
 
   const toggleTheme = () => {
     const newTheme = theme === 'dark' ? 'light' : 'dark';
@@ -128,46 +163,42 @@ export default function KiroStyleDemo() {
   return (
     <div className="kiro-demo" data-theme={theme}>
       <div className="kiro-demo-header">
-        <h1>Kiro Style UI Components</h1>
+        <h1>Codeye UI Components</h1>
         <button className="demo-theme-toggle" onClick={toggleTheme}>
-          {theme === 'dark' ? '🌙 Dark' : '☀️ Light'}
+          {theme === 'dark' ? 'Dark' : 'Light'}
         </button>
       </div>
 
       <div className="kiro-demo-content">
-        {/* Section: Status Circles */}
+        {/* Section: Tool Icons */}
         <section className="demo-section">
-          <h2>状态圆点 (Status Circles)</h2>
+          <h2>Tool Icons (Phosphor Bold)</h2>
           <div className="demo-row">
-            <div className="demo-item">
-              <StepStatusCircle status="done" />
-              <span>Done</span>
-            </div>
-            <div className="demo-item">
-              <StepStatusCircle status="running" />
-              <span>Running</span>
-            </div>
-            <div className="demo-item">
-              <StepStatusCircle status="error" />
-              <span>Error</span>
-            </div>
+            {(['Read', 'Write', 'Edit', 'Bash', 'Grep', 'Glob', 'WebSearch', 'WebFetch', 'Agent'] as ToolName[]).map((name) => (
+              <div key={name} className="demo-item">
+                <span className="tool-icon" style={{ color: getToolColor(name) }}>
+                  <ToolIcon name={name} size={18} />
+                </span>
+                <span>{name}</span>
+              </div>
+            ))}
           </div>
         </section>
 
         {/* Section: Tool Blocks */}
         <section className="demo-section">
-          <h2>工具卡片 (Tool Blocks)</h2>
+          <h2>Tool Blocks</h2>
           <div className="demo-stack">
-            <DemoToolBlock status="done" label="Read" fileName="App.tsx" output="import React from 'react';\n\nexport default function App() {\n  return <div>Hello World</div>;\n}" />
-            <DemoToolBlock status="running" label="Searching" fileName="*.tsx" />
-            <DemoToolBlock status="error" label="Ran command" fileName="build.sh" output="Error: Command failed with exit code 1" />
-            <DemoToolBlock status="done" label="Edited" fileName="utils.ts" />
+            <DemoToolBlock name="Read" status="done" label="Read file" fileName="App.tsx" output="import React from 'react';\n\nexport default function App() {\n  return <div>Hello</div>;\n}" />
+            <DemoToolBlock name="Grep" status="running" label="Searching..." fileName="*.tsx" />
+            <DemoToolBlock name="Bash" status="error" label="Command failed" fileName="build.sh" output="Error: Command failed with exit code 1" />
+            <DemoToolBlock name="Edit" status="done" label="Edited" fileName="utils.ts" />
           </div>
         </section>
 
         {/* Section: Read File Groups */}
         <section className="demo-section">
-          <h2>文件组 (Read Groups)</h2>
+          <h2>Read File Groups</h2>
           <div className="demo-stack">
             <DemoReadGroup count={1} status="done" />
             <DemoReadGroup count={3} status="done" />
@@ -175,19 +206,30 @@ export default function KiroStyleDemo() {
           </div>
         </section>
 
-        {/* Section: Tool Cards (ToolCall style) */}
+        {/* Section: Tool Cards (ToolCall.tsx style) */}
         <section className="demo-section">
-          <h2>工具卡片变体 (Tool Cards)</h2>
+          <h2>Tool Cards</h2>
           <div className="demo-stack">
-            <DemoToolCard status="done" label="Searched" fileName="*.ts" count={12} />
-            <DemoToolCard status="running" label="Reading" fileName="config.json" />
-            <DemoToolCard status="error" label="Command failed" />
+            <DemoToolCard name="Grep" status="done" label="Searched" fileName="*.ts" count={12} />
+            <DemoToolCard name="Read" status="running" label="Reading..." fileName="config.json" />
+            <DemoToolCard name="Bash" status="error" label="Command failed" />
+            <DemoToolCard name="Edit" status="done" label="Edited" fileName="App.tsx" />
+            <DemoToolCard name="Glob" status="done" label="Found files" fileName="**/*.css" count={8} />
+            <DemoToolCard name="WebSearch" status="done" label="Web search" fileName="phosphor icons react" />
+          </div>
+        </section>
+
+        {/* Section: Task Module */}
+        <section className="demo-section">
+          <h2>Task Module</h2>
+          <div className="demo-stack">
+            <DemoTaskModule />
           </div>
         </section>
 
         {/* Section: Thinking */}
         <section className="demo-section">
-          <h2>思考状态 (Thinking)</h2>
+          <h2>Thinking State</h2>
           <div className="demo-stack">
             <DemoThinkingBlock />
           </div>
@@ -195,47 +237,32 @@ export default function KiroStyleDemo() {
 
         {/* Section: Code Blocks */}
         <section className="demo-section">
-          <h2>代码块 (Code Blocks)</h2>
+          <h2>Code Blocks</h2>
           <CodeBlock
             code={`function greet(name: string) {\n  console.log(\`Hello, \${name}!\`);\n  return {\n    message: \`Welcome to Codeye\`,\n    timestamp: Date.now()\n  };\n}`}
-            language="typescript"
-          />
-          <CodeBlock
-            code={`import { useState, useEffect } from 'react';\n\nexport function useCounter(initial = 0) {\n  const [count, setCount] = useState(initial);\n  \n  const increment = () => setCount(c => c + 1);\n  const decrement = () => setCount(c => c - 1);\n  \n  return { count, increment, decrement };\n}`}
             language="typescript"
           />
         </section>
 
         {/* Section: File Badges */}
         <section className="demo-section">
-          <h2>文件徽章 (File Badges)</h2>
+          <h2>File Badges</h2>
           <div className="demo-row">
             <span className="tool-file-badge">App.tsx</span>
             <span className="tool-file-badge">index.ts</span>
             <span className="tool-file-badge">styles.css</span>
             <span className="tool-file-badge">package.json</span>
-            <span className="tool-file-badge">tsconfig.json</span>
           </div>
         </section>
 
-        {/* Section: Labels */}
+        {/* Section: Full Conversation Simulation */}
         <section className="demo-section">
-          <h2>工具标签 (Tool Labels)</h2>
-          <div className="demo-row">
-            <span className="tool-block-label">Read</span>
-            <span className="tool-block-label">Searched</span>
-            <span className="tool-block-label">Edited</span>
-            <span className="tool-block-label">Ran command</span>
-          </div>
-        </section>
-
-        {/* Section: Combined Example */}
-        <section className="demo-section">
-          <h2>完整示例 (Full Example)</h2>
+          <h2>Full Conversation Simulation</h2>
           <div className="demo-stack">
             <DemoReadGroup count={4} status="done" />
-            <DemoToolBlock status="done" label="Searched" fileName="*.tsx" />
-            <DemoToolBlock status="done" label="Edited" fileName="App.tsx" output={`- const old = 'value';\n+ const new = 'updated';`} />
+            <DemoToolBlock name="Grep" status="done" label="Searched" fileName="*.tsx" />
+            <DemoToolBlock name="Edit" status="done" label="Edited" fileName="App.tsx" output={`- const old = 'value';\n+ const new = 'updated';`} />
+            <DemoTaskModule />
             <DemoThinkingBlock />
           </div>
         </section>

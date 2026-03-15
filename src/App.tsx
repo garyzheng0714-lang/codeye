@@ -7,6 +7,7 @@ import ChatPanel from './components/Chat/ChatPanel';
 import CommandPalette from './components/Chat/CommandPalette';
 import ConnectionStatus from './components/Chat/ConnectionStatus';
 import KiroStyleDemo from './components/Demo/KiroStyleDemo';
+import IconPreview from './components/Demo/IconPreview';
 import './styles/components/kiro-demo.css';
 
 const SplitPane = lazy(() => import('./components/Chat/SplitPane'));
@@ -122,9 +123,11 @@ export default function App() {
 
   // Demo mode - just show the demo page
   if (showDemo) {
+    const params = new URLSearchParams(window.location.search);
+    const demoPage = params.get('demo');
     return (
       <ErrorBoundary>
-        <KiroStyleDemo />
+        {demoPage === 'icons' ? <IconPreview /> : <KiroStyleDemo />}
       </ErrorBoundary>
     );
   }

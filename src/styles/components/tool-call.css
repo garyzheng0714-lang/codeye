@@ -1,123 +1,5 @@
 /* ══════════════════════════════════════════
-   Steps Taken Block — Codeye-style task card
-   ══════════════════════════════════════════ */
-
-.ai-steps-block {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  animation: toolCardEnter var(--transition-slow) both;
-}
-
-/* Header */
-.steps-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--space-3) var(--space-4);
-  border-bottom: 1px solid var(--border-subtle);
-}
-
-.steps-header-label {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  font-size: var(--text-sm);
-  font-weight: 600;
-  color: var(--text-secondary);
-}
-
-.steps-status {
-  font-size: var(--text-xs);
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.steps-status::before {
-  content: '';
-  width: 6px;
-  height: 6px;
-  border-radius: var(--radius-full);
-  flex-shrink: 0;
-}
-
-.steps-status--completed { color: var(--success); }
-.steps-status--completed::before { background: var(--success); }
-.steps-status--running   { color: var(--text-muted); }
-.steps-status--running::before {
-  background: var(--accent);
-  animation: pulse 1.2s ease-in-out infinite;
-}
-.steps-status--error     { color: var(--danger); }
-.steps-status--error::before { background: var(--danger); }
-
-/* Step rows */
-.steps-list {
-  display: flex;
-  flex-direction: column;
-}
-
-.step-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 7px var(--space-4);
-  transition: background var(--transition-fast);
-  animation: fadeIn 200ms both;
-  animation-delay: calc(var(--tool-index, 0) * 30ms);
-}
-
-.step-row:hover {
-  background: var(--interactive-hover-soft);
-}
-
-.step-row + .step-row,
-.tool-card + .tool-card,
-.step-row + .tool-card,
-.tool-card + .step-row {
-  border-top: 1px solid var(--surface-glass-divider);
-}
-
-.step-row-left {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  min-width: 0;
-}
-
-.step-label {
-  font-size: var(--text-sm);
-  font-weight: 500;
-  color: var(--text-secondary);
-  flex-shrink: 0;
-}
-
-.step-badges {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-  flex-wrap: wrap;
-}
-
-.step-file-pill {
-  font-family: var(--font-mono);
-  font-size: var(--text-2xs);
-  color: var(--text-muted);
-  background: var(--surface-pill);
-  padding: 2px 7px;
-  border-radius: var(--radius-xs);
-}
-
-.step-count {
-  font-size: var(--text-xs);
-  color: var(--text-disabled);
-}
-
-/* ══════════════════════════════════════════
-   Tool Card — Kiro Style
+   Tool Card
    ══════════════════════════════════════════ */
 
 .tool-card {
@@ -133,7 +15,10 @@
   border-color: var(--border-danger);
 }
 
-/* Main row — exact Kiro measurements */
+.tool-card + .tool-card {
+  border-top: 1px solid var(--surface-glass-divider);
+}
+
 .tool-card-row {
   display: flex;
   align-items: center;
@@ -153,63 +38,22 @@
 }
 
 /* ══════════════════════════════════════════
-   Kiro-style Status Circles
+   Tool Icon — Phosphor Bold
    ══════════════════════════════════════════ */
 
-.kiro-status {
-  width: var(--status-circle-size);
-  height: var(--status-circle-size);
-  border-radius: var(--radius-full);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.kiro-status--done {
-  background: var(--status-circle-done-bg);
-  color: var(--status-circle-done-fg);
-}
-
-.kiro-status--running {
-  background: var(--status-circle-running-bg);
-  position: relative;
-}
-
-.kiro-status-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: var(--radius-full);
-  background: var(--status-circle-running-fg);
-  animation: kiro-pulse 1.2s ease-in-out infinite;
-}
-
-.kiro-status--error {
-  background: var(--status-circle-error-bg);
-  color: var(--status-circle-error-fg);
-}
-
-@keyframes kiro-pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.5; transform: scale(0.8); }
-}
-
-/* ── Original tool icon (for Bash) ── */
-
 .tool-icon {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
 
-.tool-icon--done {
-  animation: toolIconPop 300ms cubic-bezier(0.16, 1, 0.3, 1) both;
+.tool-icon--spinning {
+  animation: toolSpin 0.9s linear infinite;
 }
 
-/* Spinner */
 .tool-spinner {
   animation: toolSpin 0.9s linear infinite;
 }
@@ -219,7 +63,7 @@
   to   { transform: rotate(360deg); }
 }
 
-/* Label — Kiro style */
+/* Label */
 .tool-card-label {
   font-size: var(--text-sm);
   font-weight: var(--tool-card-label-weight);
@@ -227,17 +71,7 @@
   flex-shrink: 0;
 }
 
-/* Badges */
-.tool-card-badges {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-  flex: 1;
-  min-width: 0;
-  flex-wrap: wrap;
-}
-
-/* File badge — Kiro pill style */
+/* File badge — pill style */
 .tool-file-badge {
   font-family: var(--font-mono);
   font-size: var(--pill-font-size);
@@ -355,16 +189,14 @@
 
 .tool-bash-more-btn:hover { color: var(--text-secondary); }
 
-/* ── Diff viewer ── */
-
+/* Diff viewer */
 .tool-diff-body {
   border-top: 1px solid var(--surface-glass-divider);
   animation: expandReveal 250ms cubic-bezier(0.16, 1, 0.3, 1) both;
   overflow: hidden;
 }
 
-/* ── Search results ── */
-
+/* Search results */
 .tool-search-inline {
   border-top: 1px solid var(--surface-glass-divider);
   padding: var(--space-2) var(--space-4);
@@ -383,8 +215,7 @@
   text-overflow: ellipsis;
 }
 
-/* ── Tool progress lines ── */
-
+/* Tool progress lines */
 .tool-progress-lines {
   padding: var(--space-1) var(--space-3);
   font-size: 11px;
@@ -401,18 +232,167 @@
 }
 
 /* ══════════════════════════════════════════
-   Light Theme Overrides
+   Task Module
    ══════════════════════════════════════════ */
 
-[data-theme="light"] .ai-steps-block {
-  background: white;
-  border-color: var(--border-subtle);
+.task-module {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  animation: toolCardEnter var(--transition-slow) both;
 }
 
+.task-module-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 10px var(--space-4);
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-secondary);
+}
+
+.task-module-title {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.task-module-count {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  margin-left: auto;
+}
+
+.task-module-status {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  font-style: italic;
+  margin-left: auto;
+}
+
+.task-module-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.task-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 8px var(--space-4);
+  transition: background var(--transition-fast);
+}
+
+.task-item + .task-item {
+  border-top: 1px solid var(--surface-glass-divider);
+}
+
+.task-item:hover {
+  background: var(--interactive-hover-soft);
+}
+
+.task-item-check {
+  color: var(--success);
+  flex-shrink: 0;
+}
+
+.task-item-spinner {
+  color: #38bdf8;
+  flex-shrink: 0;
+}
+
+.task-item-circle {
+  width: 15px;
+  height: 15px;
+  border-radius: var(--radius-full);
+  border: 1.5px solid var(--border-strong);
+  flex-shrink: 0;
+}
+
+.task-item-label {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.task-item--done .task-item-label {
+  color: var(--text-muted);
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+/* ══════════════════════════════════════════
+   Light Theme — Primary Adaptation
+   ══════════════════════════════════════════ */
+
 [data-theme="light"] .tool-card {
-  background: white;
+  background: #ffffff;
+  border-color: #e5e7eb;
 }
 
 [data-theme="light"] .tool-card--error {
-  background: var(--bg-danger);
+  background: #fef2f2;
+  border-color: #fecaca;
+}
+
+[data-theme="light"] .tool-card-row--clickable:hover {
+  background: #f9fafb;
+}
+
+[data-theme="light"] .tool-file-badge {
+  background: #f3f4f6;
+  color: #4b5563;
+}
+
+[data-theme="light"] .tool-bash-inline {
+  background: #fafafa;
+}
+
+[data-theme="light"] .tool-bash-cmd {
+  color: #6b7280;
+  border-bottom-color: #e5e7eb;
+}
+
+[data-theme="light"] .tool-bash-out {
+  color: #374151;
+}
+
+[data-theme="light"] .tool-search-inline {
+  color: #4b5563;
+  border-top-color: #e5e7eb;
+}
+
+[data-theme="light"] .task-module {
+  border-color: #e5e7eb;
+}
+
+[data-theme="light"] .task-module-header {
+  background: #f9fafb;
+  border-bottom-color: #e5e7eb;
+}
+
+[data-theme="light"] .task-item + .task-item {
+  border-top-color: #f3f4f6;
+}
+
+[data-theme="light"] .task-item:hover {
+  background: #f9fafb;
+}
+
+[data-theme="light"] .task-item-circle {
+  border-color: #d1d5db;
+}
+
+[data-theme="light"] .tool-block {
+  background: #ffffff;
+  border-color: #e5e7eb;
+}
+
+[data-theme="light"] .tool-block-header:hover {
+  background: #f9fafb;
+}
+
+[data-theme="light"] .thinking-block {
+  background: #f9fafb;
+  border-color: #e5e7eb;
 }

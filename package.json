@@ -16,6 +16,7 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
+    "@phosphor-icons/react": "^2.1.10",
     "@tanstack/react-virtual": "^3.13.22",
     "chokidar": "^5.0.0",
     "electron-updater": "^6.8.3",
