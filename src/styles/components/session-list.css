@@ -117,7 +117,7 @@
   position: relative;
   display: flex;
   align-items: center;
-  padding: 9px var(--space-3) 9px 28px;
+  padding: 9px 40px 9px 28px;
   cursor: pointer;
   border-radius: 8px;
   background: transparent;
@@ -192,35 +192,18 @@
   position: absolute;
   right: var(--space-2);
   top: 50%;
-  transform: translateY(-50%) translateX(4px);
+  transform: translateY(-50%);
   display: flex;
   align-items: center;
   opacity: 0;
   pointer-events: none;
-  padding-left: 16px;
-  background: linear-gradient(to right, transparent 0px, var(--bg-primary) 16px);
-  transition:
-    opacity 120ms ease-out,
-    transform 120ms ease-out;
-}
-
-.session-row:hover .session-actions {
-  background: linear-gradient(to right, transparent 0px, rgba(255, 255, 255, 0.04) 12px);
-}
-
-.session-row.active .session-actions {
-  background: linear-gradient(to right, transparent 0px, rgba(168, 85, 247, 0.08) 12px);
-}
-
-.session-row.active:hover .session-actions {
-  background: linear-gradient(to right, transparent 0px, rgba(168, 85, 247, 0.12) 12px);
+  transition: opacity 120ms ease-out;
 }
 
 .session-row:hover .session-actions,
 .session-actions.confirming {
   opacity: 1;
   pointer-events: auto;
-  transform: translateY(-50%) translateX(0);
 }
 
 /* Hide time when actions visible */
