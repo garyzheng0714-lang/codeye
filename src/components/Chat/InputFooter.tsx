@@ -45,6 +45,7 @@ export default function InputFooter() {
   return (
     <div className="input-footer">
       <div className="input-footer-left">
+        <ModelConfigSelector />
         <div className="permission-selector" ref={containerRef}>
           <button
             className={`permission-selector-trigger permission-trigger--${permissionMode}`}
@@ -82,7 +83,6 @@ export default function InputFooter() {
         </div>
       </div>
       <div className="input-footer-right">
-        <ModelConfigSelector />
         <SessionStats />
       </div>
     </div>
