@@ -1,9 +1,15 @@
+/* ══════════════════════════════════════════
+   Code Block — Kiro Style
+   ══════════════════════════════════════════ */
+
 .code-block {
-  background: var(--bg-code);
-  border: 1px solid var(--border-subtle);
+  background: var(--surface-glass);
+  border: 1px solid var(--surface-glass-border);
   border-radius: var(--radius-md);
   overflow: hidden;
   margin: var(--space-2) 0;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .code-block-header {
@@ -11,8 +17,9 @@
   align-items: center;
   justify-content: space-between;
   padding: var(--space-2) var(--space-3);
-  background: var(--bg-code-header);
+  background: rgba(255, 255, 255, 0.02);
   border-bottom: 1px solid var(--surface-glass-border);
+  min-height: 32px;
 }
 
 .code-lang {
@@ -75,11 +82,23 @@
   font-family: var(--font-mono);
 }
 
-/* Dark theme — code blocks use dedicated tokens */
+/* Dark theme — glass effect enhanced */
 [data-theme="dark"] .code-block {
-  border-color: var(--border-accent);
+  border-color: rgba(168, 85, 247, 0.15);
+  background: rgba(26, 22, 37, 0.6);
 }
 
 [data-theme="dark"] .code-block-header {
-  border-bottom-color: var(--border-accent);
+  background: rgba(19, 15, 30, 0.4);
+  border-bottom-color: rgba(168, 85, 247, 0.1);
+}
+
+/* Light theme */
+[data-theme="light"] .code-block {
+  background: rgba(255, 255, 255, 0.7);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .code-block-header {
+  background: rgba(0, 0, 0, 0.02);
 }
