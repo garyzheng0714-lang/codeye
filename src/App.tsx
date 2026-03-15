@@ -6,6 +6,8 @@ import SidebarBoundaryToggle from './components/Layout/SidebarBoundaryToggle';
 import ChatPanel from './components/Chat/ChatPanel';
 import CommandPalette from './components/Chat/CommandPalette';
 import ConnectionStatus from './components/Chat/ConnectionStatus';
+import KiroStyleDemo from './components/Demo/KiroStyleDemo';
+import './styles/components/kiro-demo.css';
 
 const SplitPane = lazy(() => import('./components/Chat/SplitPane'));
 import ErrorBoundary from './components/ErrorBoundary';
@@ -28,6 +30,13 @@ export default function App() {
   const sidebarWidth = useUIStore((s) => s.sidebarWidth);
   const splitEnabled = useUIStore((s) => s.splitEnabled);
   const [cmdPaletteOpen, setCmdPaletteOpen] = useState(false);
+
+  // Demo mode check
+  const [showDemo, setShowDemo] = useState(false);
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setShowDemo(params.has('demo'));
+  }, []);
 
   const handlePaletteSelect = useCallback((command: { name: string; description: string; category: string }) => {
     window.dispatchEvent(new CustomEvent(CMD_PALETTE_SELECT_EVENT, { detail: { name: command.name } }));
@@ -110,6 +119,15 @@ export default function App() {
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, []);
+
+  // Demo mode - just show the demo page
+  if (showDemo) {
+    return (
+      <ErrorBoundary>
+        <KiroStyleDemo />
+      </ErrorBoundary>
+    );
+  }
 
   return (
     <ErrorBoundary>
