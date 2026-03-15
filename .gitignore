@@ -9,8 +9,9 @@ release
 *.log
 *.png
 !public/logo.png
+!build/icon-source.png
 .playwright-mcp/
-build/
+build/icon.iconset/
 playwright-report/
 playwright-results.json
 test-results/

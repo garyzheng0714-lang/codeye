@@ -2,11 +2,14 @@ name: Release DMG
 
 on:
   push:
-    branches:
-      - main
     tags:
       - "v*"
   workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release (e.g. 1.0.0). Leave empty to use package.json version."
+        required: false
+        type: string
 
 permissions:
   contents: write
@@ -21,12 +24,12 @@ jobs:
       CSC_IDENTITY_AUTO_DISCOVERY: "false"
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Setup Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v4
         with:
           node-version: "20"
           cache: "npm"
@@ -34,49 +37,46 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Resolve release target
-        id: release_target
+      - name: Resolve version
+        id: version
         run: |
           set -euo pipefail
-          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
             VERSION="${GITHUB_REF_NAME#v}"
-            echo "tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
-            echo "title=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
-            echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
-            echo "prerelease=false" >> "$GITHUB_OUTPUT"
-          elif [[ "${GITHUB_REF}" == "refs/heads/main" ]]; then
-            VERSION="$(node -e "const {execSync}=require('child_process'); const semver=(v)=>v.split('.').map(Number); const cmp=(a,b)=>a[0]-b[0]||a[1]-b[1]||a[2]-b[2]; const tags=execSync(\"git tag --list\",{encoding:'utf8'}).trim().split(/\\n+/).filter(Boolean); const versions=tags.map(t=>{const m=t.match(/(?:^v|^main-v)(\\d+\\.\\d+\\.\\d+)$/); return m?m[1]:null;}).filter(Boolean); let base=versions.sort((x,y)=>cmp(semver(x),semver(y))).pop(); if(!base){const pkg=require('./package.json'); base=(pkg.version||'0.1.0').split('-')[0];} const [major,minor,patch]=semver(base); console.log([major,minor,patch+1].join('.'));")"
-            echo "tag=main-v${VERSION}" >> "$GITHUB_OUTPUT"
-            echo "title=Main ${VERSION}" >> "$GITHUB_OUTPUT"
-            echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
-            echo "prerelease=false" >> "$GITHUB_OUTPUT"
+          elif [[ -n "${{ inputs.version }}" ]]; then
+            VERSION="${{ inputs.version }}"
           else
-            echo "This workflow only publishes from main or version tags. Current ref: ${GITHUB_REF}" >&2
-            exit 1
+            VERSION="$(node -p 'require("./package.json").version')"
           fi
+          TAG="v${VERSION}"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "📦 Building version ${VERSION} (tag: ${TAG})"
 
       - name: Set build version
         env:
-          BUILD_VERSION: ${{ steps.release_target.outputs.version }}
+          BUILD_VERSION: ${{ steps.version.outputs.version }}
         run: |
-          set -euo pipefail
-          node -e "const fs=require('fs'); const path='package.json'; const pkg=JSON.parse(fs.readFileSync(path,'utf8')); pkg.version=process.env.BUILD_VERSION; fs.writeFileSync(path, JSON.stringify(pkg, null, 2) + '\n');"
+          node -e "
+            const fs = require('fs');
+            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+            pkg.version = process.env.BUILD_VERSION;
+            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+          "
 
       - name: Build DMG
         run: npm run dist:mac
 
-      - name: Verify updater artifacts
+      - name: Verify artifacts
         run: |
           set -euo pipefail
-          ls -lh release
-          test -f release/latest-mac.yml
-          ls release/*.zip >/dev/null
-          ls release/*.dmg >/dev/null
+          ls -lh release/*.dmg release/*.zip
+          echo "✅ Artifacts ready"
 
-      - name: Upload release artifacts
-        uses: actions/upload-artifact@v7
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
         with:
-          name: codeye-release-${{ github.ref_name }}
+          name: codeye-${{ steps.version.outputs.version }}
           path: |
             release/*.dmg
             release/*.zip
@@ -84,47 +84,43 @@ jobs:
             release/*.blockmap
           if-no-files-found: error
 
-      - name: Create main release tag
-        if: github.ref == 'refs/heads/main'
+      - name: Create tag (if manual dispatch)
+        if: github.event_name == 'workflow_dispatch'
         env:
-          RELEASE_TAG: ${{ steps.release_target.outputs.tag }}
+          TAG: ${{ steps.version.outputs.tag }}
         run: |
-          set -euo pipefail
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          if git rev-parse "$RELEASE_TAG" >/dev/null 2>&1; then
-            EXISTING_SHA="$(git rev-list -n 1 "$RELEASE_TAG")"
-            if [[ "$EXISTING_SHA" != "$GITHUB_SHA" ]]; then
-              echo "Tag $RELEASE_TAG already exists on ${EXISTING_SHA}, expected ${GITHUB_SHA}" >&2
-              exit 1
-            fi
-          else
-            git tag "$RELEASE_TAG" "$GITHUB_SHA"
-            git push origin "refs/tags/$RELEASE_TAG"
+          if ! git rev-parse "$TAG" >/dev/null 2>&1; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git tag "$TAG"
+            git push origin "$TAG"
           fi
 
       - name: Publish GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ steps.release_target.outputs.tag }}
-          RELEASE_TITLE: ${{ steps.release_target.outputs.title }}
-          RELEASE_VERSION: ${{ steps.release_target.outputs.version }}
-          RELEASE_PRERELEASE: ${{ steps.release_target.outputs.prerelease }}
+          TAG: ${{ steps.version.outputs.tag }}
+          VERSION: ${{ steps.version.outputs.version }}
         run: |
           set -euo pipefail
-          FILES=(release/*.dmg release/*.zip release/latest-mac.yml release/*.blockmap)
-          NOTES="Automated build ${RELEASE_VERSION} from ${GITHUB_REF_NAME} (${GITHUB_SHA})"
-          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
-            gh release upload "$RELEASE_TAG" "${FILES[@]}" --clobber
-            if [[ "$RELEASE_PRERELEASE" == "true" ]]; then
-              gh release edit "$RELEASE_TAG" --title "$RELEASE_TITLE" --notes "$NOTES" --prerelease
-            else
-              gh release edit "$RELEASE_TAG" --title "$RELEASE_TITLE" --notes "$NOTES" --latest
-            fi
+          FILES=(release/*.dmg release/*.zip)
+
+          # Add updater files if they exist
+          [ -f release/latest-mac.yml ] && FILES+=(release/latest-mac.yml)
+          for f in release/*.blockmap; do [ -f "$f" ] && FILES+=("$f"); done
+
+          NOTES="## Codeye v${VERSION}
+
+          Automated build from \`${GITHUB_SHA::8}\`
+
+          ### Install
+          Download the \`.dmg\` file below and drag Codeye to Applications."
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "${FILES[@]}" --clobber
           else
-            if [[ "$RELEASE_PRERELEASE" == "true" ]]; then
-              gh release create "$RELEASE_TAG" "${FILES[@]}" --title "$RELEASE_TITLE" --notes "$NOTES" --prerelease
-            else
-              gh release create "$RELEASE_TAG" "${FILES[@]}" --title "$RELEASE_TITLE" --notes "$NOTES" --latest
-            fi
+            gh release create "$TAG" "${FILES[@]}" \
+              --title "v${VERSION}" \
+              --notes "$NOTES" \
+              --latest
           fi
