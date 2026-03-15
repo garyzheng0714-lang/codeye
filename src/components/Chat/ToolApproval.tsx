@@ -1,27 +1,44 @@
-import { useState } from 'react';
+import { useEffect, useState, memo } from 'react';
+import { Shield, Check, X, Timer } from 'lucide-react';
+import { useChatStore } from '../../stores/chatStore';
+import { sendApprovalDecision, clearApprovalTimeout } from '../../services/toolApproval';
+import type { PendingApproval } from '../../types';
 
-interface Props {
-  toolName: string;
-  input: Record<string, unknown>;
-  onApprove: () => void;
-  onDeny: () => void;
-}
-
-export default function ToolApproval({ toolName, input, onApprove, onDeny }: Props) {
+export default memo(function ToolApproval({ approval }: { approval: PendingApproval }) {
+  const resolveApproval = useChatStore((s) => s.resolveApproval);
   const [expanded, setExpanded] = useState(false);
+  const [remaining, setRemaining] = useState(() => {
+    const elapsed = Math.floor((Date.now() - approval.receivedAt) / 1000);
+    return Math.max(0, approval.timeoutSec - elapsed);
+  });
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - approval.receivedAt) / 1000);
+      const left = Math.max(0, approval.timeoutSec - elapsed);
+      setRemaining(left);
+      if (left <= 0) clearInterval(interval);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [approval.receivedAt, approval.timeoutSec]);
+
+  const handleDecision = (decision: 'allow' | 'deny') => {
+    resolveApproval(approval.approvalId, decision);
+    sendApprovalDecision(approval.approvalId, decision);
+  };
 
   return (
     <div className="tool-approval" role="alertdialog" aria-label="Tool approval required">
       <div className="tool-approval-header">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <path d="M8 1L1 8l7 7 7-7-7-7z" stroke="var(--warning)" strokeWidth="1.2" />
-          <path d="M8 5v3" stroke="var(--warning)" strokeWidth="1.5" strokeLinecap="round" />
-          <circle cx="8" cy="10.5" r="0.75" fill="var(--warning)" />
-        </svg>
-        <span className="tool-approval-name">{toolName}</span>
+        <Shield size={14} strokeWidth={1.8} className="tool-approval-shield" />
+        <span className="tool-approval-name">{approval.toolName}</span>
         <span className="tool-approval-label">needs approval</span>
+        <span className="tool-approval-timer">
+          <Timer size={11} strokeWidth={2} />
+          {remaining}s
+        </span>
       </div>
-      {Object.keys(input).length > 0 && (
+      {Object.keys(approval.args).length > 0 && (
         <>
           <button
             type="button"
@@ -33,19 +50,19 @@ export default function ToolApproval({ toolName, input, onApprove, onDeny }: Pro
           </button>
           {expanded && (
             <pre className="tool-approval-args">
-              {JSON.stringify(input, null, 2)}
+              {JSON.stringify(approval.args, null, 2)}
             </pre>
           )}
         </>
       )}
       <div className="tool-approval-actions">
-        <button type="button" className="tool-approval-approve" onClick={onApprove}>
-          Approve
+        <button type="button" className="tool-approval-approve" onClick={() => handleDecision('allow')}>
+          <Check size={13} strokeWidth={2} /> Approve
         </button>
-        <button type="button" className="tool-approval-deny" onClick={onDeny}>
-          Deny
+        <button type="button" className="tool-approval-deny" onClick={() => handleDecision('deny')}>
+          <X size={13} strokeWidth={2} /> Deny
         </button>
       </div>
     </div>
   );
-}
+});

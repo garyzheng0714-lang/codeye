@@ -9,7 +9,9 @@ export type ActivityType =
   | 'file_modified'
   | 'error_occurred'
   | 'git_action'
-  | 'git_result';
+  | 'git_result'
+  | 'approval_requested'
+  | 'approval_decided';
 
 export interface ActivityEntry {
   id: string;

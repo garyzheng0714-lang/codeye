@@ -16,6 +16,7 @@ import {
   normalizeEffortLevel,
   normalizeModelId,
 } from '../data/models';
+import { activityStream } from '../services/activityStream';
 
 interface ChatState {
   messages: DisplayMessage[];
@@ -248,10 +249,18 @@ export const useChatStore = create<ChatState>()((set, get) => ({
       pendingApprovals: { ...state.pendingApprovals, [approval.approvalId]: approval },
     })),
 
-  resolveApproval: (approvalId, _decision) =>
+  resolveApproval: (approvalId, decision) =>
     set((state) => {
       if (!(approvalId in state.pendingApprovals)) return state;
+      const approval = state.pendingApprovals[approvalId];
       const { [approvalId]: _, ...rest } = state.pendingApprovals;
+      activityStream.push({
+        type: 'approval_decided',
+        sessionId: state.sessionId || 'unknown',
+        sessionName: 'Current',
+        summary: `${approval.toolName} ${decision === 'allow' ? 'approved' : 'denied'}`,
+        metadata: { approvalId, decision },
+      });
       return { pendingApprovals: rest };
     }),
 

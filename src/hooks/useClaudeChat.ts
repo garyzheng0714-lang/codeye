@@ -190,6 +190,13 @@ export function useClaudeChat() {
             timeoutSec: p.timeoutSec ?? 120,
             receivedAt: Date.now(),
           });
+          activityStream.push({
+            type: 'approval_requested',
+            sessionId: useChatStore.getState().sessionId || 'unknown',
+            sessionName: 'Current',
+            summary: `${p.toolName} needs approval`,
+            metadata: { approvalId: p.approvalId, toolName: p.toolName },
+          });
           startApprovalTimeout(p.approvalId, p.timeoutSec ?? 120, (id) => {
             useChatStore.getState().resolveApproval(id, 'deny');
             sendApprovalDecision(id, 'deny', streamEvent.correlationId);

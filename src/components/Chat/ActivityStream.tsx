@@ -12,6 +12,8 @@ const ACTIVITY_LABELS: Record<ActivityType, string> = {
   error_occurred: 'Error',
   git_action: 'Git',
   git_result: 'Git',
+  approval_requested: 'Approval',
+  approval_decided: 'Approval',
 };
 
 const ACTIVITY_ICONS: Record<ActivityType, string> = {
@@ -24,6 +26,8 @@ const ACTIVITY_ICONS: Record<ActivityType, string> = {
   error_occurred: '⚠️',
   git_action: '🔀',
   git_result: '🔀',
+  approval_requested: '🛡️',
+  approval_decided: '✅',
 };
 
 const FILTER_OPTIONS: { label: string; value: ActivityType | 'all' }[] = [
