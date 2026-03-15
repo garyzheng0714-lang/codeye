@@ -1,5 +1,5 @@
 import { memo, useState } from 'react';
-import { ChevronDown, ChevronRight, Loader2 } from 'lucide-react';
+import { ChevronDown, ChevronRight } from 'lucide-react';
 import type { DisplayMessage, ToolCallDisplay } from '../../types';
 import CodeyeMark from '../Brand/CodeyeMark';
 import CodeBlock from './CodeBlock';
@@ -157,12 +157,18 @@ export default memo(function AIMessage({ message }: { message: DisplayMessage })
           {/* Tool blocks */}
           {groupedTools.map((item, idx) => {
             if ('kind' in item && item.kind === 'group') {
-              // Read group
+              // Calculate group status
+              const allSuccess = item.tools.every(t => t.output && !t.output.startsWith('Error:'));
+              const anyRunning = item.tools.some(t => t.output === undefined);
+              const groupStatus: 'done' | 'running' | 'error' = anyRunning ? 'running' : allSuccess ? 'done' : 'error';
+
               return (
                 <div key={`group-${idx}`} className="tool-block">
                   <div className="tool-block-header">
-                    <StepStatusCircle status="done" />
-                    <span className="tool-block-label">Read {item.tools.length > 1 ? 'files' : 'file'}</span>
+                    <StepStatusCircle status={groupStatus} />
+                    <span className="tool-block-label">
+                      {item.tools.length > 1 ? `Read ${item.tools.length} files` : 'Read file'}
+                    </span>
                     <div className="tool-block-files">
                       {item.tools.slice(0, 4).map((t, i) => {
                         const name = t.input.file_path
@@ -185,8 +191,8 @@ export default memo(function AIMessage({ message }: { message: DisplayMessage })
 
           {/* Thinking indicator */}
           {isThinking && (
-            <div className="thinking-row">
-              <Loader2 size={16} className="animate-spin" />
+            <div className="thinking-block">
+              <StepStatusCircle status="running" />
               <span className="thinking-text">Thinking</span>
             </div>
           )}

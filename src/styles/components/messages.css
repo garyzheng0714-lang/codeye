@@ -179,6 +179,8 @@
   align-items: center;
   gap: var(--space-1);
   flex-wrap: wrap;
+  flex: 1;
+  min-width: 0;
 }
 
 .tool-file-badge {
@@ -193,6 +195,7 @@
 .tool-block-more {
   font-size: var(--text-xs);
   color: var(--text-muted);
+  font-style: italic;
 }
 
 .tool-block-expand {
@@ -373,17 +376,23 @@
   background: white;
 }
 
-/* ── Thinking Row ── */
+/* ══════════════════════════════════════════
+   Thinking State — Kiro Style
+   ══════════════════════════════════════════ */
 
-.thinking-row {
+.thinking-block {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
-  color: var(--text-muted);
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
 }
 
 .thinking-text {
   font-size: var(--text-sm);
+  color: var(--text-muted);
 }
 
 /* ── Inline Code ── */
