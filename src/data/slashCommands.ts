@@ -58,7 +58,8 @@ export const categoryLabels: Record<SlashCommand['category'], string> = {
   action: 'Actions',
 };
 
-import { readJson, writeJson } from '../utils/jsonStorage';
+import { getDefaultStorageAdapter } from '../storage/adapter';
+import { migrateCommandsV1ToV2 } from '../migrations/v1-to-v2-commands';
 
 const CUSTOM_COMMANDS_KEY = 'codeye.custom-commands';
 const RUNTIME_COMMAND_NAMES_KEY = 'codeye.runtime-slash-command-names';
@@ -74,8 +75,30 @@ function loadCustomCommands(): SlashCommand[] {
   if (cachedCustomCommands) {
     return cachedCustomCommands;
   }
-  const parsed = readJson<SlashCommand[]>(CUSTOM_COMMANDS_KEY);
-  cachedCustomCommands = Array.isArray(parsed) ? parsed : [];
+  const adapter = getDefaultStorageAdapter();
+  const raw = adapter.getItem(CUSTOM_COMMANDS_KEY);
+  const parsed = raw ? (() => { try { return JSON.parse(raw); } catch { return null; } })() : null;
+  const doc = migrateCommandsV1ToV2(parsed);
+
+  // If raw data was v1 (plain array or null), persist migrated v2 doc and backup original
+  if (raw !== null) {
+    let isAlreadyV2 = false;
+    try {
+      const existing = JSON.parse(raw);
+      isAlreadyV2 = typeof existing === 'object' && existing !== null && existing._schemaVersion === 2;
+    } catch { /* noop */ }
+    if (!isAlreadyV2) {
+      adapter.setItem('_backup_v1_' + CUSTOM_COMMANDS_KEY, raw);
+      adapter.setItem(CUSTOM_COMMANDS_KEY, JSON.stringify(doc));
+    }
+  }
+
+  cachedCustomCommands = doc.commands.map((cmd) => ({
+    name: cmd.name,
+    description: cmd.description ?? cmd.prompt,
+    category: 'skill' as SlashCommand['category'],
+    icon: 'build',
+  }));
   return cachedCustomCommands;
 }
 
@@ -83,7 +106,9 @@ function loadRuntimeCommandNames(): string[] {
   if (cachedRuntimeCommandNames) {
     return cachedRuntimeCommandNames;
   }
-  const parsed = readJson<string[]>(RUNTIME_COMMAND_NAMES_KEY);
+  const adapter = getDefaultStorageAdapter();
+  const raw = adapter.getItem(RUNTIME_COMMAND_NAMES_KEY);
+  const parsed = raw ? (() => { try { return JSON.parse(raw); } catch { return null; } })() : null;
   cachedRuntimeCommandNames = Array.isArray(parsed)
     ? parsed.filter((entry): entry is string => typeof entry === 'string' && entry.trim().length > 0)
     : [];
@@ -92,7 +117,7 @@ function loadRuntimeCommandNames(): string[] {
 
 function saveRuntimeCommandNames(names: string[]): void {
   cachedRuntimeCommandNames = names;
-  writeJson(RUNTIME_COMMAND_NAMES_KEY, names);
+  getDefaultStorageAdapter().setItem(RUNTIME_COMMAND_NAMES_KEY, JSON.stringify(names));
 }
 
 function normalizeCommandName(raw: string): string | null {
