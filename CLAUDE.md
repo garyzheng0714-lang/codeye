@@ -20,7 +20,7 @@
 
 ### 注意事项
 - `settingsBtn` locator 必须用 `getByRole('button', { name: 'Open settings' })` 而不是 `.activity-bar-bottom .activity-btn`（底部现有 Activity + Settings 两个按钮）
-- Settings 面板已精简为仅 About（版本 + 更新按钮），无 Tab 导航，Web 模式显示替代提示
+- Settings 面板已精简为仅 About（版本 + 更新按钮），无 Tab 导航
 - uiStore 的 SidebarPanel 类型已扩展为 `'sessions' | 'settings' | 'activity'`
 - 虚拟滚动阈值: turns > 40 时启用，estimateSize=120, overscan=5
 - StreamBatcher: 16ms 基础间隔，50ms 繁忙间隔，32KB 立即 flush

@@ -7,17 +7,19 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useStreamingTypewriter } from '../../hooks/useTypewriter';
 import { ToolIcon, SpinnerIcon } from '../../data/toolIcons';
-import { getToolColor } from '../../data/toolMeta';
+import { getToolColor, getSemanticName } from '../../data/toolMeta';
 
-type ToolType = 'read' | 'search' | 'edit' | 'command' | 'agent';
+type ToolType = 'read' | 'search' | 'edit' | 'command' | 'agent' | 'task' | 'other';
 
 function getToolType(name: string): ToolType {
   if (name === 'Read') return 'read';
   if (name === 'Edit' || name === 'Write') return 'edit';
-  if (name === 'Glob' || name === 'Grep' || name === 'WebSearch') return 'search';
+  if (name === 'Glob' || name === 'Grep' || name === 'ToolSearch' || name === 'WebSearch') return 'search';
   if (name === 'Bash') return 'command';
   if (name === 'Agent' || name === 'Task') return 'agent';
-  return 'read';
+  if (name === 'TaskCreate' || name === 'TaskUpdate') return 'task';
+  if (name.startsWith('mcp__')) return 'other';
+  return 'other';
 }
 
 function getToolLabel(name: string, type: ToolType): string {
@@ -27,6 +29,8 @@ function getToolLabel(name: string, type: ToolType): string {
     edit: name === 'Write' ? 'Created' : 'Edited',
     command: 'Ran command',
     agent: 'Agent',
+    task: name === 'TaskCreate' ? 'Created task' : 'Updated task',
+    other: '',
   };
   return labels[type];
 }
@@ -71,7 +75,7 @@ function ToolBlock({ tool }: { tool: ToolCallDisplay }) {
           {status === 'running' ? <SpinnerIcon size={15} /> : <ToolIcon name={tool.name} size={15} />}
         </span>
 
-        <span className="tool-block-label">{getToolLabel(tool.name, toolType)}</span>
+        <span className="tool-block-label">{toolType === 'other' ? getSemanticName(tool.name) : getToolLabel(tool.name, toolType)}</span>
 
         {fileName && <span className="tool-file-badge">{fileName}</span>}
 
