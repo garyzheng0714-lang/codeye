@@ -221,38 +221,38 @@
   "hotPaths": [
     {
       "path": "src",
-      "accessCount": 30,
-      "lastAccessed": 1773714958302,
+      "accessCount": 35,
+      "lastAccessed": 1773745599552,
       "type": "directory"
     },
     {
       "path": "src/storage/sessionPersistence.ts",
-      "accessCount": 26,
-      "lastAccessed": 1773711606597,
-      "type": "file"
-    },
-    {
-      "path": "",
-      "accessCount": 25,
-      "lastAccessed": 1773714915864,
-      "type": "directory"
-    },
-    {
-      "path": "src/components/Layout/Sidebar.tsx",
-      "accessCount": 24,
-      "lastAccessed": 1773717526551,
+      "accessCount": 33,
+      "lastAccessed": 1773745187074,
       "type": "file"
     },
     {
       "path": "src/stores/sessionStore.ts",
-      "accessCount": 23,
-      "lastAccessed": 1773717462841,
+      "accessCount": 33,
+      "lastAccessed": 1773747914193,
       "type": "file"
     },
     {
+      "path": "",
+      "accessCount": 32,
+      "lastAccessed": 1773745599605,
+      "type": "directory"
+    },
+    {
       "path": "src/components/Session/SessionList.tsx",
-      "accessCount": 22,
-      "lastAccessed": 1773717503866,
+      "accessCount": 27,
+      "lastAccessed": 1773747862746,
+      "type": "file"
+    },
+    {
+      "path": "src/components/Layout/Sidebar.tsx",
+      "accessCount": 25,
+      "lastAccessed": 1773739805124,
       "type": "file"
     },
     {
@@ -262,39 +262,57 @@
       "type": "file"
     },
     {
+      "path": "src/components/Session/SessionRow.tsx",
+      "accessCount": 18,
+      "lastAccessed": 1773747972039,
+      "type": "file"
+    },
+    {
       "path": "src/services/gitIntegration.ts",
       "accessCount": 16,
       "lastAccessed": 1773714908949,
       "type": "file"
     },
     {
-      "path": "src/components/Session/SessionRow.tsx",
-      "accessCount": 14,
-      "lastAccessed": 1773715946310,
-      "type": "file"
-    },
-    {
-      "path": "src/hooks/useInputComposer.ts",
-      "accessCount": 11,
-      "lastAccessed": 1773711494398,
-      "type": "file"
-    },
-    {
-      "path": "src/types/session.ts",
-      "accessCount": 11,
-      "lastAccessed": 1773714915847,
-      "type": "file"
-    },
-    {
-      "path": "src/components/Session/ProjectHeader.tsx",
-      "accessCount": 10,
-      "lastAccessed": 1773717421323,
+      "path": "src/stores/chatStore.ts",
+      "accessCount": 15,
+      "lastAccessed": 1773745340732,
       "type": "file"
     },
     {
       "path": "src/styles/components/session-list.css",
-      "accessCount": 9,
-      "lastAccessed": 1773717569591,
+      "accessCount": 15,
+      "lastAccessed": 1773745578872,
+      "type": "file"
+    },
+    {
+      "path": "src/hooks/useInputComposer.ts",
+      "accessCount": 12,
+      "lastAccessed": 1773739825756,
+      "type": "file"
+    },
+    {
+      "path": "src/types/session.ts",
+      "accessCount": 12,
+      "lastAccessed": 1773739871508,
+      "type": "file"
+    },
+    {
+      "path": "src/hooks/useClaudeChat.ts",
+      "accessCount": 12,
+      "lastAccessed": 1773745371286,
+      "type": "file"
+    },
+    {
+      "path": "src/components/Session/ProjectHeader.tsx",
+      "accessCount": 11,
+      "lastAccessed": 1773739871637,
+      "type": "file"
+    },
+    {
+      "path": "src/storage/bootstrap.ts",
+      "accessCount": 8,
+      "lastAccessed": 1773745306543,
       "type": "file"
     },
     {
@@ -304,21 +322,21 @@
       "type": "file"
     },
     {
-      "path": "src/types/electron.d.ts",
-      "accessCount": 6,
-      "lastAccessed": 1773714943960,
+      "path": "src/utils/session.ts",
+      "accessCount": 7,
+      "lastAccessed": 1773740301891,
       "type": "file"
     },
     {
       "path": "src/types/index.ts",
-      "accessCount": 5,
-      "lastAccessed": 1773714909001,
+      "accessCount": 7,
+      "lastAccessed": 1773745323291,
       "type": "file"
     },
     {
-      "path": "src/utils/session.ts",
-      "accessCount": 5,
-      "lastAccessed": 1773714923874,
+      "path": "src/types/electron.d.ts",
+      "accessCount": 6,
+      "lastAccessed": 1773714943960,
       "type": "file"
     },
     {
@@ -388,16 +406,16 @@
       "type": "file"
     },
     {
-      "path": "src/storage/bootstrap.ts",
-      "accessCount": 3,
-      "lastAccessed": 1773714949189,
-      "type": "file"
-    },
-    {
       "path": ".context/attachments/PR instructions.md",
       "accessCount": 3,
       "lastAccessed": 1773717709149,
       "type": "file"
+    },
+    {
+      "path": "src/types",
+      "accessCount": 3,
+      "lastAccessed": 1773745150432,
+      "type": "directory"
     },
     {
       "path": "electron/ipc/claude.ts",
@@ -410,18 +428,6 @@
       "accessCount": 2,
       "lastAccessed": 1773704407419,
       "type": "file"
-    },
-    {
-      "path": "src/stores/chatStore.ts",
-      "accessCount": 2,
-      "lastAccessed": 1773704431264,
-      "type": "file"
-    },
-    {
-      "path": "src/types",
-      "accessCount": 2,
-      "lastAccessed": 1773704552534,
-      "type": "directory"
     },
     {
       "path": "docs/superpowers/specs/2026-03-15-sidebar-redesign-design.md",
@@ -493,12 +499,6 @@
       "path": "src/components/Layout/TitleBar.tsx",
       "accessCount": 1,
       "lastAccessed": 1773704424539,
-      "type": "file"
-    },
-    {
-      "path": "src/hooks/useClaudeChat.ts",
-      "accessCount": 1,
-      "lastAccessed": 1773708210931,
       "type": "file"
     },
     {

@@ -1,6 +1,6 @@
 import { memo, useRef, useState } from 'react';
 import { Archive } from 'lucide-react';
-import { formatCompactTime, isOlderThan3Days } from '../../utils/timeFormat';
+import { isOlderThan3Days } from '../../utils/timeFormat';
 import type { SessionData } from '../../types';
 
 interface Props {
@@ -112,9 +112,6 @@ export default memo(function SessionRow({
       <div className="session-row-content">
         <span className="session-title">{title}</span>
       </div>
-      {!isActive && (
-        <span className="session-time">{formatCompactTime(session.updatedAt)}</span>
-      )}
       <div className={`session-actions ${isConfirming ? 'confirming' : ''}`}>
         {!isConfirming ? (
           <button

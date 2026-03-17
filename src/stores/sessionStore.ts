@@ -335,9 +335,12 @@ export const useSessionStore = create<SessionState>((set, get) => ({
 
   saveSessionMessages: (id, messages, cost, input, output, options) =>
     set((state) => {
-      const timestamp = now();
       const target = state.sessions.find((session) => session.id === id);
       if (!target) return state;
+
+      // Only bump updatedAt when messages actually changed (new content, not just re-save on click)
+      const hasNewContent = messages.length !== target.messages.length;
+      const timestamp = hasNewContent ? now() : target.updatedAt;
 
       return {
         sessions: state.sessions.map((session) =>
@@ -355,9 +358,11 @@ export const useSessionStore = create<SessionState>((set, get) => ({
               }
             : session
         ),
-        folders: state.folders.map((folder) =>
-          folder.id === target.folderId ? { ...folder, updatedAt: timestamp } : folder
-        ),
+        folders: hasNewContent
+          ? state.folders.map((folder) =>
+              folder.id === target.folderId ? { ...folder, updatedAt: timestamp } : folder
+            )
+          : state.folders,
       };
     }),
 
