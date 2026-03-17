@@ -25,4 +25,5 @@
 @import "./components/git-confirm.css";
 @import "./components/git-result-card.css";
 @import "./components/command-palette.css";
+@import "./components/file-tree.css";
 @import "./responsive.css";

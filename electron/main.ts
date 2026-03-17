@@ -5,6 +5,7 @@ import { registerClaudeHandlers } from './ipc/claude';
 import { registerSessionHandlers } from './ipc/sessions';
 import { registerProjectHandlers } from './ipc/projects';
 import { registerSecretHandlers } from './ipc/secrets';
+import { registerFileTreeHandlers } from './ipc/fileTree';
 import { registerUpdaterHandlers } from './updater';
 
 let mainWindow: BrowserWindow | null = null;
@@ -172,6 +173,7 @@ app.whenReady().then(() => {
   registerSessionHandlers(ipcMain);
   registerProjectHandlers(ipcMain);
   registerSecretHandlers(ipcMain);
+  registerFileTreeHandlers(ipcMain);
   registerUpdaterHandlers(ipcMain, () => mainWindow);
   ensureWindow();
 });

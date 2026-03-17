@@ -76,6 +76,11 @@ export default function App() {
         e.preventDefault();
         document.querySelector<HTMLTextAreaElement>('.input-textarea')?.focus();
       }
+      // Cmd+E — toggle file tree panel
+      if (mod && e.key === 'e') {
+        e.preventDefault();
+        useUIStore.getState().setActivePanel('files');
+      }
       // Cmd+B — toggle sidebar
       if (mod && e.key === 'b') {
         e.preventDefault();

@@ -35,6 +35,9 @@ interface ElectronAPI {
     delete: (key: string) => Promise<boolean>;
     listKeys: () => Promise<string[]>;
   };
+  fileTree: {
+    readDir: (dirPath: string) => Promise<FileTreeEntry[]>;
+  };
   window: {
     minimize: () => Promise<void>;
     maximize: () => Promise<void>;
@@ -127,6 +130,12 @@ interface GitStatusSnapshot {
 }
 
 declare global {
+  interface FileTreeEntry {
+    name: string;
+    path: string;
+    isDirectory: boolean;
+  }
+
   type UpdaterStage =
     | 'idle'
     | 'unsupported'
