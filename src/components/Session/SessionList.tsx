@@ -7,6 +7,7 @@ import {
   useState,
 } from 'react';
 import { Search as SearchIcon } from 'lucide-react';
+import CodeyeMark from '../Brand/CodeyeMark';
 import { useSessionStore } from '../../stores/sessionStore';
 import { useChatStore } from '../../stores/chatStore';
 import { stopClaude } from '../../hooks/useClaudeChat';
@@ -205,9 +206,9 @@ export default memo(function SessionList({
   if (folders.length === 0) {
     return (
       <div className="empty-state">
-        <SearchIcon size={28} strokeWidth={1.2} className="empty-state-icon" aria-hidden="true" />
-        <p>暂无项目</p>
-        <p>点击上方 + 选择工作区文件夹</p>
+        <CodeyeMark size={32} />
+        <p>Open a project to start</p>
+        <p>Click + above to choose a folder</p>
       </div>
     );
   }
