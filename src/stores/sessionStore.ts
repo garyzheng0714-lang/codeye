@@ -207,6 +207,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
 
     set((state) => {
       const sessions = [...state.sessions];
+      const activeId = state.activeSessionId;
 
       for (const imported of importedSessions) {
         const existingIndex = sessions.findIndex(
@@ -214,6 +215,22 @@ export const useSessionStore = create<SessionState>((set, get) => ({
             session.folderId === folderId &&
             session.claudeSessionId === imported.claudeSessionId
         );
+
+        // CRITICAL: Never overwrite the currently active session's messages
+        if (existingIndex >= 0 && sessions[existingIndex].id === activeId) {
+          const existing = sessions[existingIndex];
+          sessions[existingIndex] = {
+            ...existing,
+            inputTokens: Math.max(existing.inputTokens, imported.inputTokens),
+            outputTokens: Math.max(existing.outputTokens, imported.outputTokens),
+            updatedAt: Math.max(existing.updatedAt, imported.updatedAt),
+          };
+          if (imported.updatedAt > latestUpdatedAt) {
+            latestUpdatedAt = imported.updatedAt;
+            latestSessionId = existing.id;
+          }
+          continue;
+        }
 
         let displayName = imported.name;
         if (displayName.startsWith('<') || displayName.startsWith('local-command') || !displayName.trim()) {

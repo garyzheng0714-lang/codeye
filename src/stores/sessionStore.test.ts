@@ -37,6 +37,36 @@ describe('sessionStore importClaudeSessions', () => {
     expect(imported.model).toBe('sonnet');
   });
 
+  it('importClaudeSessions should not overwrite the active session messages', () => {
+    const store = useSessionStore.getState();
+    const folder = store.createFolder('/test', 'Test');
+    const session = store.createSession('Active', folder.id);
+
+    useSessionStore.getState().saveSessionMessages(
+      session.id,
+      [{ id: '1', role: 'user', content: 'Hello', toolCalls: [], timestamp: Date.now() }],
+      0, 0, 0,
+      { claudeSessionId: 'claude-abc-123' }
+    );
+
+    store.setActiveSession(session.id);
+
+    const result = store.importClaudeSessions(folder.id, [{
+      claudeSessionId: 'claude-abc-123',
+      name: 'Imported',
+      cwd: '/test',
+      messages: [],
+      inputTokens: 0,
+      outputTokens: 0,
+      createdAt: Date.now() - 1000,
+      updatedAt: Date.now(),
+    }]);
+
+    const activeSession = store.getSession(session.id);
+    expect(activeSession?.messages.length).toBe(1);
+    expect(activeSession?.messages[0].content).toBe('Hello');
+  });
+
   it('upserts existing imported session by claudeSessionId', () => {
     const store = useSessionStore.getState();
     const folder = store.createFolder('/tmp/project');
