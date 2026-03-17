@@ -20,6 +20,7 @@ export interface SessionData {
   cwd: string;
   claudeSessionId?: string;
   model?: ModelId;
+  branch?: string | null;
   messages: DisplayMessage[];
   cost: number;
   inputTokens: number;

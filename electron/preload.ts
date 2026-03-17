@@ -81,6 +81,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
     selectDirectory: () => ipcRenderer.invoke('projects:select-directory'),
     importClaudeHistory: (folderPath: string) => ipcRenderer.invoke('projects:import-claude-history', folderPath),
     getGitStatus: (cwd: string) => ipcRenderer.invoke('projects:get-git-status', cwd),
+    listBranches: (folderPath: string) => ipcRenderer.invoke('projects:list-branches', folderPath),
+    createBranch: (folderPath: string, branchName: string) => ipcRenderer.invoke('projects:create-branch', folderPath, branchName),
+    checkoutBranch: (folderPath: string, branchName: string) => ipcRenderer.invoke('projects:checkout-branch', folderPath, branchName),
+    renameBranch: (folderPath: string, oldName: string, newName: string) => ipcRenderer.invoke('projects:rename-branch', folderPath, oldName, newName),
     watchHistory: (folderPath: string, encodedPath: string) =>
       ipcRenderer.invoke('projects:watch-history', folderPath, encodedPath),
     unwatchHistory: (encodedPath: string) =>

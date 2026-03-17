@@ -1,5 +1,23 @@
 const BRANCH_NAME_RE = /^[a-zA-Z0-9._/-]{1,100}$/;
 
+const FOOD_NAMES = [
+  'mapo-doufu', 'kung-pao-chicken', 'xiaolongbao', 'jianbing',
+  'hot-pot', 'char-siu', 'dan-dan-mian', 'zongzi',
+  'mooncake', 'tangyuan', 'baozi', 'shaomai',
+  'congee', 'wonton', 'chow-mein', 'spring-roll',
+  'dim-sum', 'peking-duck', 'malatang', 'luosifen',
+  'roujiamo', 'chuanr', 'doubanjiang', 'youtiao',
+  'guilin-mifen', 'lanzhou-lamian', 'biangbiang-mian', 'suancaiyu',
+  'hongshaorou', 'tangcu-paigu', 'yuxiang-rousi', 'gongbao-jiding',
+  'huiguorou', 'shuizhu-niurou', 'chaofan', 'jiaozi',
+  'guobaorou', 'dongpo-rou', 'zhajiangmian', 'liangpi',
+];
+
+export function generateFoodBranchName(): string {
+  const food = FOOD_NAMES[Math.floor(Math.random() * FOOD_NAMES.length)];
+  return `codeye/${food}`;
+}
+
 export function sanitizeBranchName(raw: string): string {
   return raw
     .toLowerCase()

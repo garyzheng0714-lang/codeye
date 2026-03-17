@@ -71,7 +71,7 @@ interface SessionState {
   createFolder: (folderPath?: string, fallbackName?: string, kind?: SessionFolder['kind']) => SessionFolder;
   setActiveFolder: (id: string | null) => void;
   markFolderSynced: (folderId: string, syncedAt?: number) => void;
-  createSession: (name?: string, folderId?: string) => SessionData;
+  createSession: (name?: string, folderId?: string, branch?: string | null) => SessionData;
   importClaudeSessions: (folderId: string, importedSessions: ImportedClaudeSession[]) => ImportResult;
   setActiveSession: (id: string | null) => void;
   renameSession: (id: string, name: string) => void;
@@ -85,6 +85,7 @@ interface SessionState {
     options?: SaveSessionOptions
   ) => void;
   forkSession: (sourceId: string, fromMessageIndex: number) => SessionData | null;
+  updateSessionBranch: (id: string, branch: string | null) => void;
   getFolder: (id: string) => SessionFolder | undefined;
   getSession: (id: string) => SessionData | undefined;
 }
@@ -130,7 +131,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       ),
     })),
 
-  createSession: (name, folderId) => {
+  createSession: (name, folderId, branch) => {
     let folder =
       (folderId ? get().folders.find((candidate) => candidate.id === folderId) : undefined) ??
       (get().activeFolderId ? get().folders.find((candidate) => candidate.id === get().activeFolderId) : undefined);
@@ -162,6 +163,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
           minute: '2-digit',
         })}`,
       cwd,
+      branch: branch ?? null,
       messages: [],
       cost: 0,
       inputTokens: 0,
@@ -348,6 +350,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       source: 'local',
       name: `Fork: ${source.name}`,
       cwd: source.cwd,
+      branch: null,
       claudeSessionId: undefined,
       model: source.model,
       messages: forkedMessages,
@@ -376,6 +379,13 @@ export const useSessionStore = create<SessionState>((set, get) => ({
 
     return forked;
   },
+
+  updateSessionBranch: (id, branch) =>
+    set((state) => ({
+      sessions: state.sessions.map((session) =>
+        session.id === id ? { ...session, branch } : session
+      ),
+    })),
 
   getFolder: (id) => get().folders.find((folder) => folder.id === id),
   getSession: (id) => get().sessions.find((session) => session.id === id),

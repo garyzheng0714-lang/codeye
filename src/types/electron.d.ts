@@ -25,6 +25,10 @@ interface ElectronAPI {
     selectDirectory: () => Promise<string | null>;
     importClaudeHistory: (folderPath: string) => Promise<ImportedClaudeSession[]>;
     getGitStatus: (cwd: string) => Promise<GitStatusSnapshot>;
+    listBranches: (folderPath: string) => Promise<string[]>;
+    createBranch: (folderPath: string, branchName: string) => Promise<{ success: boolean; branch: string; error?: string }>;
+    checkoutBranch: (folderPath: string, branchName: string) => Promise<{ success: boolean; branch: string; error?: string }>;
+    renameBranch: (folderPath: string, oldName: string, newName: string) => Promise<{ success: boolean; branch: string; error?: string }>;
     watchHistory: (folderPath: string, encodedPath: string) => Promise<void>;
     unwatchHistory: (encodedPath: string) => Promise<void>;
     onHistoryChanged: (callback: (encodedPath: string) => void) => () => void;
