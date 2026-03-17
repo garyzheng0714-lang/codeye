@@ -8,6 +8,9 @@ const STORAGE_KEY = 'codeye.session-store';
 const STORAGE_BACKUP_KEY = 'codeye.session-store.backup';
 const SCHEMA_VERSION = 3;
 const DEFAULT_FOLDER_NAME = 'Quick Chats';
+const MAX_PERSIST_SIZE = 4 * 1024 * 1024; // 4MB safety margin
+const MAX_TOOL_OUTPUT_LENGTH = 500;
+const TRIMMED_MARKER = '\n... [trimmed for storage]';
 
 const toolCallSchema = z.object({
   id: z.string(),
@@ -209,25 +212,100 @@ export function loadSessionSnapshot(
   return null;
 }
 
+function trimToolOutputs(sessions: SessionData[]): SessionData[] {
+  return sessions.map((session) => ({
+    ...session,
+    messages: session.messages.map((msg) => ({
+      ...msg,
+      toolCalls: msg.toolCalls.map((tc) => {
+        const { progressLines: _, ...rest } = tc;
+        return {
+          ...rest,
+          output: rest.output && rest.output.length > MAX_TOOL_OUTPUT_LENGTH
+            ? rest.output.slice(0, MAX_TOOL_OUTPUT_LENGTH) + TRIMMED_MARKER
+            : rest.output,
+        };
+      }),
+    })),
+  }));
+}
+
+function stripNonActiveToolOutputs(sessions: SessionData[], activeSessionId: string | null): SessionData[] {
+  return sessions.map((s) =>
+    s.id === activeSessionId
+      ? s
+      : {
+          ...s,
+          messages: s.messages.map((m) => ({
+            ...m,
+            toolCalls: m.toolCalls.map(({ progressLines: _, output: __, ...rest }) => rest),
+          })),
+        }
+  );
+}
+
+function dropOldestSessionMessages(sessions: SessionData[], activeSessionId: string | null): SessionData[] {
+  const sorted = [...sessions].sort((a, b) => a.updatedAt - b.updatedAt);
+  let dropped = 0;
+  return sorted.map((s) => {
+    if (s.id === activeSessionId) return s;
+    if (dropped >= Math.ceil(sorted.length / 2)) return s;
+    dropped++;
+    return { ...s, messages: [] };
+  });
+}
+
+function keepOnlyActiveSession(sessions: SessionData[], activeSessionId: string | null): SessionData[] {
+  return sessions.map((s) =>
+    s.id === activeSessionId ? s : { ...s, messages: [] }
+  );
+}
+
 export function persistSessionSnapshot(
   snapshot: SessionStoreSnapshot,
   adapter: StorageAdapter = getDefaultStorageAdapter()
 ): void {
-  const nextDocument: SessionDocumentV3 = {
-    _schemaVersion: SCHEMA_VERSION,
+  const baseDoc = {
+    _schemaVersion: SCHEMA_VERSION as typeof SCHEMA_VERSION,
     folders: snapshot.folders,
-    sessions: snapshot.sessions,
     activeFolderId: snapshot.activeFolderId,
     activeSessionId: snapshot.activeSessionId,
     updatedAt: Date.now(),
   };
+  const activeId = snapshot.activeSessionId;
 
-  const serialized = JSON.stringify(nextDocument);
-  const current = adapter.getItem(STORAGE_KEY);
+  const levels: Array<(s: SessionData[]) => SessionData[]> = [
+    (s) => trimToolOutputs(s),
+    (s) => stripNonActiveToolOutputs(s, activeId),
+    (s) => dropOldestSessionMessages(s, activeId),
+    (s) => keepOnlyActiveSession(s, activeId),
+  ];
 
-  if (current) {
-    adapter.setItem(STORAGE_BACKUP_KEY, current);
+  let sessions = snapshot.sessions;
+  let serialized = '';
+
+  for (let level = 0; level < levels.length; level++) {
+    sessions = levels[level](sessions);
+    const doc: SessionDocumentV3 = { ...baseDoc, sessions };
+    serialized = JSON.stringify(doc);
+    if (serialized.length <= MAX_PERSIST_SIZE) break;
+    if (level < levels.length - 1) {
+      console.warn(`[persist] Level ${level} still exceeds 4MB (${(serialized.length / 1024 / 1024).toFixed(1)}MB), escalating`);
+    }
   }
 
-  adapter.setItem(STORAGE_KEY, serialized);
+  try {
+    const current = adapter.getItem(STORAGE_KEY);
+    if (current) {
+      adapter.setItem(STORAGE_BACKUP_KEY, current);
+    }
+  } catch {
+    console.warn('[persist] Backup write failed (quota), proceeding with save');
+  }
+
+  try {
+    adapter.setItem(STORAGE_KEY, serialized);
+  } catch (err) {
+    console.error('[persist] Failed to save session snapshot after all degradation levels:', err);
+  }
 }

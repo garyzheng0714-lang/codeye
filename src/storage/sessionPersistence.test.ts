@@ -83,6 +83,41 @@ describe('sessionPersistence', () => {
     expect(restored).toEqual(snapshot);
   });
 
+  it('should trim tool call outputs when payload exceeds size limit', () => {
+    const adapter = new TestStorageAdapter();
+
+    const bigOutput = 'x'.repeat(100_000);
+    const messages = Array.from({ length: 20 }, (_, i) => ({
+      id: `msg-${i}`,
+      role: 'assistant' as const,
+      content: 'Response',
+      toolCalls: Array.from({ length: 5 }, (_, j) => ({
+        id: `tool-${i}-${j}`,
+        name: 'Bash',
+        input: { command: 'ls' },
+        output: bigOutput,
+        expanded: false,
+      })),
+      timestamp: Date.now(),
+    }));
+
+    const snapshot: SessionStoreSnapshot = {
+      folders: [{ id: 'f1', name: 'Test', path: '/test', kind: 'local' as const, hasSyncedClaudeHistory: false, createdAt: Date.now(), updatedAt: Date.now() }],
+      sessions: [{
+        id: 's1', folderId: 'f1', source: 'local' as const, name: 'Big',
+        cwd: '/test', messages, cost: 0, inputTokens: 0, outputTokens: 0,
+        createdAt: Date.now(), updatedAt: Date.now(),
+      }],
+      activeFolderId: 'f1',
+      activeSessionId: 's1',
+    };
+
+    expect(() => persistSessionSnapshot(snapshot, adapter)).not.toThrow();
+    const stored = adapter.getItem('codeye.session-store');
+    expect(stored).toBeTruthy();
+    expect(stored!.length).toBeLessThan(4 * 1024 * 1024);
+  });
+
   it('migrates legacy document without schema version', () => {
     const adapter = new TestStorageAdapter();
     adapter.setItem(
