@@ -2,10 +2,11 @@ import { z } from 'zod';
 import type { SessionData, SessionFolder } from '../types';
 import type { StorageAdapter } from './adapter';
 import { getDefaultStorageAdapter } from './adapter';
+import { migrateSessionsV2ToV3 } from '../migrations/v2-to-v3-branch';
 
 const STORAGE_KEY = 'codeye.session-store';
 const STORAGE_BACKUP_KEY = 'codeye.session-store.backup';
-const SCHEMA_VERSION = 2;
+const SCHEMA_VERSION = 3;
 const DEFAULT_FOLDER_NAME = 'Quick Chats';
 
 const toolCallSchema = z.object({
@@ -50,6 +51,7 @@ const sessionDataSchema = z.object({
   outputTokens: z.number(),
   createdAt: z.number(),
   updatedAt: z.number(),
+  branch: z.string().nullable().optional(),
 });
 
 const sessionDocumentV2Schema = z.object({
@@ -62,6 +64,17 @@ const sessionDocumentV2Schema = z.object({
 });
 
 type SessionDocumentV2 = z.infer<typeof sessionDocumentV2Schema>;
+
+const sessionDocumentV3Schema = z.object({
+  _schemaVersion: z.literal(3),
+  folders: z.array(sessionFolderSchema),
+  sessions: z.array(sessionDataSchema),
+  activeFolderId: z.string().nullable(),
+  activeSessionId: z.string().nullable(),
+  updatedAt: z.number(),
+});
+
+type SessionDocumentV3 = z.infer<typeof sessionDocumentV3Schema>;
 
 const legacySessionDataSchema = z.object({
   id: z.string(),
@@ -139,7 +152,7 @@ function migrateLegacyDocument(raw: unknown): SessionDocumentV2 | null {
     : undefined;
 
   return {
-    _schemaVersion: SCHEMA_VERSION,
+    _schemaVersion: 2 as const,
     folders: Array.from(foldersByPath.values()).sort((a, b) => b.updatedAt - a.updatedAt),
     sessions,
     activeFolderId: activeSession?.folderId ?? Array.from(foldersByPath.values())[0]?.id ?? null,
@@ -148,13 +161,17 @@ function migrateLegacyDocument(raw: unknown): SessionDocumentV2 | null {
   };
 }
 
-function migrateToLatest(raw: unknown): SessionDocumentV2 | null {
-  const parsedV2 = sessionDocumentV2Schema.safeParse(raw);
-  if (parsedV2.success) {
-    return parsedV2.data;
-  }
+function migrateToLatest(raw: unknown): SessionDocumentV3 | null {
+  const parsedV3 = sessionDocumentV3Schema.safeParse(raw);
+  if (parsedV3.success) return parsedV3.data;
 
-  return migrateLegacyDocument(raw);
+  const parsedV2 = sessionDocumentV2Schema.safeParse(raw);
+  if (parsedV2.success) return migrateSessionsV2ToV3(parsedV2.data) as unknown as SessionDocumentV3;
+
+  const legacy = migrateLegacyDocument(raw);
+  if (legacy) return migrateSessionsV2ToV3(legacy) as unknown as SessionDocumentV3;
+
+  return null;
 }
 
 export interface SessionStoreSnapshot {
@@ -171,8 +188,8 @@ export function loadSessionSnapshot(
   const primary = migrateToLatest(primaryRaw);
   if (primary) {
     return {
-      folders: primary.folders as SessionFolder[],
-      sessions: primary.sessions as SessionData[],
+      folders: primary.folders as unknown as SessionFolder[],
+      sessions: primary.sessions as unknown as SessionData[],
       activeFolderId: primary.activeFolderId,
       activeSessionId: primary.activeSessionId,
     };
@@ -182,8 +199,8 @@ export function loadSessionSnapshot(
   const backup = migrateToLatest(backupRaw);
   if (backup) {
     return {
-      folders: backup.folders as SessionFolder[],
-      sessions: backup.sessions as SessionData[],
+      folders: backup.folders as unknown as SessionFolder[],
+      sessions: backup.sessions as unknown as SessionData[],
       activeFolderId: backup.activeFolderId,
       activeSessionId: backup.activeSessionId,
     };
@@ -196,7 +213,7 @@ export function persistSessionSnapshot(
   snapshot: SessionStoreSnapshot,
   adapter: StorageAdapter = getDefaultStorageAdapter()
 ): void {
-  const nextDocument: SessionDocumentV2 = {
+  const nextDocument: SessionDocumentV3 = {
     _schemaVersion: SCHEMA_VERSION,
     folders: snapshot.folders,
     sessions: snapshot.sessions,

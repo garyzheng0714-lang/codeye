@@ -144,6 +144,33 @@
   background: rgba(168, 85, 247, 0.12);
 }
 
+/* ── Row content wrapper ── */
+
+.session-row-content {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+  gap: 1px;
+}
+
+/* ── Branch indicator ── */
+
+.session-branch {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--text-2xs);
+  color: var(--text-disabled);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.session-row.active .session-branch {
+  color: var(--text-muted);
+}
+
 /* ── Title ── */
 
 .session-title {

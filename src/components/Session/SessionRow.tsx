@@ -1,5 +1,5 @@
 import { memo, useRef, useState } from 'react';
-import { Archive } from 'lucide-react';
+import { Archive, GitBranch } from 'lucide-react';
 import { formatCompactTime, isOlderThan3Days } from '../../utils/timeFormat';
 import type { SessionData } from '../../types';
 
@@ -109,7 +109,15 @@ export default memo(function SessionRow({
       onKeyDown={handleKeyDown}
       onDoubleClick={handleDoubleClick}
     >
-      <span className="session-title">{title}</span>
+      <div className="session-row-content">
+        <span className="session-title">{title}</span>
+        {session.branch && (
+          <span className="session-branch">
+            <GitBranch size={10} strokeWidth={2} />
+            {session.branch}
+          </span>
+        )}
+      </div>
       {!isActive && (
         <span className="session-time">{formatCompactTime(session.updatedAt)}</span>
       )}

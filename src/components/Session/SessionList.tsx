@@ -131,8 +131,25 @@ export default memo(function SessionList({
         clearMessages();
         setClaudeSessionId(null);
       }
+
+      checkoutSessionBranch(session);
     },
-    [activeSessionId, clearMessages, finishStreaming, getFolder, loadSession, saveSessionMessages, setActiveFolder, setActiveSession, setClaudeSessionId, setCwd, setSessionId],
+    [activeSessionId, checkoutSessionBranch, clearMessages, finishStreaming, getFolder, loadSession, saveSessionMessages, setActiveFolder, setActiveSession, setClaudeSessionId, setCwd, setSessionId],
+  );
+
+  const checkoutSessionBranch = useCallback(
+    (session: SessionData) => {
+      if (!session.branch || !window.electronAPI?.projects.checkoutBranch) return;
+      const folder = getFolder(session.folderId);
+      if (!folder || folder.kind !== 'local' || !folder.path) return;
+      window.electronAPI.projects
+        .checkoutBranch(folder.path, session.branch)
+        .then((r) => {
+          if (!r.success) console.warn(`[git] checkout ${session.branch} failed:`, r.error);
+        })
+        .catch((err) => console.warn('[git] checkout error:', err));
+    },
+    [getFolder],
   );
 
   const handleToggleFolder = useCallback(

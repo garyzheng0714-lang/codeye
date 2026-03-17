@@ -3,6 +3,7 @@ import { useChatStore } from '../stores/chatStore';
 import { useSessionStore } from '../stores/sessionStore';
 import { sendClaudeQuery, stopClaude } from './useClaudeChat';
 import { saveCurrentSession } from '../utils/session';
+import { suggestBranchName, resolveBranchConflict } from '../services/gitIntegration';
 import { filterCommands, getSlashCommandByName, type SlashCommand } from '../data/slashCommands';
 import type { ModelId, EffortLevel, InputAttachment, PendingMessage } from '../types';
 import { startStreamTrace } from '../observability/perfBaseline';
@@ -48,6 +49,7 @@ export function useInputComposer() {
   const draftRef = useRef('');
   const suppressSendUntilRef = useRef(0);
   const attachmentPasteTokenRef = useRef(0);
+  const branchRenamedRef = useRef<string | null>(null);
 
   const isStreaming = useChatStore((s) => s.isStreaming);
   const mode = useChatStore((s) => s.mode);
@@ -137,6 +139,36 @@ export function useInputComposer() {
       sessionId: state.claudeSessionId || undefined,
       attachments: normalizedMessage.attachments,
     });
+
+    // Auto-rename branch after first message (once per session)
+    const sessionState = useSessionStore.getState();
+    const currentSession = sessionState.activeSessionId
+      ? sessionState.getSession(sessionState.activeSessionId)
+      : undefined;
+    if (
+      currentSession?.branch &&
+      branchRenamedRef.current !== currentSession.id &&
+      window.electronAPI?.projects.renameBranch
+    ) {
+      const folder = sessionState.getFolder(currentSession.folderId);
+      if (folder?.kind === 'local' && folder.path) {
+        branchRenamedRef.current = currentSession.id;
+        const oldBranch = currentSession.branch;
+        void (async () => {
+          try {
+            const branches = await window.electronAPI!.projects.listBranches(folder.path);
+            const newName = resolveBranchConflict(suggestBranchName(prompt), branches);
+            const result = await window.electronAPI!.projects.renameBranch(folder.path, oldBranch, newName);
+            if (result.success) {
+              useSessionStore.getState().updateSessionBranch(currentSession.id, newName);
+            }
+          } catch (err) {
+            branchRenamedRef.current = null;
+            console.warn('[git] Branch rename error:', err);
+          }
+        })();
+      }
+    }
   }, [activeSessionId, addUserMessage, createSession, mode, resetTextareaHeight, startAssistantMessage]);
 
   const handleCommandSelect = useCallback((command: SlashCommand, commandArgs = '') => {

@@ -467,6 +467,66 @@ function tryDecodePath(segments: string[]): string {
   return current;
 }
 
+interface BranchResult {
+  success: boolean;
+  branch: string;
+  error?: string;
+}
+
+const BRANCH_NAME_RE = /^[a-zA-Z0-9._/-]{1,100}$/;
+
+function isValidBranchName(name: string): boolean {
+  return BRANCH_NAME_RE.test(name);
+}
+
+function listBranchesForPath(folderPath: string): string[] {
+  const safePath = resolveProjectPath(folderPath);
+  const result = spawnSync('git', ['-C', safePath, 'branch', '--list', '--format=%(refname:short)'], {
+    encoding: 'utf8',
+  });
+  if (result.status !== 0 || result.error) return [];
+  return (result.stdout || '')
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+}
+
+function createBranchForPath(folderPath: string, branchName: string): BranchResult {
+  const safePath = resolveProjectPath(folderPath);
+  const result = spawnSync('git', ['-C', safePath, 'checkout', '-b', branchName], {
+    encoding: 'utf8',
+  });
+  if (result.status !== 0 || result.error) {
+    const stderr = (result.stderr || '').trim();
+    return { success: false, branch: branchName, error: stderr || 'Failed to create branch' };
+  }
+  return { success: true, branch: branchName };
+}
+
+function renameBranchForPath(folderPath: string, oldName: string, newName: string): BranchResult {
+  const safePath = resolveProjectPath(folderPath);
+  const result = spawnSync('git', ['-C', safePath, 'branch', '-m', oldName, newName], {
+    encoding: 'utf8',
+  });
+  if (result.status !== 0 || result.error) {
+    const stderr = (result.stderr || '').trim();
+    return { success: false, branch: newName, error: stderr || 'Failed to rename branch' };
+  }
+  return { success: true, branch: newName };
+}
+
+function checkoutBranchForPath(folderPath: string, branchName: string): BranchResult {
+  const safePath = resolveProjectPath(folderPath);
+  const result = spawnSync('git', ['-C', safePath, 'checkout', branchName], {
+    encoding: 'utf8',
+  });
+  if (result.status !== 0 || result.error) {
+    const stderr = (result.stderr || '').trim();
+    return { success: false, branch: branchName, error: stderr || 'Failed to checkout branch' };
+  }
+  return { success: true, branch: branchName };
+}
+
 export function registerProjectHandlers(ipcMain: IpcMain) {
   ipcMain.handle('projects:list', () => {
     return discoverClaudeProjects();
@@ -506,6 +566,41 @@ export function registerProjectHandlers(ipcMain: IpcMain) {
     }
 
     return readGitStatusForPath(folderPath);
+  });
+
+  ipcMain.handle('projects:list-branches', (_, folderPath: string) => {
+    if (typeof folderPath !== 'string' || !folderPath.trim()) return [];
+    return listBranchesForPath(folderPath);
+  });
+
+  ipcMain.handle('projects:create-branch', (_, folderPath: string, branchName: string) => {
+    if (typeof folderPath !== 'string' || !folderPath.trim() || typeof branchName !== 'string' || !branchName.trim()) {
+      return { success: false, branch: branchName || '', error: 'Invalid arguments' } satisfies BranchResult;
+    }
+    if (!isValidBranchName(branchName)) {
+      return { success: false, branch: branchName, error: 'Invalid branch name' } satisfies BranchResult;
+    }
+    return createBranchForPath(folderPath, branchName);
+  });
+
+  ipcMain.handle('projects:checkout-branch', (_, folderPath: string, branchName: string) => {
+    if (typeof folderPath !== 'string' || !folderPath.trim() || typeof branchName !== 'string' || !branchName.trim()) {
+      return { success: false, branch: branchName || '', error: 'Invalid arguments' } satisfies BranchResult;
+    }
+    if (!isValidBranchName(branchName)) {
+      return { success: false, branch: branchName, error: 'Invalid branch name' } satisfies BranchResult;
+    }
+    return checkoutBranchForPath(folderPath, branchName);
+  });
+
+  ipcMain.handle('projects:rename-branch', (_, folderPath: string, oldName: string, newName: string) => {
+    if (typeof folderPath !== 'string' || !folderPath.trim() || typeof oldName !== 'string' || !oldName.trim() || typeof newName !== 'string' || !newName.trim()) {
+      return { success: false, branch: newName || '', error: 'Invalid arguments' } satisfies BranchResult;
+    }
+    if (!isValidBranchName(oldName) || !isValidBranchName(newName)) {
+      return { success: false, branch: newName, error: 'Invalid branch name' } satisfies BranchResult;
+    }
+    return renameBranchForPath(folderPath, oldName, newName);
   });
 
   ipcMain.handle('projects:watch-history', (_, folderPath: string, encodedPath: string) => {

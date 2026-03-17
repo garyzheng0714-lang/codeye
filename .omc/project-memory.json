@@ -1,0 +1,524 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1773703704300,
+  "projectRoot": "/Users/simba/conductor/workspaces/codeye/surabaya",
+  "techStack": {
+    "languages": [
+      {
+        "name": "JavaScript/TypeScript",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "package.json"
+        ]
+      },
+      {
+        "name": "TypeScript",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "tsconfig.json"
+        ]
+      }
+    ],
+    "frameworks": [
+      {
+        "name": "react",
+        "version": "19.2.0",
+        "category": "frontend"
+      },
+      {
+        "name": "react-dom",
+        "version": "19.2.0",
+        "category": "frontend"
+      },
+      {
+        "name": "@playwright/test",
+        "version": "1.58.2",
+        "category": "testing"
+      },
+      {
+        "name": "vite",
+        "version": "7.3.1",
+        "category": "build"
+      },
+      {
+        "name": "vitest",
+        "version": "4.1.0",
+        "category": "testing"
+      }
+    ],
+    "packageManager": "npm",
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": "npm run build",
+    "testCommand": "npm test",
+    "lintCommand": "npm run lint",
+    "devCommand": "npm run dev",
+    "scripts": {
+      "dev": "concurrently -k \"vite\" \"tsc -p tsconfig.electron.json -w\" \"wait-on http://localhost:5180 dist-electron/main.js && VITE_DEV_SERVER_URL=http://localhost:5180 electronmon .\"",
+      "build": "tsc -b && vite build",
+      "build:electron": "tsc -p tsconfig.electron.json",
+      "dist": "npm run build && npm run build:electron && electron-builder --publish never && bash scripts/verify-icon.sh",
+      "dist:mac": "npm run build && npm run build:electron && electron-builder --mac dmg zip --publish never && bash scripts/verify-icon.sh",
+      "lint": "eslint .",
+      "test": "vitest run",
+      "test:watch": "vitest",
+      "test:e2e": "playwright test"
+    }
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": "type-based"
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [
+      "docs",
+      "public",
+      "scripts",
+      "src",
+      "tests"
+    ],
+    "gitBranches": {
+      "defaultBranch": "main",
+      "branchingStrategy": null
+    }
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "build": {
+      "path": "build",
+      "purpose": "Build output",
+      "fileCount": 2,
+      "lastAccessed": 1773703704279,
+      "keyFiles": [
+        "icon-source.png",
+        "icon.icns"
+      ]
+    },
+    "docs": {
+      "path": "docs",
+      "purpose": "Documentation",
+      "fileCount": 0,
+      "lastAccessed": 1773703704279,
+      "keyFiles": []
+    },
+    "electron": {
+      "path": "electron",
+      "purpose": null,
+      "fileCount": 3,
+      "lastAccessed": 1773703704282,
+      "keyFiles": [
+        "main.ts",
+        "preload.ts",
+        "updater.ts"
+      ]
+    },
+    "public": {
+      "path": "public",
+      "purpose": "Public files",
+      "fileCount": 2,
+      "lastAccessed": 1773703704283,
+      "keyFiles": [
+        "logo.png",
+        "logo.svg"
+      ]
+    },
+    "scripts": {
+      "path": "scripts",
+      "purpose": "Build/utility scripts",
+      "fileCount": 1,
+      "lastAccessed": 1773703704283,
+      "keyFiles": [
+        "verify-icon.sh"
+      ]
+    },
+    "src": {
+      "path": "src",
+      "purpose": "Source code",
+      "fileCount": 2,
+      "lastAccessed": 1773703704283,
+      "keyFiles": [
+        "App.tsx",
+        "main.tsx"
+      ]
+    },
+    "tests": {
+      "path": "tests",
+      "purpose": "Test files",
+      "fileCount": 0,
+      "lastAccessed": 1773703704284,
+      "keyFiles": []
+    },
+    "src/components": {
+      "path": "src/components",
+      "purpose": "UI components",
+      "fileCount": 1,
+      "lastAccessed": 1773703704286,
+      "keyFiles": [
+        "ErrorBoundary.tsx"
+      ]
+    },
+    "src/data": {
+      "path": "src/data",
+      "purpose": "Data files",
+      "fileCount": 7,
+      "lastAccessed": 1773703704287,
+      "keyFiles": [
+        "commandIcons.tsx",
+        "models.test.ts",
+        "models.ts"
+      ]
+    },
+    "src/migrations": {
+      "path": "src/migrations",
+      "purpose": "Database migrations",
+      "fileCount": 4,
+      "lastAccessed": 1773703704287,
+      "keyFiles": [
+        "migrationRunner.test.ts",
+        "migrationRunner.ts",
+        "v1-to-v2-commands.test.ts"
+      ]
+    },
+    "src/services": {
+      "path": "src/services",
+      "purpose": "Business logic services",
+      "fileCount": 37,
+      "lastAccessed": 1773703704287,
+      "keyFiles": [
+        "activityStream.test.ts",
+        "activityStream.ts",
+        "apiAdapter.ts"
+      ]
+    },
+    "tests/fixtures": {
+      "path": "tests/fixtures",
+      "purpose": "Test fixtures",
+      "fileCount": 1,
+      "lastAccessed": 1773703704287,
+      "keyFiles": [
+        "app.ts"
+      ]
+    },
+    "tests/pages": {
+      "path": "tests/pages",
+      "purpose": "Page components",
+      "fileCount": 3,
+      "lastAccessed": 1773703704287,
+      "keyFiles": [
+        "AppPage.ts",
+        "ChatPage.ts",
+        "SidebarPage.ts"
+      ]
+    }
+  },
+  "hotPaths": [
+    {
+      "path": "src/storage/sessionPersistence.ts",
+      "accessCount": 26,
+      "lastAccessed": 1773711606597,
+      "type": "file"
+    },
+    {
+      "path": "src",
+      "accessCount": 24,
+      "lastAccessed": 1773709919324,
+      "type": "directory"
+    },
+    {
+      "path": "",
+      "accessCount": 18,
+      "lastAccessed": 1773711441456,
+      "type": "directory"
+    },
+    {
+      "path": "electron/ipc/projects.ts",
+      "accessCount": 18,
+      "lastAccessed": 1773711493789,
+      "type": "file"
+    },
+    {
+      "path": "src/stores/sessionStore.ts",
+      "accessCount": 16,
+      "lastAccessed": 1773709912601,
+      "type": "file"
+    },
+    {
+      "path": "src/components/Layout/Sidebar.tsx",
+      "accessCount": 14,
+      "lastAccessed": 1773709733043,
+      "type": "file"
+    },
+    {
+      "path": "src/components/Session/SessionList.tsx",
+      "accessCount": 14,
+      "lastAccessed": 1773709923265,
+      "type": "file"
+    },
+    {
+      "path": "src/services/gitIntegration.ts",
+      "accessCount": 13,
+      "lastAccessed": 1773711441508,
+      "type": "file"
+    },
+    {
+      "path": "src/hooks/useInputComposer.ts",
+      "accessCount": 11,
+      "lastAccessed": 1773711494398,
+      "type": "file"
+    },
+    {
+      "path": "src/types/session.ts",
+      "accessCount": 9,
+      "lastAccessed": 1773707125848,
+      "type": "file"
+    },
+    {
+      "path": "src/components/Session/SessionRow.tsx",
+      "accessCount": 9,
+      "lastAccessed": 1773709733151,
+      "type": "file"
+    },
+    {
+      "path": "electron/preload.ts",
+      "accessCount": 7,
+      "lastAccessed": 1773708270927,
+      "type": "file"
+    },
+    {
+      "path": "src/components/Session/ProjectHeader.tsx",
+      "accessCount": 6,
+      "lastAccessed": 1773704386428,
+      "type": "file"
+    },
+    {
+      "path": "src/types/electron.d.ts",
+      "accessCount": 5,
+      "lastAccessed": 1773708271023,
+      "type": "file"
+    },
+    {
+      "path": "electron/ipc/sessions.ts",
+      "accessCount": 4,
+      "lastAccessed": 1773704376006,
+      "type": "file"
+    },
+    {
+      "path": "src/styles/components/session-list.css",
+      "accessCount": 4,
+      "lastAccessed": 1773709726890,
+      "type": "file"
+    },
+    {
+      "path": "src/utils/session.ts",
+      "accessCount": 4,
+      "lastAccessed": 1773709923315,
+      "type": "file"
+    },
+    {
+      "path": "src/types/index.ts",
+      "accessCount": 3,
+      "lastAccessed": 1773704257691,
+      "type": "file"
+    },
+    {
+      "path": "electron/main.ts",
+      "accessCount": 3,
+      "lastAccessed": 1773704266190,
+      "type": "file"
+    },
+    {
+      "path": "src/components",
+      "accessCount": 3,
+      "lastAccessed": 1773704396483,
+      "type": "directory"
+    },
+    {
+      "path": "src/hooks/useGitStatus.ts",
+      "accessCount": 3,
+      "lastAccessed": 1773704401226,
+      "type": "file"
+    },
+    {
+      "path": "src/types/git.ts",
+      "accessCount": 3,
+      "lastAccessed": 1773704401384,
+      "type": "file"
+    },
+    {
+      "path": "electron",
+      "accessCount": 3,
+      "lastAccessed": 1773704446577,
+      "type": "directory"
+    },
+    {
+      "path": "CLAUDE.md",
+      "accessCount": 3,
+      "lastAccessed": 1773709631596,
+      "type": "file"
+    },
+    {
+      "path": "src/migrations/migrationRunner.ts",
+      "accessCount": 3,
+      "lastAccessed": 1773709726780,
+      "type": "file"
+    },
+    {
+      "path": "src/migrations/v1-to-v2-commands.ts",
+      "accessCount": 3,
+      "lastAccessed": 1773711455463,
+      "type": "file"
+    },
+    {
+      "path": "electron/ipc/claude.ts",
+      "accessCount": 2,
+      "lastAccessed": 1773704268306,
+      "type": "file"
+    },
+    {
+      "path": "ROADMAP.md",
+      "accessCount": 2,
+      "lastAccessed": 1773704280755,
+      "type": "file"
+    },
+    {
+      "path": "src/storage/bootstrap.ts",
+      "accessCount": 2,
+      "lastAccessed": 1773704386320,
+      "type": "file"
+    },
+    {
+      "path": "src/storage/adapter.ts",
+      "accessCount": 2,
+      "lastAccessed": 1773704407419,
+      "type": "file"
+    },
+    {
+      "path": "src/stores/chatStore.ts",
+      "accessCount": 2,
+      "lastAccessed": 1773704431264,
+      "type": "file"
+    },
+    {
+      "path": "src/types",
+      "accessCount": 2,
+      "lastAccessed": 1773704552534,
+      "type": "directory"
+    },
+    {
+      "path": "src/migrations/v2-to-v3-branch.ts",
+      "accessCount": 2,
+      "lastAccessed": 1773711580732,
+      "type": "file"
+    },
+    {
+      "path": "electron/ipc/historyWatcher.ts",
+      "accessCount": 1,
+      "lastAccessed": 1773703876925,
+      "type": "file"
+    },
+    {
+      "path": "src/utils/sessionGrouping.ts",
+      "accessCount": 1,
+      "lastAccessed": 1773703878937,
+      "type": "file"
+    },
+    {
+      "path": ".context/todos.md",
+      "accessCount": 1,
+      "lastAccessed": 1773703880662,
+      "type": "file"
+    },
+    {
+      "path": ".context/notes.md",
+      "accessCount": 1,
+      "lastAccessed": 1773703880696,
+      "type": "file"
+    },
+    {
+      "path": "src/services/sessionInbox.ts",
+      "accessCount": 1,
+      "lastAccessed": 1773703882717,
+      "type": "file"
+    },
+    {
+      "path": "docs/superpowers/specs/2026-03-15-sidebar-redesign-design.md",
+      "accessCount": 1,
+      "lastAccessed": 1773703896379,
+      "type": "file"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-03-15-sidebar-redesign.md",
+      "accessCount": 1,
+      "lastAccessed": 1773703896750,
+      "type": "file"
+    },
+    {
+      "path": "src/services/gitWrite.ts",
+      "accessCount": 1,
+      "lastAccessed": 1773704163033,
+      "type": "file"
+    },
+    {
+      "path": "src/services/gitIntegration.test.ts",
+      "accessCount": 1,
+      "lastAccessed": 1773704176363,
+      "type": "file"
+    },
+    {
+      "path": "src/stores",
+      "accessCount": 1,
+      "lastAccessed": 1773704184046,
+      "type": "directory"
+    },
+    {
+      "path": "electron/ipc",
+      "accessCount": 1,
+      "lastAccessed": 1773704268368,
+      "type": "directory"
+    },
+    {
+      "path": "src/components/Layout/TitleBar.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1773704424539,
+      "type": "file"
+    },
+    {
+      "path": "src/hooks/useClaudeChat.ts",
+      "accessCount": 1,
+      "lastAccessed": 1773708210931,
+      "type": "file"
+    },
+    {
+      "path": ".context/attachments/Review request.md",
+      "accessCount": 1,
+      "lastAccessed": 1773709592802,
+      "type": "file"
+    },
+    {
+      "path": "src/migrations/v1-to-v2-commands.test.ts",
+      "accessCount": 1,
+      "lastAccessed": 1773711455411,
+      "type": "file"
+    },
+    {
+      "path": "src/migrations/v2-to-v3-branch.test.ts",
+      "accessCount": 1,
+      "lastAccessed": 1773711509254,
+      "type": "file"
+    },
+    {
+      "path": ".context/attachments/PR instructions.md",
+      "accessCount": 1,
+      "lastAccessed": 1773711737955,
+      "type": "file"
+    }
+  ],
+  "userDirectives": []
+}
