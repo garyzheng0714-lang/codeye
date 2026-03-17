@@ -6,7 +6,7 @@ import ToolExpandedContent from './ToolExpandedContent';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useStreamingTypewriter } from '../../hooks/useTypewriter';
-import { ToolIcon, SpinnerIcon } from '../../data/toolIcons';
+import { ToolIcon } from '../../data/toolIcons';
 import { getSemanticName, getToolIconBgClass } from '../../data/toolMeta';
 import { parseToolOutput } from '../../utils/toolOutputParser';
 
@@ -220,21 +220,19 @@ function TaskBlock({ tool, isStreaming }: { tool: ToolCallDisplay; isStreaming?:
     return { label: line.replace(/^\[(x|done|pending|\s)\]\s*/, ''), done: isDone };
   });
 
+  const title = String(tool.input.description || (tool.input.prompt as string)?.slice(0, 60) || 'Agent Task');
+
   if (!tasks || tasks.length === 0) {
     return (
       <div className="task-module">
         <div className="task-module-header">
-          <div className="tool-icon-square tool-icon-square--indigo">
-            {isRunning ? <SpinnerIcon size={14} /> : <ToolIcon name="Agent" size={14} />}
-          </div>
-          <span className="task-module-title">Agent</span>
-          {isRunning && (
-            <span className="task-module-status">
-              <span className="task-module-status-dot" />
-              IN PROGRESS
-            </span>
-          )}
+          <span className="task-module-title">Task: {title}</span>
+          <span className="task-module-status">
+            <span className="task-module-status-dot" />
+            IN PROGRESS
+          </span>
         </div>
+        <div className="task-module-meta">0/0 steps</div>
       </div>
     );
   }
@@ -245,12 +243,7 @@ function TaskBlock({ tool, isStreaming }: { tool: ToolCallDisplay; isStreaming?:
   return (
     <div className="task-module">
       <div className="task-module-header">
-        <div className="tool-icon-square tool-icon-square--indigo">
-          {isRunning ? <SpinnerIcon size={14} /> : <ToolIcon name="Agent" size={14} />}
-        </div>
-        <span className="task-module-title">
-          Task: {String(tool.input.description || (tool.input.prompt as string)?.slice(0, 50) || 'Agent Task')}
-        </span>
+        <span className="task-module-title">Task: {title}</span>
         <span className={`task-module-status ${allDone ? 'task-module-status--done' : ''}`}>
           <span className="task-module-status-dot" />
           {allDone ? 'COMPLETED' : 'IN PROGRESS'}
@@ -262,9 +255,9 @@ function TaskBlock({ tool, isStreaming }: { tool: ToolCallDisplay; isStreaming?:
           return (
             <div key={i} className={`task-item ${task.done ? 'task-item--done' : ''} ${isActive ? 'task-item--active' : ''}`}>
               {task.done ? (
-                <CheckCircle size={15} weight="fill" className="task-item-check" />
+                <CheckCircle size={18} weight="fill" className="task-item-check" />
               ) : isActive ? (
-                <CircleNotch size={15} weight="bold" className="task-item-spinner tool-spinner" />
+                <CircleNotch size={18} weight="bold" className="task-item-spinner tool-spinner" />
               ) : (
                 <span className="task-item-circle" />
               )}
@@ -273,11 +266,9 @@ function TaskBlock({ tool, isStreaming }: { tool: ToolCallDisplay; isStreaming?:
           );
         })}
       </div>
-      {allDone && (
-        <div className="task-module-meta">
-          {doneCount}/{tasks.length} steps
-        </div>
-      )}
+      <div className="task-module-meta">
+        {doneCount}/{tasks.length} steps
+      </div>
     </div>
   );
 }
