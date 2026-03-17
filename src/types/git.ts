@@ -130,12 +130,8 @@ export const gitAddRequestPayloadSchema = connectionContextSchema.extend({
   all: z.boolean().optional().default(true),
 });
 
-export type GitAddRequestPayload = z.infer<typeof gitAddRequestPayloadSchema>;
-
 export const gitAddResultPayloadSchema = z.object({
   operationId: z.uuid(),
   success: z.boolean(),
   error: errorPayloadSchema.optional(),
 });
-
-export type GitAddResultPayload = z.infer<typeof gitAddResultPayloadSchema>;

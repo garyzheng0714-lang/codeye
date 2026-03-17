@@ -1,7 +1,7 @@
 import { useEffect, useState, memo } from 'react';
 import { Shield, Check, X, Timer } from 'lucide-react';
 import { useChatStore } from '../../stores/chatStore';
-import { sendApprovalDecision, clearApprovalTimeout } from '../../services/toolApproval';
+import { sendApprovalDecision } from '../../services/toolApproval';
 import type { PendingApproval } from '../../types';
 
 export default memo(function ToolApproval({ approval }: { approval: PendingApproval }) {

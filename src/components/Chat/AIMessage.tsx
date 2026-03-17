@@ -1,5 +1,5 @@
 import { memo, useState, useMemo } from 'react';
-import { CaretDown, CaretRight, CircleNotch, CheckCircle, Check } from '@phosphor-icons/react';
+import { CaretDown, CaretRight, CircleNotch, CheckCircle } from '@phosphor-icons/react';
 import type { DisplayMessage, ToolCallDisplay } from '../../types';
 import CodeBlock from './CodeBlock';
 import ToolExpandedContent from './ToolExpandedContent';

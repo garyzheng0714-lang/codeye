@@ -19,11 +19,9 @@
 @import "./components/session-stats.css";
 @import "./components/activity-stream.css";
 @import "./components/error-boundary.css";
-@import "./components/diff-viewer.css";
 @import "./components/message-search.css";
 @import "./components/tool-approval.css";
 @import "./components/git-confirm.css";
-@import "./components/git-result-card.css";
 @import "./components/command-palette.css";
 @import "./components/file-tree.css";
 @import "./responsive.css";
