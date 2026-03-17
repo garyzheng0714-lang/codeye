@@ -73,12 +73,6 @@ const builtinThemes = new Map<string, ThemeDefinition>([
 const THEME_STORAGE_KEY = 'codeye.theme';
 
 export function getStoredTheme(): ThemeId {
-  try {
-    const stored = window.localStorage.getItem(THEME_STORAGE_KEY);
-    if (stored && builtinThemes.has(stored)) return stored;
-  } catch {
-    // ignore
-  }
   return 'light';
 }
 
