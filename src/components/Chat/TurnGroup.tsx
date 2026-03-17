@@ -29,14 +29,16 @@ export default memo(function TurnGroup({ turn, isLast }: Props) {
             : 'Collapse'}
         </button>
       )}
-      {(!toolsCollapsed || isLast) &&
+      {(!toolsCollapsed || isLast) ? (
         turn.assistantMessages.map((msg) => (
           <AIMessage key={msg.id} message={msg} />
-        ))}
-      {toolsCollapsed && !isLast && turn.assistantMessages.length > 0 && (
-        <AIMessage
-          message={turn.assistantMessages[turn.assistantMessages.length - 1]}
-        />
+        ))
+      ) : (
+        turn.assistantMessages.length > 0 && (
+          <AIMessage
+            message={turn.assistantMessages[turn.assistantMessages.length - 1]}
+          />
+        )
       )}
     </div>
   );

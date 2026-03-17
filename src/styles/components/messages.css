@@ -1,20 +1,35 @@
+/* ══════════════════════════════════════════
+   Messages — Notion-warm + Glass Tool Blocks
+   ══════════════════════════════════════════ */
+
 .message-list {
   flex: 1;
   overflow-y: auto;
-  padding: var(--space-6);
+  padding: 0 var(--space-6);
   display: flex;
   flex-direction: column;
-  gap: var(--space-5);
+  background: var(--chat-bg);
 }
 
 .message-list > .message-list-spacer {
   flex: 1 0 0px;
 }
 
+/* ── Turn Group ── */
+
 .turn-group {
   display: flex;
   flex-direction: column;
-  gap: var(--space-5);
+  padding: 20px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.turn-group:last-child {
+  border-bottom: none;
+}
+
+[data-theme="light"] .turn-group {
+  border-bottom-color: rgba(0, 0, 0, 0.04);
 }
 
 .turn-collapse-btn {
@@ -27,6 +42,7 @@
   color: var(--text-muted);
   cursor: pointer;
   transition: all var(--transition-fast);
+  margin: var(--space-3) 0;
 }
 
 .turn-collapse-btn:hover {
@@ -38,41 +54,53 @@
 
 .message-row {
   display: flex;
-  gap: var(--space-4);
+  gap: 14px;
   max-width: 100%;
   width: 100%;
   animation: slideUp var(--transition-base);
   align-items: flex-start;
 }
 
-/* ── Message Avatar ── */
+.message-row + .message-row {
+  margin-top: 20px;
+}
+
+/* ── Message Avatar — 24px rounded square ── */
 
 .message-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-full);
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  background: var(--bg-tertiary);
-  color: var(--text-secondary);
-  border: 1px solid var(--border-subtle);
+  margin-top: 2px;
+  font-size: 12px;
+  font-weight: 600;
 }
 
 .message-avatar--user {
-  background: var(--bg-tertiary);
+  background: var(--accent-muted);
+  color: var(--code-inline-fg);
 }
 
 .message-avatar--ai {
-  background: var(--bg-base);
-  border: 1px solid var(--accent);
-  color: var(--accent);
+  background: linear-gradient(135deg, var(--accent-deep), var(--accent));
+  border: none;
   transition: box-shadow var(--transition-base);
 }
 
-[data-theme="light"] .message-avatar--ai {
-  background: white;
+.message-avatar--ai .avatar-eyes {
+  display: flex;
+  gap: 2px;
+}
+
+.message-avatar--ai .avatar-eye {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
 }
 
 /* ── Message Content Wrapper ── */
@@ -90,6 +118,7 @@
   align-items: center;
   gap: var(--space-2);
   min-height: 20px;
+  display: none;
 }
 
 .message-sender {
@@ -110,11 +139,12 @@
 }
 
 .user-message-content {
-  font-size: var(--text-md);
-  line-height: 1.6;
-  color: var(--text-primary);
+  font-size: 15px;
+  line-height: 1.72;
+  color: var(--chat-text-strong);
   white-space: pre-wrap;
   word-break: break-word;
+  letter-spacing: -0.01em;
 }
 
 /* ── AI Message ── */
@@ -123,34 +153,29 @@
   justify-content: flex-start;
 }
 
-/* Kiro-style flat message (no card) */
 .ai-message-flat {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: 10px;
   min-width: 0;
-}
-
-/* Tool blocks gap within AI message */
-.ai-message-flat > .tool-block + .tool-block {
-  margin-top: 0;
 }
 
 .ai-message-flat > .tool-block + .thinking-block,
 .ai-message-flat > .thinking-block + .ai-message-text,
 .ai-message-flat > .tool-block + .ai-message-text {
-  margin-top: var(--space-2);
+  margin-top: 4px;
 }
 
 /* ══════════════════════════════════════════
-   Tool Blocks — Kiro Style
+   Tool Blocks — Glass Style
    ══════════════════════════════════════════ */
 
 .tool-block {
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
-  background: var(--bg-secondary);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  box-shadow: var(--glass-shadow);
   overflow: hidden;
   animation: toolCardEnter var(--transition-slow) both;
 }
@@ -158,30 +183,86 @@
 .tool-block-header {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
-  padding: 7px var(--space-4);
+  gap: 10px;
+  padding: 9px 14px;
   min-height: 34px;
   cursor: pointer;
   transition: background var(--transition-fast);
 }
 
 .tool-block-header:hover {
-  background: var(--interactive-hover-soft);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+[data-theme="light"] .tool-block-header:hover {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+/* ── Tool Icon Square ── */
+
+.tool-icon-square {
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.tool-icon-square svg,
+.tool-icon-square .tool-spinner {
+  width: 14px;
+  height: 14px;
+}
+
+.tool-icon-square--green  { background: var(--tool-bg-green);  color: var(--success); }
+.tool-icon-square--yellow { background: var(--tool-bg-yellow); color: var(--warning); }
+.tool-icon-square--gray   { background: var(--tool-bg-gray);   color: var(--text-secondary); }
+.tool-icon-square--blue   { background: var(--tool-bg-blue);   color: #38bdf8; }
+.tool-icon-square--purple { background: var(--tool-bg-purple); color: var(--accent); }
+.tool-icon-square--indigo { background: var(--tool-bg-indigo); color: var(--info); }
+
+[data-theme="light"] .tool-icon-square--blue { color: #0e7490; }
+
+/* Legacy .tool-icon class (still used in some places) */
+.tool-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.tool-icon--spinning {
+  animation: toolRingSpin 0.9s linear infinite;
 }
 
 .tool-block-label {
-  font-size: var(--text-sm);
+  font-size: 13px;
   font-weight: 500;
-  color: var(--text-secondary);
+  color: var(--chat-text-dim);
 }
 
 .tool-block-files {
   display: flex;
   align-items: center;
-  gap: var(--space-1);
+  gap: 5px;
   flex-wrap: wrap;
   flex: 1;
   min-width: 0;
+}
+
+.tool-file-badge {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--pill-fg);
+  background: var(--pill-bg);
+  padding: 2px 8px;
+  border-radius: var(--pill-radius);
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .tool-block-more {
@@ -201,27 +282,223 @@
   color: var(--text-muted);
 }
 
+/* ── Kiro-style Status Circles ── */
+
+.tool-status-circle {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.tool-status-circle--done {
+  background: var(--status-done-bg);
+  color: var(--status-done-fg);
+}
+
+.tool-status-circle--running {
+  background: var(--status-running-bg);
+}
+
+.tool-status-circle--running .status-pulse-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--status-running-fg);
+  animation: statusPulse 1.2s ease-in-out infinite;
+}
+
+.tool-status-circle--error {
+  background: var(--status-error-bg);
+  color: var(--status-error-fg);
+}
+
+/* ── Tool Diff Count ── */
+
+.tool-diff-count {
+  margin-left: auto;
+  display: flex;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+.tool-diff-add { color: rgba(52, 211, 153, 0.7); }
+.tool-diff-del { color: rgba(248, 113, 113, 0.5); }
+
+[data-theme="light"] .tool-diff-add { color: rgba(22, 163, 74, 0.7); }
+[data-theme="light"] .tool-diff-del { color: rgba(220, 38, 38, 0.5); }
+
+/* ── Tool Block Content (expanded output) ── */
+
 .tool-block-content {
-  padding: var(--space-3);
-  border-top: 1px solid var(--surface-glass-divider);
+  padding: 10px 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(0, 0, 0, 0.18);
+}
+
+[data-theme="light"] .tool-block-content {
+  border-top-color: rgba(0, 0, 0, 0.05);
+  background: rgba(0, 0, 0, 0.02);
 }
 
 .tool-block-output {
   font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  color: var(--text-secondary);
+  font-size: 11.5px;
+  color: var(--chat-text-dimmer);
   white-space: pre-wrap;
   overflow-x: auto;
   max-height: 300px;
   overflow-y: auto;
+  line-height: 1.65;
 }
 
-/* ── AI Text Content ── */
+/* ══════════════════════════════════════════
+   Task Block — Kiro Style
+   ══════════════════════════════════════════ */
+
+.task-module {
+  background: var(--glass-bg);
+  border: 1px solid var(--border-info);
+  border-radius: 10px;
+  box-shadow: var(--glass-shadow);
+  overflow: hidden;
+  animation: toolCardEnter var(--transition-slow) both;
+}
+
+.task-module-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(129, 140, 248, 0.08);
+}
+
+[data-theme="light"] .task-module-header {
+  border-bottom-color: rgba(79, 70, 229, 0.08);
+}
+
+.task-module-title {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--chat-text);
+  flex: 1;
+}
+
+.task-module-status {
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--info);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.task-module-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--info);
+  box-shadow: 0 0 6px rgba(129, 140, 248, 0.4);
+}
+
+.task-module-status--done {
+  color: var(--success);
+}
+
+.task-module-status--done .task-module-status-dot {
+  background: var(--success);
+  box-shadow: 0 0 6px rgba(52, 211, 153, 0.4);
+}
+
+.task-module-count {
+  font-size: 11px;
+  color: var(--info);
+  font-family: var(--font-mono);
+  margin-left: auto;
+}
+
+.task-module-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  border-bottom: 1px solid rgba(129, 140, 248, 0.06);
+  font-size: 12px;
+  color: var(--chat-text-dimmer);
+}
+
+.task-module-list {
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.task-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+
+.task-item-check {
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: var(--success);
+}
+
+.task-item-circle {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.04);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+[data-theme="light"] .task-item-circle {
+  border-color: rgba(0, 0, 0, 0.10);
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.task-item-spinner {
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: var(--info);
+}
+
+.task-item-label {
+  color: var(--chat-text-dim);
+}
+
+.task-item--done .task-item-label {
+  color: var(--chat-text-dimmer);
+}
+
+.task-item--active .task-item-label {
+  color: var(--code-inline-fg);
+}
+
+.tool-spinner {
+  animation: toolRingSpin 0.9s linear infinite;
+}
+
+/* ── AI Text Content — Notion warm typography ── */
 
 .ai-message-text {
-  font-size: var(--text-md);
-  line-height: 1.75;
-  color: var(--text-primary);
+  font-size: 15px;
+  line-height: 1.78;
+  color: var(--chat-text);
+  letter-spacing: -0.01em;
 }
 
 .ai-message-text p {
@@ -232,6 +509,11 @@
   margin-bottom: 0;
 }
 
+.ai-message-text strong {
+  color: var(--chat-text-strong);
+  font-weight: 500;
+}
+
 .ai-message-text ul, .ai-message-text ol {
   padding-left: var(--space-5);
   margin-bottom: var(--space-4);
@@ -239,18 +521,21 @@
 
 .ai-message-text li {
   margin-bottom: var(--space-2);
+  color: var(--chat-text);
+  line-height: 1.72;
 }
 
 .ai-message-text h1, .ai-message-text h2, .ai-message-text h3 {
   margin-top: var(--space-6);
   margin-bottom: var(--space-3);
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--chat-text-strong);
+  letter-spacing: -0.01em;
 }
 
 .ai-message-text h1 { font-size: var(--text-xl); }
 .ai-message-text h2 { font-size: var(--text-lg); }
-.ai-message-text h3 { font-size: var(--text-md); font-weight: 700; }
+.ai-message-text h3 { font-size: 15px; font-weight: 600; }
 
 .ai-message-text a {
   color: var(--accent);
@@ -261,12 +546,15 @@
   text-decoration: underline;
 }
 
+/* Inline code — purple tinted */
 .ai-message-text code {
-  background: var(--bg-tertiary);
-  padding: 2px 6px;
-  border-radius: var(--radius-xs);
+  background: var(--code-inline-bg);
+  padding: 2px 7px;
+  border-radius: 4px;
   font-family: var(--font-mono);
-  font-size: 0.9em;
+  font-size: 13px;
+  color: var(--code-inline-fg);
+  font-weight: 400;
 }
 
 .ai-message-text pre {
@@ -280,6 +568,23 @@
 .ai-message-text pre code {
   background: none;
   padding: 0;
+  color: var(--text-code);
+}
+
+/* Blockquote — purple left border */
+.ai-message-text blockquote {
+  border-left: 3px solid rgba(168, 85, 247, 0.3);
+  padding: 8px 16px;
+  margin: 8px 0;
+  background: rgba(168, 85, 247, 0.03);
+  border-radius: 0 6px 6px 0;
+  color: var(--chat-text-dim);
+  font-size: 14px;
+}
+
+[data-theme="light"] .ai-message-text blockquote {
+  border-left-color: rgba(147, 51, 234, 0.3);
+  background: rgba(147, 51, 234, 0.03);
 }
 
 /* ── Streaming Typewriter Cursor ── */
@@ -314,13 +619,11 @@
 @keyframes avatarBreath {
   0%, 100% {
     box-shadow:
-      0 0 0 1px var(--accent),
       0 0 8px var(--accent-glow),
       0 0 16px rgba(168, 85, 247, 0.2);
   }
   50% {
     box-shadow:
-      0 0 0 1px var(--accent),
       0 0 16px var(--accent-glow),
       0 0 32px rgba(168, 85, 247, 0.4),
       0 0 48px rgba(168, 85, 247, 0.15);
@@ -328,33 +631,55 @@
 }
 
 /* ══════════════════════════════════════════
-   Thinking State — Kiro Style
+   Thinking Block — Animated Dots
    ══════════════════════════════════════════ */
 
 .thinking-block {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
+  gap: 10px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
+[data-theme="light"] .thinking-block {
+  background: rgba(0, 0, 0, 0.02);
+  border-color: rgba(0, 0, 0, 0.05);
+}
+
+.thinking-dots {
+  display: flex;
+  gap: 4px;
+}
+
+.thinking-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: thinkPulse 1.4s ease-in-out infinite;
+}
+
+.thinking-dot:nth-child(2) { animation-delay: 0.2s; }
+.thinking-dot:nth-child(3) { animation-delay: 0.4s; }
+
 .thinking-text {
-  font-size: var(--text-sm);
-  color: var(--text-muted);
+  font-size: 13px;
+  color: var(--chat-text-dimmer);
+  font-style: italic;
 }
 
 /* ── Inline Code ── */
 
 .inline-code {
-  background: var(--bg-tertiary);
-  padding: 2px 6px;
-  border-radius: var(--radius-xs);
+  background: var(--code-inline-bg);
+  padding: 2px 7px;
+  border-radius: 4px;
   font-family: var(--font-mono);
-  font-size: 0.9em;
-  color: var(--text-code);
+  font-size: 13px;
+  color: var(--code-inline-fg);
 }
 
 /* ── Animations ── */

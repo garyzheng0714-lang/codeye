@@ -139,6 +139,39 @@
   --pill-padding: 2px 7px;
   --pill-radius: var(--radius-xs);
 
+  /* Chat — warm Notion-style overrides */
+  --chat-bg: #191919;
+  --chat-text: #e0ddd8;
+  --chat-text-strong: #f5f3ef;
+  --chat-text-dim: #8a857e;
+  --chat-text-dimmer: #6b6560;
+
+  /* Glass tool block */
+  --glass-bg: rgba(255, 255, 255, 0.035);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-shadow: 0 1px 3px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  --glass-blur: 12px;
+
+  /* Tool icon background squares */
+  --tool-bg-green: rgba(52, 211, 153, 0.10);
+  --tool-bg-yellow: rgba(251, 191, 36, 0.10);
+  --tool-bg-gray: rgba(154, 148, 144, 0.10);
+  --tool-bg-blue: rgba(56, 189, 248, 0.10);
+  --tool-bg-purple: rgba(168, 85, 247, 0.10);
+  --tool-bg-indigo: rgba(129, 140, 248, 0.10);
+
+  /* Kiro-style status circles */
+  --status-done-bg: rgba(52, 211, 153, 0.15);
+  --status-done-fg: var(--success);
+  --status-running-bg: rgba(168, 85, 247, 0.15);
+  --status-running-fg: var(--accent);
+  --status-error-bg: rgba(248, 113, 113, 0.15);
+  --status-error-fg: var(--danger);
+
+  /* Inline code accent */
+  --code-inline-bg: rgba(168, 85, 247, 0.10);
+  --code-inline-fg: #c4b5fd;
+
   /* Layout */
   --activity-bar-w: 48px;
   --sidebar-w: 280px;
@@ -220,16 +253,41 @@
   --shadow-glow-lg: 0 0 32px rgba(147, 51, 234, 0.08);
 
   /* Light theme status circles */
-  --status-circle-done-bg: rgba(22, 163, 74, 0.1);
-  --status-circle-done-fg: #16a34a;
-  --status-circle-running-bg: rgba(147, 51, 234, 0.1);
-  --status-circle-running-fg: #9333ea;
-  --status-circle-error-bg: rgba(220, 38, 38, 0.1);
-  --status-circle-error-fg: #dc2626;
+  --status-done-bg: rgba(22, 163, 74, 0.12);
+  --status-done-fg: #16a34a;
+  --status-running-bg: rgba(147, 51, 234, 0.12);
+  --status-running-fg: #9333ea;
+  --status-error-bg: rgba(220, 38, 38, 0.12);
+  --status-error-fg: #dc2626;
 
   /* Light theme pill */
   --pill-bg: rgba(0, 0, 0, 0.05);
   --pill-fg: #6b7280;
+
+  /* Chat — warm light overrides */
+  --chat-bg: #ffffff;
+  --chat-text: #37352f;
+  --chat-text-strong: #111113;
+  --chat-text-dim: #787774;
+  --chat-text-dimmer: #a3a19e;
+
+  /* Glass — light theme */
+  --glass-bg: rgba(0, 0, 0, 0.025);
+  --glass-border: rgba(0, 0, 0, 0.08);
+  --glass-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  --glass-blur: 12px;
+
+  /* Tool icon bg — light */
+  --tool-bg-green: rgba(22, 163, 74, 0.08);
+  --tool-bg-yellow: rgba(217, 119, 6, 0.08);
+  --tool-bg-gray: rgba(0, 0, 0, 0.05);
+  --tool-bg-blue: rgba(14, 116, 144, 0.08);
+  --tool-bg-purple: rgba(147, 51, 234, 0.08);
+  --tool-bg-indigo: rgba(79, 70, 229, 0.08);
+
+  /* Inline code — light */
+  --code-inline-bg: rgba(147, 51, 234, 0.08);
+  --code-inline-fg: #7c3aed;
 
   color-scheme: light;
 }
