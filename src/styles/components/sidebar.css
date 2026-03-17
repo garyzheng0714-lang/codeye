@@ -69,11 +69,13 @@
 
 .sidebar-search-wrapper {
   padding: 0 var(--space-3) var(--space-2);
+  -webkit-app-region: no-drag;
 }
 
 .sidebar-actions {
   display: flex;
   align-items: center;
+  -webkit-app-region: no-drag;
 }
 
 .sidebar-action-btn {
@@ -105,6 +107,9 @@
   flex: 1;
   overflow-y: auto;
   padding: var(--space-1) 0;
+  /* contain: layout paint creates a containing block for abs-positioned descendants,
+     but .project-header's position:relative is closer in the DOM tree, so .folder-menu
+     (position:absolute) resolves to .project-header — not this element. Safe to keep. */
   contain: layout paint;
 }
 
