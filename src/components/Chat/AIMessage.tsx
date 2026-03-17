@@ -1,17 +1,17 @@
 import { memo, useState } from 'react';
-import { CaretDown, CaretRight, CircleNotch, CheckCircle } from '@phosphor-icons/react';
+import { CaretDown, CaretRight, CircleNotch, CheckCircle, Check } from '@phosphor-icons/react';
 import type { DisplayMessage, ToolCallDisplay } from '../../types';
-import CodeyeMark from '../Brand/CodeyeMark';
 import CodeBlock from './CodeBlock';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useStreamingTypewriter } from '../../hooks/useTypewriter';
 import { ToolIcon, SpinnerIcon } from '../../data/toolIcons';
-import { getToolColor, getSemanticName } from '../../data/toolMeta';
+import { getSemanticName, getToolIconBgClass } from '../../data/toolMeta';
 
 type ToolType = 'read' | 'search' | 'edit' | 'command' | 'agent' | 'task' | 'other';
 
 function getToolType(name: string): ToolType {
+  if (!name) return 'other';
   if (name === 'Read') return 'read';
   if (name === 'Edit' || name === 'Write') return 'edit';
   if (name === 'Glob' || name === 'Grep' || name === 'ToolSearch' || name === 'WebSearch') return 'search';
@@ -41,43 +41,92 @@ function getToolBlockStatus(tool: ToolCallDisplay, isStreaming?: boolean): 'done
   return 'done';
 }
 
+function parseEditDiff(output?: string): { added: number; removed: number } | null {
+  if (!output) return null;
+  const addMatch = output.match(/(\d+)\s*(?:insertion|addition|line)/);
+  const delMatch = output.match(/(\d+)\s*(?:deletion|removal)/);
+  if (addMatch || delMatch) {
+    return {
+      added: addMatch ? parseInt(addMatch[1], 10) : 0,
+      removed: delMatch ? parseInt(delMatch[1], 10) : 0,
+    };
+  }
+  return null;
+}
+
+function ToolStatusIndicator({ status, toolName }: { status: 'done' | 'running' | 'error'; toolName?: string }) {
+  if (status === 'running') {
+    return (
+      <span className="tool-status-circle tool-status-circle--running">
+        <span className="status-pulse-dot" />
+      </span>
+    );
+  }
+  if (status === 'error') {
+    return (
+      <span className="tool-status-circle tool-status-circle--error">
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+          <path d="M5 2.5v3M5 7v.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        </svg>
+      </span>
+    );
+  }
+  // Done: show tool-type icon in colored square for visual variety
+  const bgClass = getToolIconBgClass(toolName || '');
+  return (
+    <div className={`tool-icon-square ${bgClass}`}>
+      <ToolIcon name={toolName || ''} size={14} />
+    </div>
+  );
+}
+
 function ToolBlock({ tool, isStreaming }: { tool: ToolCallDisplay; isStreaming?: boolean }) {
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
   const toolType = getToolType(tool.name);
   const status = getToolBlockStatus(tool, isStreaming);
-
-  const color = status === 'error'
-    ? 'var(--danger)'
-    : status === 'running'
-      ? 'var(--text-muted)'
-      : getToolColor(tool.name);
 
   const fileName = tool.input.file_path
     ? String(tool.input.file_path).split('/').pop()
     : null;
 
+  const isEdit = tool.name === 'Edit' || tool.name === 'Write';
+  const diff = isEdit ? parseEditDiff(tool.output) : null;
+
   return (
     <div className="tool-block">
       <div
         className="tool-block-header"
-        onClick={() => tool.output && setIsExpanded(!isExpanded)}
+        onClick={() => setIsExpanded(!isExpanded)}
         role="button"
         aria-expanded={isExpanded}
         tabIndex={0}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
-            tool.output && setIsExpanded(!isExpanded);
+            setIsExpanded(!isExpanded);
           }
         }}
       >
-        <span className={`tool-icon ${status === 'running' ? 'tool-icon--spinning' : ''}`} style={{ color }}>
-          {status === 'running' ? <SpinnerIcon size={15} /> : <ToolIcon name={tool.name} size={15} />}
+        <ToolStatusIndicator status={status} toolName={tool.name} />
+
+        <span className="tool-block-label">
+          {toolType === 'other' ? getSemanticName(tool.name) : getToolLabel(tool.name, toolType)}
         </span>
 
-        <span className="tool-block-label">{toolType === 'other' ? getSemanticName(tool.name) : getToolLabel(tool.name, toolType)}</span>
-
         {fileName && <span className="tool-file-badge">{fileName}</span>}
+
+        {/* Command string for Bash */}
+        {tool.name === 'Bash' && typeof tool.input.command === 'string' && (
+          <span className="tool-file-badge">{tool.input.command.slice(0, 60)}</span>
+        )}
+
+        {/* Diff counts for Edit */}
+        {diff && (
+          <span className="tool-diff-count">
+            <span className="tool-diff-add">+{diff.added}</span>
+            <span className="tool-diff-del">-{diff.removed}</span>
+          </span>
+        )}
 
         {tool.output && (
           <span className="tool-block-expand">
@@ -100,18 +149,10 @@ function ReadGroup({ tools, isStreaming }: { tools: ToolCallDisplay[]; isStreami
   const anyRunning = isStreaming && tools.some(t => t.output === undefined);
   const status: 'done' | 'running' | 'error' = anyRunning ? 'running' : anyError ? 'error' : 'done';
 
-  const color = status === 'error'
-    ? 'var(--danger)'
-    : status === 'running'
-      ? 'var(--text-muted)'
-      : getToolColor('Read');
-
   return (
     <div className="tool-block">
       <div className="tool-block-header">
-        <span className={`tool-icon ${status === 'running' ? 'tool-icon--spinning' : ''}`} style={{ color }}>
-          {status === 'running' ? <SpinnerIcon size={15} /> : <ToolIcon name="Read" size={15} />}
-        </span>
+        <ToolStatusIndicator status={status} toolName="Read" />
         <span className="tool-block-label">
           {tools.length > 1 ? `Read ${tools.length} files` : 'Read file'}
         </span>
@@ -143,41 +184,60 @@ function TaskBlock({ tool, isStreaming }: { tool: ToolCallDisplay; isStreaming?:
     return (
       <div className="task-module">
         <div className="task-module-header">
-          <span className={`tool-icon ${isRunning ? 'tool-icon--spinning' : ''}`} style={{ color: '#818cf8' }}>
-            {isRunning ? <SpinnerIcon size={15} /> : <ToolIcon name="Agent" size={15} />}
-          </span>
+          <div className="tool-icon-square tool-icon-square--indigo">
+            {isRunning ? <SpinnerIcon size={14} /> : <ToolIcon name="Agent" size={14} />}
+          </div>
           <span className="task-module-title">Agent</span>
-          {isRunning && <span className="task-module-status">running...</span>}
+          {isRunning && (
+            <span className="task-module-status">
+              <span className="task-module-status-dot" />
+              IN PROGRESS
+            </span>
+          )}
         </div>
       </div>
     );
   }
 
   const doneCount = tasks.filter(t => t.done).length;
+  const allDone = doneCount === tasks.length && !isRunning;
 
   return (
     <div className="task-module">
       <div className="task-module-header">
-        <span className={`tool-icon ${isRunning ? 'tool-icon--spinning' : ''}`} style={{ color: '#818cf8' }}>
-          {isRunning ? <SpinnerIcon size={15} /> : <ToolIcon name="Agent" size={15} />}
+        <div className="tool-icon-square tool-icon-square--indigo">
+          {isRunning ? <SpinnerIcon size={14} /> : <ToolIcon name="Agent" size={14} />}
+        </div>
+        <span className="task-module-title">
+          Task: {String(tool.input.description || (tool.input.prompt as string)?.slice(0, 50) || 'Agent Task')}
         </span>
-        <span className="task-module-title">Agent Task</span>
-        <span className="task-module-count">{doneCount}/{tasks.length}</span>
+        <span className={`task-module-status ${allDone ? 'task-module-status--done' : ''}`}>
+          <span className="task-module-status-dot" />
+          {allDone ? 'COMPLETED' : 'IN PROGRESS'}
+        </span>
       </div>
       <div className="task-module-list">
-        {tasks.map((task, i) => (
-          <div key={i} className={`task-item ${task.done ? 'task-item--done' : ''}`}>
-            {task.done ? (
-              <CheckCircle size={15} weight="fill" className="task-item-check" />
-            ) : isRunning && i === doneCount ? (
-              <CircleNotch size={15} weight="bold" className="task-item-spinner tool-spinner" />
-            ) : (
-              <span className="task-item-circle" />
-            )}
-            <span className="task-item-label">{task.label}</span>
-          </div>
-        ))}
+        {tasks.map((task, i) => {
+          const isActive = isRunning && !task.done && i === doneCount;
+          return (
+            <div key={i} className={`task-item ${task.done ? 'task-item--done' : ''} ${isActive ? 'task-item--active' : ''}`}>
+              {task.done ? (
+                <CheckCircle size={15} weight="fill" className="task-item-check" />
+              ) : isActive ? (
+                <CircleNotch size={15} weight="bold" className="task-item-spinner tool-spinner" />
+              ) : (
+                <span className="task-item-circle" />
+              )}
+              <span className="task-item-label">{task.label}</span>
+            </div>
+          );
+        })}
       </div>
+      {allDone && (
+        <div className="task-module-meta">
+          {doneCount}/{tasks.length} steps
+        </div>
+      )}
     </div>
   );
 }
@@ -207,14 +267,13 @@ export default memo(function AIMessage({ message }: { message: DisplayMessage })
   return (
     <div className="message-row ai-message-row" data-message-id={message.id}>
       <div className={`message-avatar message-avatar--ai ${message.isStreaming ? 'streaming' : ''}`}>
-        <CodeyeMark size={20} animate={message.isStreaming ? 'thinking' : 'idle'} />
+        <div className="avatar-eyes">
+          <div className="avatar-eye" />
+          <div className="avatar-eye" />
+        </div>
       </div>
 
       <div className="message-content-wrapper">
-        <div className="message-header">
-          <span className="message-sender">Codeye</span>
-        </div>
-
         <div className="ai-message-flat">
           {groupedTools.map((item, idx) => {
             if ('kind' in item && item.kind === 'group') {
@@ -229,8 +288,12 @@ export default memo(function AIMessage({ message }: { message: DisplayMessage })
 
           {isThinking && (
             <div className="thinking-block">
-              <SpinnerIcon size={15} />
-              <span className="thinking-text">Thinking</span>
+              <div className="thinking-dots">
+                <div className="thinking-dot" />
+                <div className="thinking-dot" />
+                <div className="thinking-dot" />
+              </div>
+              <span className="thinking-text">Thinking...</span>
             </div>
           )}
 

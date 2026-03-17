@@ -46,6 +46,26 @@ export function getSemanticName(name: string): string {
   return semanticNames[name] || name;
 }
 
+export function getToolIconBgClass(name: string): string {
+  if (!name) return 'tool-icon-square--gray';
+  if (name.startsWith('mcp__')) {
+    if (name.includes('playwright')) return 'tool-icon-square--blue';
+    if (name.includes('exa')) return 'tool-icon-square--purple';
+    return 'tool-icon-square--gray';
+  }
+  switch (name) {
+    case 'Read': case 'Write': return 'tool-icon-square--green';
+    case 'Edit': return 'tool-icon-square--yellow';
+    case 'Bash': return 'tool-icon-square--gray';
+    case 'Grep': case 'Glob': case 'ToolSearch': return 'tool-icon-square--blue';
+    case 'WebSearch': case 'WebFetch': return 'tool-icon-square--purple';
+    case 'Agent': case 'Task': case 'TaskCreate': case 'TaskUpdate': return 'tool-icon-square--indigo';
+    case 'Skill': return 'tool-icon-square--purple';
+    case 'AskUserQuestion': return 'tool-icon-square--purple';
+    default: return 'tool-icon-square--gray';
+  }
+}
+
 export function getToolColor(name: string): string {
   if (name.startsWith('mcp__')) {
     if (name.includes('playwright')) return '#2dd4bf'; // teal
