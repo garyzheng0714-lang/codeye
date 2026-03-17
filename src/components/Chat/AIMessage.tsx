@@ -55,17 +55,16 @@ function ToolStatusIndicator({ status, toolName }: { status: 'done' | 'running' 
   if (status === 'error') {
     return (
       <span className="tool-status-circle tool-status-circle--error">
-        <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-          <path d="M5 2.5v3M5 7v.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+          <path d="M6 3v3.5M6 8.5v.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
         </svg>
       </span>
     );
   }
-  // Done: show tool-type icon in colored square for visual variety
   const bgClass = getToolIconBgClass(toolName || '');
   return (
     <div className={`tool-icon-square ${bgClass}`}>
-      <ToolIcon name={toolName || ''} size={14} />
+      <ToolIcon name={toolName || ''} size={15} />
     </div>
   );
 }
@@ -326,7 +325,6 @@ export default memo(function AIMessage({ message, showAvatar = true }: { message
                 <div className="thinking-dot" />
                 <div className="thinking-dot" />
               </div>
-              <span className="thinking-text">Thinking...</span>
             </div>
           )}
 

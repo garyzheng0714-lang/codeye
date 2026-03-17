@@ -78,7 +78,7 @@
   color: var(--pill-fg);
   background: var(--pill-bg);
   padding: var(--pill-padding);
-  border-radius: var(--pill-radius);
+  border-radius: var(--radius-sm);
 }
 
 /* Count badge */

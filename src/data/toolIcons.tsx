@@ -20,9 +20,9 @@ import {
   Plug,
 } from '@phosphor-icons/react';
 
-const WEIGHT = 'bold' as const;
+const WEIGHT = 'regular' as const;
 
-export function ToolIcon({ name, size = 14 }: { name: string; size?: number }) {
+export function ToolIcon({ name, size = 15 }: { name: string; size?: number }) {
   const props = { size, weight: WEIGHT } as const;
 
   // MCP tools: extract category from mcp__<server>__<action>
@@ -52,14 +52,14 @@ export function ToolIcon({ name, size = 14 }: { name: string; size?: number }) {
   }
 }
 
-export function SpinnerIcon({ size = 14 }: { size?: number }) {
+export function SpinnerIcon({ size = 15 }: { size?: number }) {
   return <CircleNotch size={size} weight="bold" className="tool-spinner" />;
 }
 
-export function SuccessIcon({ size = 14 }: { size?: number }) {
+export function SuccessIcon({ size = 15 }: { size?: number }) {
   return <CheckCircle size={size} weight="fill" />;
 }
 
-export function ErrorIcon({ size = 14 }: { size?: number }) {
+export function ErrorIcon({ size = 15 }: { size?: number }) {
   return <XCircle size={size} weight="fill" />;
 }

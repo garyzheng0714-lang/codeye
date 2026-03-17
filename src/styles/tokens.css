@@ -147,18 +147,18 @@
   --chat-text-dimmer: #6b6560;
 
   /* Glass tool block */
-  --glass-bg: rgba(255, 255, 255, 0.035);
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-shadow: 0 1px 3px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  --glass-bg: rgba(255, 255, 255, 0.04);
+  --glass-border: rgba(255, 255, 255, 0.07);
+  --glass-shadow: none;
   --glass-blur: 12px;
 
   /* Tool icon background squares */
-  --tool-bg-green: rgba(52, 211, 153, 0.10);
-  --tool-bg-yellow: rgba(251, 191, 36, 0.10);
+  --tool-bg-green: rgba(52, 211, 153, 0.12);
+  --tool-bg-yellow: rgba(251, 191, 36, 0.12);
   --tool-bg-gray: rgba(154, 148, 144, 0.10);
-  --tool-bg-blue: rgba(56, 189, 248, 0.10);
-  --tool-bg-purple: rgba(99, 102, 241, 0.10);
-  --tool-bg-indigo: rgba(129, 140, 248, 0.10);
+  --tool-bg-blue: rgba(56, 189, 248, 0.12);
+  --tool-bg-purple: rgba(99, 102, 241, 0.12);
+  --tool-bg-indigo: rgba(129, 140, 248, 0.12);
 
   /* Kiro-style status circles */
   --status-done-bg: rgba(52, 211, 153, 0.15);
@@ -275,7 +275,7 @@
   /* Glass — light theme */
   --glass-bg: rgba(0, 0, 0, 0.025);
   --glass-border: rgba(0, 0, 0, 0.08);
-  --glass-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  --glass-shadow: none;
   --glass-blur: 12px;
 
   /* Tool icon bg — light */
