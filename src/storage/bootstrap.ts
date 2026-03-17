@@ -179,6 +179,17 @@ export function startSessionAutoPersistence(): () => void {
   });
 
   const unsubChat = useChatStore.subscribe((state, prev) => {
+    if (state.claudeSessionId && state.claudeSessionId !== prev.claudeSessionId) {
+      const { activeSessionId, saveSessionMessages } = useSessionStore.getState();
+      if (activeSessionId) {
+        saveSessionMessages(activeSessionId, state.messages, state.cost, state.inputTokens, state.outputTokens, {
+          model: state.model,
+          claudeSessionId: state.claudeSessionId,
+          cwd: state.cwd,
+        });
+      }
+    }
+
     if (state.messages === prev.messages && state.cost === prev.cost) return;
     if (state.isStreaming) return;
 
