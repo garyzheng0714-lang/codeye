@@ -3,6 +3,7 @@ import { ArrowUp, Square } from 'lucide-react';
 import { stopClaude } from '../../hooks/useClaudeChat';
 import { useInputComposer } from '../../hooks/useInputComposer';
 import InputFooter from './InputFooter';
+import TaskProgressCard from './TaskProgressCard';
 
 export default memo(function InputArea() {
   const {
@@ -22,6 +23,7 @@ export default memo(function InputArea() {
   return (
     <div className={`input-area ${isStreaming ? 'is-streaming' : ''}`}>
       <div className="input-container-wrapper">
+        <TaskProgressCard />
         <div className={`input-container ${isStreaming ? 'is-streaming' : ''}`}>
           <textarea
             ref={textareaRef}

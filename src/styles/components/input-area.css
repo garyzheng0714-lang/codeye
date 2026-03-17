@@ -585,3 +585,126 @@
   background: var(--bg-base);
   box-shadow: var(--shadow-sm);
 }
+
+.kiro-task-card {
+  background: #1a1a2e;
+  border-radius: 16px;
+  padding: 20px 24px;
+  margin-bottom: 8px;
+  color: #e0e0e8;
+}
+
+.kiro-task-total {
+  font-size: 14px;
+  font-weight: 700;
+  color: #e0e0e8;
+  letter-spacing: 0.04em;
+  margin-bottom: 16px;
+}
+
+.kiro-task-section {
+  margin-bottom: 8px;
+}
+
+.kiro-task-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.kiro-task-section-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.02em;
+}
+
+.kiro-task-chevron {
+  color: #6b6b80;
+}
+
+.kiro-task-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-left: 2px;
+}
+
+.kiro-task-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.kiro-spinner {
+  color: #6366f1;
+  animation: kiroSpin 1s linear infinite;
+}
+
+.kiro-pending {
+  color: #6366f1;
+  opacity: 0.5;
+}
+
+@keyframes kiroSpin {
+  to { transform: rotate(360deg); }
+}
+
+.kiro-task-item-label {
+  font-size: 15px;
+  font-weight: 400;
+  color: #d0d0dc;
+  line-height: 1.5;
+}
+
+.kiro-task-item--done .kiro-task-item-label {
+  color: #6b6b80;
+}
+
+.kiro-check-done {
+  color: #34d399;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.kiro-task-completed-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 0 4px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-family: var(--font-body);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  margin-top: 8px;
+}
+
+.kiro-task-completed-text {
+  font-size: 14px;
+  font-weight: 700;
+  color: #e0e0e8;
+  letter-spacing: 0.02em;
+  flex: 1;
+  text-align: left;
+}
+
+.kiro-task-completed-arrow {
+  color: #6b6b80;
+  display: flex;
+  align-items: center;
+}
+
+.kiro-task-completed-btn:hover {
+  opacity: 0.85;
+}
+
+.kiro-task-list--done {
+  padding-top: 12px;
+}
+
+[data-theme="light"] .kiro-task-card {
+  background: #1a1a2e;
+}
