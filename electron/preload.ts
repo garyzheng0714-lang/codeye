@@ -34,6 +34,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     query: (params: { prompt: string; sessionId?: string; cwd?: string; mode?: string; model?: string; effort?: string; permissionMode?: string; attachments?: AttachmentPayload[] }) =>
       ipcRenderer.invoke('claude:query', params),
     stop: () => ipcRenderer.invoke('claude:stop', 'primary'),
+    generateTitle: (message: string): Promise<string | null> => ipcRenderer.invoke('claude:generateTitle', message),
     checkAuth: () => ipcRenderer.invoke('claude:check-auth'),
     onMessage: (callback: (message: unknown) => void) => {
       const handler = (_: unknown, message: unknown) => callback(message);

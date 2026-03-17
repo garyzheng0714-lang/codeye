@@ -142,6 +142,27 @@ export function startHistoryChangeListener(): () => void {
   return removeListener;
 }
 
+const titleGeneratedSessions = new Set<string>();
+
+function generateSessionTitle(): void {
+  const { activeSessionId, renameSession, getSession } = useSessionStore.getState();
+  if (!activeSessionId || titleGeneratedSessions.has(activeSessionId)) return;
+
+  const session = getSession(activeSessionId);
+  if (!session) return;
+
+  const firstUserMsg = useChatStore.getState().messages.find((m) => m.role === 'user');
+  if (!firstUserMsg?.content) return;
+
+  titleGeneratedSessions.add(activeSessionId);
+
+  if (window.electronAPI?.claude.generateTitle) {
+    window.electronAPI.claude.generateTitle(firstUserMsg.content).then((title) => {
+      if (title) renameSession(activeSessionId, title);
+    }).catch(() => {});
+  }
+}
+
 function syncChatToSession(): void {
   const { messages, cost, inputTokens, outputTokens, model, claudeSessionId, cwd } =
     useChatStore.getState();
@@ -188,6 +209,10 @@ export function startSessionAutoPersistence(): () => void {
           cwd: state.cwd,
         });
       }
+    }
+
+    if (prev.isStreaming && !state.isStreaming && state.messages.length > 0) {
+      generateSessionTitle();
     }
 
     if (state.messages === prev.messages && state.cost === prev.cost) return;

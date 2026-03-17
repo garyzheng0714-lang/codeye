@@ -410,4 +410,28 @@ export function registerClaudeHandlers(ipcMain: IpcMain) {
       activeProcesses.delete(safePaneId);
     }
   });
+
+  ipcMain.handle('claude:generateTitle', async (_, message: string): Promise<string | null> => {
+    const claudeBinary = resolveClaudeBinary();
+    if (!claudeBinary) return null;
+
+    const safeMessage = String(message).slice(0, 200).replace(/"/g, '\\"');
+    const prompt = `用6个中文字以内概括这句话的主题，只输出标题，不要引号不要标点：${safeMessage}`;
+
+    return new Promise((resolve) => {
+      const proc = spawn(claudeBinary, ['-p', '--model', 'haiku', prompt], {
+        stdio: ['ignore', 'pipe', 'ignore'],
+        env: { ...process.env, TERM: 'dumb' },
+        timeout: 10000,
+      });
+
+      let output = '';
+      proc.stdout.on('data', (chunk: Buffer) => { output += chunk.toString(); });
+      proc.on('close', () => {
+        const title = output.trim().replace(/["""''「」『』]/g, '').slice(0, 20);
+        resolve(title || null);
+      });
+      proc.on('error', () => resolve(null));
+    });
+  });
 }
