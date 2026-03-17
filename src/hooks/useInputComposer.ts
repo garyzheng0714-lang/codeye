@@ -3,16 +3,13 @@ import { useChatStore } from '../stores/chatStore';
 import { useSessionStore } from '../stores/sessionStore';
 import { sendClaudeQuery, stopClaude } from './useClaudeChat';
 import { saveCurrentSession } from '../utils/session';
-import { suggestBranchName, resolveBranchConflict } from '../services/gitIntegration';
 import { filterCommands, getSlashCommandByName, type SlashCommand } from '../data/slashCommands';
 import type { ModelId, EffortLevel, InputAttachment, PendingMessage } from '../types';
 import { startStreamTrace } from '../observability/perfBaseline';
 import { parseContextReferences, CONTEXT_SUGGESTIONS } from '../services/contextReferences';
-import {
-  MAX_ATTACHMENTS_PER_MESSAGE,
-  fileToInputAttachment,
-  takeAttachmentFilesFromClipboard,
-} from '../services/attachments';
+import { useInputHistory } from './useInputHistory';
+import { useAttachments } from './useAttachments';
+import { useBranchAutoRename } from './useBranchAutoRename';
 
 const OPEN_SLASH_EVENT = 'codeye:open-slash-command';
 const CMD_PALETTE_SELECT_EVENT = 'codeye:cmd-palette-select';
@@ -23,10 +20,7 @@ const ATTACHMENTS_ONLY_PROMPT = 'Please inspect the attached files and summarize
 
 function normalizePendingMessage(payload: PendingMessage): PendingMessage {
   const prompt = payload.prompt.trim() || ATTACHMENTS_ONLY_PROMPT;
-  return {
-    prompt,
-    attachments: payload.attachments,
-  };
+  return { prompt, attachments: payload.attachments };
 }
 
 function buildUserMessageDisplay(prompt: string, attachments: InputAttachment[]): string {
@@ -36,21 +30,22 @@ function buildUserMessageDisplay(prompt: string, attachments: InputAttachment[])
 }
 
 export function useInputComposer() {
+  // --- Core input state ---
   const [input, setInput] = useState('');
   const [showPalette, setShowPalette] = useState(false);
   const [showContextSuggestions, setShowContextSuggestions] = useState(false);
   const [slashQuery, setSlashQuery] = useState('');
   const [activeSkill, setActiveSkill] = useState<string | null>(null);
-  const [attachments, setAttachments] = useState<InputAttachment[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const composingRef = useRef(false);
-  const historyRef = useRef<string[]>([]);
-  const historyIdxRef = useRef(-1);
-  const draftRef = useRef('');
   const suppressSendUntilRef = useRef(0);
-  const attachmentPasteTokenRef = useRef(0);
-  const branchRenamedRef = useRef<string | null>(null);
 
+  // --- Sub-hooks ---
+  const history = useInputHistory();
+  const { attachments, appendAttachments, handlePaste, removeAttachment, clearAttachments } = useAttachments();
+  useBranchAutoRename();
+
+  // --- Store selectors ---
   const isStreaming = useChatStore((s) => s.isStreaming);
   const mode = useChatStore((s) => s.mode);
   const pendingMessages = useChatStore((s) => s.pendingMessages);
@@ -70,6 +65,7 @@ export function useInputComposer() {
   const contextRefs = useMemo(() => parseContextReferences(input), [input]);
   const paletteHasMatches = useMemo(() => filterCommands(slashQuery).length > 0, [slashQuery]);
 
+  // --- Textarea helpers ---
   const setCompactTextareaHeight = useCallback(() => {
     const el = textareaRef.current;
     if (!el) return;
@@ -80,10 +76,7 @@ export function useInputComposer() {
   const resizeTextarea = useCallback(() => {
     const el = textareaRef.current;
     if (!el) return;
-    if (isStreaming) {
-      setCompactTextareaHeight();
-      return;
-    }
+    if (isStreaming) { setCompactTextareaHeight(); return; }
     el.style.height = 'auto';
     el.style.height = `${Math.min(el.scrollHeight, MAX_INPUT_HEIGHT)}px`;
   }, [isStreaming, setCompactTextareaHeight]);
@@ -92,18 +85,97 @@ export function useInputComposer() {
     requestAnimationFrame(() => {
       const el = textareaRef.current;
       if (!el) return;
-      if (isStreaming) {
-        setCompactTextareaHeight();
-        return;
-      }
+      if (isStreaming) { setCompactTextareaHeight(); return; }
       el.style.height = 'auto';
     });
   }, [isStreaming, setCompactTextareaHeight]);
 
+  /** Clears transient input state (input text, palette, context suggestions). */
+  const resetInputState = useCallback(() => {
+    setInput('');
+    setShowPalette(false);
+    setShowContextSuggestions(false);
+    history.resetNavigation();
+  }, [history]);
+
+  // --- Slash command routing ---
   const markSlashSelection = useCallback(() => {
     suppressSendUntilRef.current = performance.now() + SLASH_SELECTION_GUARD_MS;
   }, []);
 
+  const handleCommandSelect = useCallback((command: SlashCommand, commandArgs = '') => {
+    markSlashSelection();
+    setShowPalette(false);
+
+    if (command.category === 'mode') {
+      setMode(command.name as 'chat' | 'code' | 'plan');
+      resetInputState();
+      resizeTextarea();
+      textareaRef.current?.focus();
+      return;
+    }
+    if (command.category === 'model') {
+      const modelMap: Record<string, ModelId> = { opus: 'opus', sonnet: 'sonnet', haiku: 'haiku' };
+      if (modelMap[command.name]) setModel(modelMap[command.name]);
+      resetInputState();
+      resizeTextarea();
+      textareaRef.current?.focus();
+      return;
+    }
+    if (command.category === 'effort') {
+      const effortMap: Record<string, EffortLevel> = {
+        'think-low': 'low', 'think-med': 'medium', 'think-high': 'high',
+      };
+      if (effortMap[command.name]) setEffort(effortMap[command.name]);
+      resetInputState();
+      resizeTextarea();
+      textareaRef.current?.focus();
+      return;
+    }
+    if (command.category === 'action') {
+      if (command.name === 'clear') {
+        clearMessages();
+        resetInputState();
+        resizeTextarea();
+        return;
+      }
+      if (command.name === 'new') {
+        saveCurrentSession();
+        clearMessages();
+        createSession();
+        resetInputState();
+        resizeTextarea();
+        return;
+      }
+      const nextInput = commandArgs.trim()
+        ? `/${command.name} ${commandArgs.trim()}`
+        : `/${command.name} `;
+      setInput(nextInput);
+      setShowContextSuggestions(false);
+      requestAnimationFrame(() => {
+        const el = textareaRef.current;
+        if (!el) return;
+        el.focus();
+        el.selectionStart = el.selectionEnd = nextInput.length;
+        resizeTextarea();
+      });
+      return;
+    }
+
+    // Skills: insert as pill
+    setActiveSkill(command.name);
+    setInput(commandArgs.trim() ? commandArgs.trim() : '');
+    setShowContextSuggestions(false);
+    requestAnimationFrame(() => {
+      const el = textareaRef.current;
+      if (!el) return;
+      el.focus();
+      el.selectionStart = el.selectionEnd = el.value.length;
+      resizeTextarea();
+    });
+  }, [clearMessages, createSession, markSlashSelection, resetInputState, resizeTextarea, setEffort, setMode, setModel]);
+
+  // --- Dispatch ---
   const dispatchPrompt = useCallback((message: PendingMessage) => {
     const normalizedMessage = normalizePendingMessage(message);
     const prompt = normalizedMessage.prompt;
@@ -118,7 +190,7 @@ export function useInputComposer() {
     startAssistantMessage();
     setInput('');
     setActiveSkill(null);
-    setAttachments([]);
+    clearAttachments();
     setShowPalette(false);
     setShowContextSuggestions(false);
     resetTextareaHeight();
@@ -139,158 +211,34 @@ export function useInputComposer() {
       sessionId: state.claudeSessionId || undefined,
       attachments: normalizedMessage.attachments,
     });
-
-    // Auto-rename branch after first message (once per session)
-    const sessionState = useSessionStore.getState();
-    const currentSession = sessionState.activeSessionId
-      ? sessionState.getSession(sessionState.activeSessionId)
-      : undefined;
-    if (
-      currentSession?.branch &&
-      branchRenamedRef.current !== currentSession.id &&
-      window.electronAPI?.projects.renameBranch
-    ) {
-      const folder = sessionState.getFolder(currentSession.folderId);
-      if (folder?.kind === 'local' && folder.path) {
-        branchRenamedRef.current = currentSession.id;
-        const oldBranch = currentSession.branch;
-        void (async () => {
-          try {
-            const branches = await window.electronAPI!.projects.listBranches(folder.path);
-            const newName = resolveBranchConflict(suggestBranchName(prompt), branches);
-            const result = await window.electronAPI!.projects.renameBranch(folder.path, oldBranch, newName);
-            if (result.success) {
-              useSessionStore.getState().updateSessionBranch(currentSession.id, newName);
-            }
-          } catch (err) {
-            branchRenamedRef.current = null;
-            console.warn('[git] Branch rename error:', err);
-          }
-        })();
-      }
-    }
-  }, [activeSessionId, addUserMessage, createSession, mode, resetTextareaHeight, startAssistantMessage]);
-
-  const handleCommandSelect = useCallback((command: SlashCommand, commandArgs = '') => {
-    markSlashSelection();
-    setShowPalette(false);
-
-    if (command.category === 'mode') {
-      setMode(command.name as 'chat' | 'code' | 'plan');
-      setInput('');
-      setShowContextSuggestions(false);
-      resizeTextarea();
-      textareaRef.current?.focus();
-      return;
-    }
-
-    if (command.category === 'model') {
-      const modelMap: Record<string, ModelId> = { opus: 'opus', sonnet: 'sonnet', haiku: 'haiku' };
-      if (modelMap[command.name]) setModel(modelMap[command.name]);
-      setInput('');
-      setShowContextSuggestions(false);
-      resizeTextarea();
-      textareaRef.current?.focus();
-      return;
-    }
-
-    if (command.category === 'effort') {
-      const effortMap: Record<string, EffortLevel> = {
-        'think-low': 'low', 'think-med': 'medium', 'think-high': 'high',
-      };
-      if (effortMap[command.name]) setEffort(effortMap[command.name]);
-      setInput('');
-      setShowContextSuggestions(false);
-      resizeTextarea();
-      textareaRef.current?.focus();
-      return;
-    }
-
-    if (command.category === 'action') {
-      if (command.name === 'clear') {
-        clearMessages();
-        setInput('');
-        setShowContextSuggestions(false);
-        resizeTextarea();
-        historyIdxRef.current = -1;
-        draftRef.current = '';
-        return;
-      }
-      if (command.name === 'new') {
-        saveCurrentSession();
-        clearMessages();
-        createSession();
-        setInput('');
-        setShowContextSuggestions(false);
-        resizeTextarea();
-        historyIdxRef.current = -1;
-        draftRef.current = '';
-        return;
-      }
-      const nextInput = commandArgs.trim()
-        ? `/${command.name} ${commandArgs.trim()}`
-        : `/${command.name} `;
-      setInput(nextInput);
-      setShowContextSuggestions(false);
-      requestAnimationFrame(() => {
-        const el = textareaRef.current;
-        if (!el) return;
-        el.focus();
-        el.selectionStart = el.selectionEnd = nextInput.length;
-        resizeTextarea();
-      });
-      return;
-    }
-
-    // Skills: insert as pill, don't send immediately
-    setActiveSkill(command.name);
-    setInput(commandArgs.trim() ? commandArgs.trim() : '');
-    setShowContextSuggestions(false);
-    requestAnimationFrame(() => {
-      const el = textareaRef.current;
-      if (!el) return;
-      el.focus();
-      el.selectionStart = el.selectionEnd = el.value.length;
-      resizeTextarea();
-    });
-  }, [clearMessages, createSession, markSlashSelection, resizeTextarea, setEffort, setMode, setModel]);
+  }, [activeSessionId, addUserMessage, clearAttachments, createSession, mode, resetTextareaHeight, startAssistantMessage]);
 
   const executeSlashInput = useCallback((rawInput: string): boolean => {
     const match = rawInput.trim().match(/^\/([^\s]+)(?:\s+(.*))?$/);
     if (!match) return false;
-
     const [, commandName, commandArgs = ''] = match;
     const command = getSlashCommandByName(commandName);
     if (!command) return false;
-
     if (command.category === 'skill') {
       dispatchPrompt({ prompt: rawInput.trim(), attachments: [] });
       return true;
     }
-
     handleCommandSelect(command, commandArgs);
     return true;
   }, [dispatchPrompt, handleCommandSelect]);
 
-  const clearActiveSkill = useCallback(() => {
-    setActiveSkill(null);
-  }, []);
-
+  // --- Send ---
   const handleSend = useCallback(() => {
-    if (performance.now() < suppressSendUntilRef.current) {
-      return;
-    }
+    if (performance.now() < suppressSendUntilRef.current) return;
 
     const text = input.trim();
     const currentAttachments = attachments;
 
-    // Compose prompt from activeSkill + input
     let prompt: string | null = null;
     if (activeSkill) {
       prompt = text ? `/${activeSkill} ${text}` : `/${activeSkill}`;
       setActiveSkill(null);
     } else if (text) {
-      // Non-skill slash commands are handled inline (mode/model/effort/action)
       if (text.startsWith('/') && currentAttachments.length === 0 && !isStreaming && executeSlashInput(text)) {
         return;
       }
@@ -305,53 +253,44 @@ export function useInputComposer() {
       attachments: currentAttachments,
     });
 
-    // Save to history
-    if (historyRef.current[0] !== prompt) {
-      historyRef.current.unshift(prompt);
-      if (historyRef.current.length > 100) historyRef.current.pop();
-    }
-    historyIdxRef.current = -1;
-    draftRef.current = '';
+    history.saveToHistory(prompt);
 
-    // Queue if streaming, dispatch if idle
     if (isStreaming) {
       enqueueMessage(outboundMessage);
       setInput('');
-      setAttachments([]);
+      clearAttachments();
       setShowPalette(false);
       setShowContextSuggestions(false);
       resetTextareaHeight();
     } else {
       dispatchPrompt(outboundMessage);
     }
-  }, [activeSkill, attachments, dispatchPrompt, enqueueMessage, executeSlashInput, input, isStreaming, resetTextareaHeight]);
+  }, [activeSkill, attachments, clearAttachments, dispatchPrompt, enqueueMessage, executeSlashInput, history, input, isStreaming, resetTextareaHeight]);
 
-  // Queue drain: when streaming finishes and there are pending messages, dispatch next
+  // --- Queue drain ---
   useEffect(() => {
     if (isStreaming || pendingCount === 0) return;
     const next = useChatStore.getState().dequeueMessage();
     if (next) {
-      // Small delay to let UI settle before next dispatch
       const timer = setTimeout(() => dispatchPrompt(next), 100);
       return () => clearTimeout(timer);
     }
   }, [isStreaming, pendingCount, dispatchPrompt]);
 
+  // --- Textarea streaming resize ---
   useEffect(() => {
-    if (isStreaming) {
-      setCompactTextareaHeight();
-      return;
-    }
+    if (isStreaming) { setCompactTextareaHeight(); return; }
     resizeTextarea();
   }, [isStreaming, resizeTextarea, setCompactTextareaHeight]);
 
+  // --- Global event listeners ---
   useEffect(() => {
     const handleOpenSlashCommand = () => {
       setInput('/');
       setSlashQuery('');
       setShowPalette(true);
       setShowContextSuggestions(false);
-      historyIdxRef.current = -1;
+      history.resetNavigation();
       requestAnimationFrame(() => {
         const el = textareaRef.current;
         if (!el) return;
@@ -360,10 +299,9 @@ export function useInputComposer() {
         resizeTextarea();
       });
     };
-
     window.addEventListener(OPEN_SLASH_EVENT, handleOpenSlashCommand);
     return () => window.removeEventListener(OPEN_SLASH_EVENT, handleOpenSlashCommand);
-  }, [resizeTextarea]);
+  }, [history, resizeTextarea]);
 
   useEffect(() => {
     const handleCmdPaletteSelect = (e: Event) => {
@@ -373,92 +311,24 @@ export function useInputComposer() {
       if (!command) return;
       handleCommandSelect(command);
     };
-
     window.addEventListener(CMD_PALETTE_SELECT_EVENT, handleCmdPaletteSelect);
     return () => window.removeEventListener(CMD_PALETTE_SELECT_EVENT, handleCmdPaletteSelect);
   }, [handleCommandSelect]);
 
-  const appendAttachments = useCallback((incoming: InputAttachment[]) => {
-    if (incoming.length === 0) return;
-    setAttachments((prev) => {
-      if (prev.length >= MAX_ATTACHMENTS_PER_MESSAGE) return prev;
-      const room = MAX_ATTACHMENTS_PER_MESSAGE - prev.length;
-      return [...prev, ...incoming.slice(0, room)];
-    });
-  }, []);
-
-  const handlePaste = useCallback(async (event: React.ClipboardEvent<HTMLTextAreaElement>) => {
-    const files = takeAttachmentFilesFromClipboard(event.clipboardData);
-    if (files.length === 0) return;
-
-    event.preventDefault();
-
-    if (attachments.length >= MAX_ATTACHMENTS_PER_MESSAGE) {
-      return;
-    }
-
-    const nextToken = attachmentPasteTokenRef.current + 1;
-    attachmentPasteTokenRef.current = nextToken;
-    const room = MAX_ATTACHMENTS_PER_MESSAGE - attachments.length;
-    const filesToConvert = files.slice(0, room);
-
-    const converted = await Promise.allSettled(
-      filesToConvert.map((file, index) => fileToInputAttachment(file, index))
-    );
-
-    if (attachmentPasteTokenRef.current !== nextToken) return;
-
-    appendAttachments(
-      converted.flatMap((result) => {
-        if (result.status !== 'fulfilled' || !result.value) return [];
-        return [result.value];
-      })
-    );
-  }, [appendAttachments, attachments.length]);
-
-  const removeAttachment = useCallback((attachmentId: string) => {
-    setAttachments((prev) => prev.filter((item) => item.id !== attachmentId));
-  }, []);
-
-  const clearAttachments = useCallback(() => {
-    setAttachments([]);
-  }, []);
-
-  const editQueuedMessage = useCallback((index: number) => {
-    const picked = removeQueuedMessage(index);
-    if (!picked) return;
-
-    setInput(picked.prompt === ATTACHMENTS_ONLY_PROMPT ? '' : picked.prompt);
-    setAttachments(picked.attachments);
-    setShowPalette(false);
-    setShowContextSuggestions(false);
-    requestAnimationFrame(() => {
-      const el = textareaRef.current;
-      if (!el) return;
-      el.focus();
-      el.selectionStart = el.selectionEnd = el.value.length;
-      resizeTextarea();
-    });
-  }, [removeQueuedMessage, resizeTextarea]);
-
-  const removeQueuedMessageAt = useCallback((index: number) => {
-    removeQueuedMessage(index);
-  }, [removeQueuedMessage]);
-
+  // --- Event handlers ---
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    // Slash palette navigation
     if (showPalette && e.key === 'Escape') {
       e.preventDefault();
       setShowPalette(false);
       return;
     }
-
-    if (showPalette && paletteHasMatches) {
-      if (['ArrowDown', 'ArrowUp', 'Enter', 'Tab'].includes(e.key)) {
-        e.preventDefault();
-        return;
-      }
+    if (showPalette && paletteHasMatches && ['ArrowDown', 'ArrowUp', 'Enter', 'Tab'].includes(e.key)) {
+      e.preventDefault();
+      return;
     }
 
+    // Send
     const isComposing = composingRef.current || e.nativeEvent.isComposing;
     if (e.key === 'Enter' && !isComposing && (!e.shiftKey || e.metaKey || e.ctrlKey)) {
       e.preventDefault();
@@ -466,44 +336,31 @@ export function useInputComposer() {
       return;
     }
 
+    // Escape cascade
     if (e.key === 'Escape') {
       e.preventDefault();
-      if (activeSkill) {
-        setActiveSkill(null);
-        return;
-      }
-      if (attachments.length > 0 && !input) {
-        clearAttachments();
-        return;
-      }
-      if (isStreaming) {
-        stopClaude();
-      } else if (input) {
-        setInput('');
-        setShowPalette(false);
-        setShowContextSuggestions(false);
-        historyIdxRef.current = -1;
-        draftRef.current = '';
-        resizeTextarea();
-      }
+      if (activeSkill) { setActiveSkill(null); return; }
+      if (attachments.length > 0 && !input) { clearAttachments(); return; }
+      if (isStreaming) { stopClaude(); }
+      else if (input) { resetInputState(); resizeTextarea(); }
       return;
     }
 
+    // Stop streaming
     if (e.ctrlKey && e.key === 'c' && isStreaming) {
       e.preventDefault();
       stopClaude();
       return;
     }
 
+    // History navigation (ArrowUp)
     if (e.key === 'ArrowUp' && !e.shiftKey && !showPalette) {
       const atTop = (textareaRef.current?.selectionStart ?? 0) === 0;
-      if (atTop && (input === '' || historyIdxRef.current >= 0)) {
+      if (atTop && (input === '' || history.isNavigating())) {
         e.preventDefault();
-        if (historyIdxRef.current === -1) draftRef.current = input;
-        const next = Math.min(historyIdxRef.current + 1, historyRef.current.length - 1);
-        if (next >= 0 && next < historyRef.current.length) {
-          historyIdxRef.current = next;
-          setInput(historyRef.current[next]);
+        const entry = history.navigateUp(input);
+        if (entry !== null) {
+          setInput(entry);
           requestAnimationFrame(() => {
             const el = textareaRef.current;
             if (el) { el.selectionStart = el.selectionEnd = el.value.length; }
@@ -513,20 +370,22 @@ export function useInputComposer() {
       }
     }
 
-    if (e.key === 'ArrowDown' && !e.shiftKey && historyIdxRef.current >= 0 && !showPalette) {
+    // History navigation (ArrowDown)
+    if (e.key === 'ArrowDown' && !e.shiftKey && history.isNavigating() && !showPalette) {
       const el = textareaRef.current;
       const atBottom = (el?.selectionStart ?? 0) >= (el?.value.length ?? 0);
       if (atBottom) {
         e.preventDefault();
-        const next = historyIdxRef.current - 1;
-        historyIdxRef.current = next;
-        setInput(next < 0 ? draftRef.current : historyRef.current[next]);
-        requestAnimationFrame(() => {
-          const node = textareaRef.current;
-          if (!node) return;
-          node.selectionStart = node.selectionEnd = node.value.length;
-          resizeTextarea();
-        });
+        const entry = history.navigateDown();
+        if (entry !== null) {
+          setInput(entry);
+          requestAnimationFrame(() => {
+            const node = textareaRef.current;
+            if (!node) return;
+            node.selectionStart = node.selectionEnd = node.value.length;
+            resizeTextarea();
+          });
+        }
         return;
       }
     }
@@ -535,9 +394,7 @@ export function useInputComposer() {
   const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
     setInput(value);
-    if (historyIdxRef.current >= 0) {
-      historyIdxRef.current = -1;
-    }
+    if (history.isNavigating()) history.resetNavigation();
 
     if (value.startsWith('/')) {
       setSlashQuery(value.slice(1));
@@ -568,6 +425,25 @@ export function useInputComposer() {
       resizeTextarea();
     });
   };
+
+  const editQueuedMessage = useCallback((index: number) => {
+    const picked = removeQueuedMessage(index);
+    if (!picked) return;
+    setInput(picked.prompt === ATTACHMENTS_ONLY_PROMPT ? '' : picked.prompt);
+    setShowPalette(false);
+    setShowContextSuggestions(false);
+    requestAnimationFrame(() => {
+      const el = textareaRef.current;
+      if (!el) return;
+      el.focus();
+      el.selectionStart = el.selectionEnd = el.value.length;
+      resizeTextarea();
+    });
+  }, [removeQueuedMessage, resizeTextarea]);
+
+  const removeQueuedMessageAt = useCallback((index: number) => {
+    removeQueuedMessage(index);
+  }, [removeQueuedMessage]);
 
   const placeholders = {
     chat: 'Ask a question...   Enter to send · / for commands',
@@ -604,7 +480,7 @@ export function useInputComposer() {
     editQueuedMessage,
     removeQueuedMessageAt,
     closeQueue: clearQueue,
-    clearActiveSkill,
+    clearActiveSkill: useCallback(() => setActiveSkill(null), []),
     setShowPalette,
     CONTEXT_SUGGESTIONS,
   };
