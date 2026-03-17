@@ -5,6 +5,7 @@ function resetChatStore() {
   useChatStore.setState({
     messages: [],
     isStreaming: false,
+    activeStreamId: null,
     mode: 'code',
     model: 'sonnet',
     effort: 'high',
@@ -101,5 +102,131 @@ describe('chatStore streaming guards', () => {
     const removed = store.removeQueuedMessage(0);
     expect(removed?.prompt).toBe('first');
     expect(useChatStore.getState().pendingMessages.map((item) => item.prompt)).toEqual(['second']);
+  });
+});
+
+describe('activeStreamId isolation', () => {
+  beforeEach(() => {
+    resetChatStore();
+  });
+
+  it('should reject content from a stale stream after a new stream starts', () => {
+    const store = useChatStore.getState();
+    store.startAssistantMessage();
+    const firstStreamId = useChatStore.getState().activeStreamId;
+    expect(firstStreamId).toBeTruthy();
+
+    store.appendAssistantContent('hello', firstStreamId!);
+    expect(useChatStore.getState().messages[0].content).toBe('hello');
+
+    store.finishStreaming();
+    store.addUserMessage('next');
+    store.startAssistantMessage();
+    const secondStreamId = useChatStore.getState().activeStreamId;
+    expect(secondStreamId).not.toBe(firstStreamId);
+
+    // Late chunk from first stream -- must be rejected
+    store.appendAssistantContent(' late', firstStreamId!);
+    const msgs = useChatStore.getState().messages;
+    const lastAssistant = msgs[msgs.length - 1];
+    expect(lastAssistant.content).toBe('');
+  });
+
+  it('should reject content after clearMessages resets activeStreamId', () => {
+    const store = useChatStore.getState();
+    store.startAssistantMessage();
+    const streamId = useChatStore.getState().activeStreamId;
+
+    store.clearMessages();
+    store.appendAssistantContent('stale', streamId!);
+    expect(useChatStore.getState().messages.length).toBe(0);
+  });
+
+  it('should accept content with matching streamId even after finishStreaming', () => {
+    const store = useChatStore.getState();
+    store.startAssistantMessage();
+    const streamId = useChatStore.getState().activeStreamId!;
+
+    store.appendAssistantContent('before', streamId);
+    store.finishStreaming();
+    // Same streamId -- should still be accepted (grace for late delivery)
+    store.appendAssistantContent(' after', streamId);
+
+    const msgs = useChatStore.getState().messages;
+    expect(msgs[0].content).toBe('before after');
+  });
+
+  it('should reject tool calls from a stale stream', () => {
+    const store = useChatStore.getState();
+    store.startAssistantMessage();
+    const firstStreamId = useChatStore.getState().activeStreamId!;
+
+    store.finishStreaming();
+    store.addUserMessage('next');
+    store.startAssistantMessage();
+
+    // Late tool call from first stream
+    store.addToolCall(
+      { id: 'tool-stale', name: 'Read', input: {}, expanded: false },
+      firstStreamId,
+    );
+    const msgs = useChatStore.getState().messages;
+    const lastAssistant = msgs[msgs.length - 1];
+    expect(lastAssistant.toolCalls).toHaveLength(0);
+  });
+
+  it('should reject tool results from a stale stream', () => {
+    const store = useChatStore.getState();
+    store.startAssistantMessage();
+    const firstStreamId = useChatStore.getState().activeStreamId!;
+    store.addToolCall(
+      { id: 'tool-1', name: 'Read', input: {}, expanded: false },
+      firstStreamId,
+    );
+
+    store.finishStreaming();
+    store.addUserMessage('next');
+    store.startAssistantMessage();
+    const secondStreamId = useChatStore.getState().activeStreamId!;
+
+    // Late tool result targeting old stream
+    store.updateToolResult('tool-1', 'stale output', firstStreamId);
+    // Tool in first assistant message should remain unchanged (finishStreaming fills undefined → '')
+    const firstAssistant = useChatStore.getState().messages[0];
+    expect(firstAssistant.toolCalls[0].output).toBe('');
+
+    // Tool result without streamId should still work (backward compat)
+    store.updateToolResult('tool-1', 'valid output');
+    const updatedFirst = useChatStore.getState().messages[0];
+    expect(updatedFirst.toolCalls[0].output).toBe('valid output');
+  });
+
+  it('should generate a new activeStreamId on each startAssistantMessage', () => {
+    const store = useChatStore.getState();
+    store.startAssistantMessage();
+    const id1 = useChatStore.getState().activeStreamId;
+    store.finishStreaming();
+
+    store.addUserMessage('q');
+    store.startAssistantMessage();
+    const id2 = useChatStore.getState().activeStreamId;
+
+    expect(id1).toBeTruthy();
+    expect(id2).toBeTruthy();
+    expect(id1).not.toBe(id2);
+  });
+
+  it('should reset activeStreamId on loadSession', () => {
+    const store = useChatStore.getState();
+    store.startAssistantMessage();
+    expect(useChatStore.getState().activeStreamId).toBeTruthy();
+
+    store.loadSession({
+      messages: [],
+      cost: 0,
+      inputTokens: 0,
+      outputTokens: 0,
+    });
+    expect(useChatStore.getState().activeStreamId).toBeNull();
   });
 });

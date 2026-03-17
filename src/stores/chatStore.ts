@@ -21,6 +21,7 @@ import { activityStream } from '../services/activityStream';
 interface ChatState {
   messages: DisplayMessage[];
   isStreaming: boolean;
+  activeStreamId: string | null;
   mode: ChatMode;
   model: ModelId;
   effort: EffortLevel;
@@ -40,11 +41,11 @@ interface ChatState {
   setSessionId: (id: string | null) => void;
   setClaudeSessionId: (id: string | null) => void;
   addUserMessage: (content: string) => void;
-  appendAssistantContent: (content: string) => void;
+  appendAssistantContent: (content: string, streamId?: string) => void;
   startAssistantMessage: () => void;
   finishStreaming: () => void;
-  addToolCall: (tool: ToolCallDisplay) => void;
-  updateToolResult: (toolId: string, output: string) => void;
+  addToolCall: (tool: ToolCallDisplay, streamId?: string) => void;
+  updateToolResult: (toolId: string, output: string, streamId?: string) => void;
   toggleToolExpand: (messageId: string, toolId: string) => void;
   updateCost: (cost: number, input: number, output: number) => void;
   addGitResult: (result: GitResultDisplay) => void;
@@ -62,6 +63,7 @@ interface ChatState {
 export const useChatStore = create<ChatState>()((set, get) => ({
   messages: [],
   isStreaming: false,
+  activeStreamId: null,
   mode: 'code',
   model: DEFAULT_MODEL,
   effort: DEFAULT_EFFORT,
@@ -103,6 +105,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
   startAssistantMessage: () =>
     set((state) => ({
       isStreaming: true,
+      activeStreamId: crypto.randomUUID(),
       messages: [
         ...state.messages,
         {
@@ -116,9 +119,11 @@ export const useChatStore = create<ChatState>()((set, get) => ({
       ],
     })),
 
-  appendAssistantContent: (content) =>
+  appendAssistantContent: (content, streamId) =>
     set((state) => {
-      if (!state.isStreaming) return state;
+      if (streamId && state.activeStreamId !== streamId) return state;
+      if (!state.isStreaming && !streamId) return state;
+
       const msgs = [...state.messages];
       const last = msgs[msgs.length - 1];
       if (last?.role === 'assistant') {
@@ -130,7 +135,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
           content,
           toolCalls: [],
           timestamp: Date.now(),
-          isStreaming: true,
+          isStreaming: state.isStreaming,
         });
       }
       return { messages: msgs };
@@ -148,9 +153,11 @@ export const useChatStore = create<ChatState>()((set, get) => ({
       return { messages: msgs, isStreaming: false };
     }),
 
-  addToolCall: (tool) =>
+  addToolCall: (tool, streamId) =>
     set((state) => {
-      if (!state.isStreaming) return state;
+      if (streamId && state.activeStreamId !== streamId) return state;
+      if (!state.isStreaming && !streamId) return state;
+
       const msgs = [...state.messages];
       const last = msgs[msgs.length - 1];
       if (last?.role === 'assistant') {
@@ -171,8 +178,10 @@ export const useChatStore = create<ChatState>()((set, get) => ({
       return { messages: msgs };
     }),
 
-  updateToolResult: (toolId, output) =>
+  updateToolResult: (toolId, output, streamId) =>
     set((state) => {
+      if (streamId && state.activeStreamId !== streamId) return state;
+
       const msgs = state.messages.map((m) => {
         if (m.role !== 'assistant') return m;
         const hasTarget = m.toolCalls.some((t) => t.id === toolId);
@@ -282,7 +291,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
       return { pendingApprovals: rest };
     }),
 
-  clearMessages: () => set({ messages: [], cost: 0, inputTokens: 0, outputTokens: 0, isStreaming: false, claudeSessionId: null, pendingMessages: [], pendingApprovals: {} }),
+  clearMessages: () => set({ messages: [], cost: 0, inputTokens: 0, outputTokens: 0, isStreaming: false, activeStreamId: null, claudeSessionId: null, pendingMessages: [], pendingApprovals: {} }),
 
   loadSession: (data) =>
     set({
@@ -295,5 +304,6 @@ export const useChatStore = create<ChatState>()((set, get) => ({
       claudeSessionId: data.claudeSessionId ?? null,
       model: normalizeModelId(data.model),
       isStreaming: false,
+      activeStreamId: null,
     }),
 }));

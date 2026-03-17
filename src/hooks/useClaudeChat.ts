@@ -15,21 +15,28 @@ import { applyServerFeatureFlagDocument, isEnabled } from '../services/featureFl
 import { activityStream } from '../services/activityStream';
 import { startApprovalTimeout, sendApprovalDecision, denyAllPending } from '../services/toolApproval';
 import { previewCache } from '../services/previewCache';
-import type { GitResultDisplay, InputAttachment } from '../types';
+import type { GitResultDisplay, InputAttachment, ToolCallDisplay } from '../types';
 
 function getActions(): StoreActions {
   const s = useChatStore.getState();
   return {
-    // Zustand actions are stable -- they use set() internally, always current state
-    appendAssistantContent: s.appendAssistantContent,
+    appendAssistantContent: (content: string) => {
+      const streamId = useChatStore.getState().activeStreamId;
+      s.appendAssistantContent(content, streamId ?? undefined);
+    },
+    addToolCall: (tool: ToolCallDisplay) => {
+      const streamId = useChatStore.getState().activeStreamId;
+      s.addToolCall(tool, streamId ?? undefined);
+    },
+    updateToolResult: (toolId: string, output: string) => {
+      const streamId = useChatStore.getState().activeStreamId;
+      s.updateToolResult(toolId, output, streamId ?? undefined);
+    },
     finishStreaming: s.finishStreaming,
-    addToolCall: s.addToolCall,
-    updateToolResult: s.updateToolResult,
     updateCost: s.updateCost,
     setClaudeSessionId: s.setClaudeSessionId,
     setRuntimeSlashCommands,
     getLastAssistantContent: () => {
-      // Pure read -- must get fresh state each call (not captured `s`)
       const current = useChatStore.getState();
       const last = current.messages[current.messages.length - 1];
       if (last?.role !== 'assistant') return null;
@@ -45,7 +52,8 @@ export function useClaudeChat() {
     const textBatcher = new StreamBatcher((chunks) => {
       const combined = chunks.join('');
       if (combined) {
-        useChatStore.getState().appendAssistantContent(combined);
+        const streamId = useChatStore.getState().activeStreamId;
+        useChatStore.getState().appendAssistantContent(combined, streamId ?? undefined);
       }
     });
     batcherRef.current = textBatcher;
