@@ -12,6 +12,8 @@ export default memo(function MessageList() {
   const parentRef = useRef<HTMLDivElement>(null);
   const prevTurnsRef = useRef<Turn[]>([]);
   const prevMsgLenRef = useRef(0);
+  const isAtBottomRef = useRef(true);
+  const prevUserMsgCountRef = useRef(0);
 
   const turns = useMemo(() => {
     if (messages.length >= prevMsgLenRef.current && prevTurnsRef.current.length > 0) {
@@ -41,12 +43,36 @@ export default memo(function MessageList() {
   });
 
   useEffect(() => {
+    const el = parentRef.current;
+    if (!el) return;
+    const handleScroll = () => {
+      const threshold = 80;
+      isAtBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < threshold;
+    };
+    el.addEventListener('scroll', handleScroll, { passive: true });
+    return () => el.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    const userMsgCount = messages.filter((m) => m.role === 'user').length;
+    if (userMsgCount > prevUserMsgCountRef.current) {
+      isAtBottomRef.current = true;
+    }
+    prevUserMsgCountRef.current = userMsgCount;
+  }, [messages]);
+
+  useEffect(() => {
+    if (!isAtBottomRef.current) return;
     if (useVirtual) {
       if (turns.length > 0) {
         virtualizer.scrollToIndex(turns.length - 1, { align: 'end' });
       }
     } else if (parentRef.current) {
-      parentRef.current.scrollTo({ top: parentRef.current.scrollHeight, behavior: 'smooth' });
+      const isStreaming = messages[messages.length - 1]?.isStreaming;
+      parentRef.current.scrollTo({
+        top: parentRef.current.scrollHeight,
+        behavior: isStreaming ? 'instant' : 'smooth',
+      });
     }
   }, [messages, useVirtual, turns.length, virtualizer]);
 
