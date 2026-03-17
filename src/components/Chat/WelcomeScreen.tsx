@@ -3,6 +3,7 @@ import type { ChatMode } from '../../types';
 import { t } from '../../i18n';
 import CodeyeMark from '../Brand/CodeyeMark';
 import HintCard from './HintCard';
+import { MOCK_MESSAGES } from '../../data/mockConversation';
 
 const hints = [
   { text: 'Explain the auth flow in this project' },
@@ -19,6 +20,16 @@ const modeDescriptions: Record<ChatMode, string> = {
 
 export default function WelcomeScreen() {
   const mode = useChatStore((s) => s.mode);
+  const loadSession = useChatStore((s) => s.loadSession);
+
+  const loadDemo = () => {
+    loadSession({
+      messages: MOCK_MESSAGES,
+      cost: 0.042,
+      inputTokens: 12_500,
+      outputTokens: 3_800,
+    });
+  };
 
   return (
     <div className="welcome-screen">
@@ -33,6 +44,22 @@ export default function WelcomeScreen() {
             <HintCard key={h.text} text={h.text} />
           ))}
         </div>
+        <button
+          type="button"
+          onClick={loadDemo}
+          style={{
+            marginTop: 24,
+            padding: '8px 20px',
+            background: 'var(--bg-secondary)',
+            border: '1px solid var(--border-subtle)',
+            borderRadius: 'var(--radius-md)',
+            color: 'var(--text-muted)',
+            cursor: 'pointer',
+            fontSize: 'var(--text-sm)',
+          }}
+        >
+          Load Demo Conversation
+        </button>
       </div>
     </div>
   );

@@ -60,8 +60,9 @@
   flex-direction: column;
   max-width: 100%;
   width: 100%;
-  padding: 0 var(--space-4);
+  padding: 0;
   animation: slideUp var(--transition-base);
+  overflow-x: hidden;
 }
 
 .message-row + .message-row {
@@ -177,6 +178,7 @@
   flex-direction: column;
   gap: 10px;
   min-width: 0;
+  overflow: hidden;
 }
 
 .ai-message-flat > .tool-block + .thinking-block,
@@ -761,6 +763,9 @@
   line-height: 1.78;
   color: var(--chat-text);
   letter-spacing: -0.01em;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  min-width: 0;
 }
 
 .ai-message-text p {
