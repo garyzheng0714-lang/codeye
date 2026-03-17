@@ -2,6 +2,14 @@
   padding: var(--space-3) var(--space-6) var(--space-4);
   background: linear-gradient(to top, var(--bg-base) 70%, transparent);
   position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.input-container-wrapper {
+  width: 100%;
+  max-width: var(--chat-content-max-width);
 }
 
 .input-area.is-streaming {

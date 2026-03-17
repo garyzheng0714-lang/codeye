@@ -8,6 +8,7 @@
   padding: 0 var(--space-6);
   display: flex;
   flex-direction: column;
+  align-items: center;
   background: var(--chat-bg);
 }
 
@@ -22,6 +23,8 @@
   flex-direction: column;
   padding: 20px 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  width: 100%;
+  max-width: var(--chat-content-max-width);
 }
 
 .turn-group:last-child {
@@ -54,53 +57,68 @@
 
 .message-row {
   display: flex;
-  gap: 14px;
+  flex-direction: column;
   max-width: 100%;
   width: 100%;
+  padding: 0 var(--space-4);
   animation: slideUp var(--transition-base);
-  align-items: flex-start;
 }
 
 .message-row + .message-row {
   margin-top: 20px;
 }
 
-/* ── Message Avatar — 24px rounded square ── */
+/* ── Message Role Label ── */
 
-.message-avatar {
-  width: 24px;
-  height: 24px;
+.message-role-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--chat-text-dim);
+}
+
+/* ── AI Message Header (inline avatar + label) ── */
+
+.ai-message-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.ai-avatar-inline {
+  width: 22px;
+  height: 22px;
   border-radius: 6px;
+  background: linear-gradient(135deg, var(--accent-deep), var(--accent));
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
-  margin-top: 2px;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.message-avatar--user {
-  background: var(--accent-muted);
-  color: var(--code-inline-fg);
-}
-
-.message-avatar--ai {
-  background: linear-gradient(135deg, var(--accent-deep), var(--accent));
-  border: none;
-  transition: box-shadow var(--transition-base);
-}
-
-.message-avatar--ai .avatar-eyes {
-  display: flex;
   gap: 2px;
+  flex-shrink: 0;
 }
 
-.message-avatar--ai .avatar-eye {
+.ai-avatar-inline .avatar-eye {
   width: 4px;
   height: 4px;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.9);
+}
+
+.ai-message-header.streaming .ai-avatar-inline {
+  animation: avatarPulse 2s ease-in-out infinite;
+}
+
+@keyframes avatarPulse {
+  0%, 100% {
+    box-shadow: 0 0 6px var(--accent-glow);
+  }
+  50% {
+    box-shadow: 0 0 14px var(--accent-glow), 0 0 24px rgba(168, 85, 247, 0.2);
+  }
+}
+
+.ai-message-header .message-role-label {
+  color: var(--chat-text-dim);
 }
 
 /* ── Message Content Wrapper ── */
@@ -358,6 +376,250 @@
 }
 
 /* ══════════════════════════════════════════
+   Rich Tool Expanded Content
+   ══════════════════════════════════════════ */
+
+/* ── Shared expanded layout ── */
+
+.tool-expanded-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.tool-expanded-path {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--chat-text-dim);
+  word-break: break-all;
+}
+
+.tool-expanded-fallback {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 4px 0;
+}
+
+/* ── Header badges ── */
+
+.tool-line-count {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-muted);
+  background: var(--surface-pill);
+  padding: 1px 6px;
+  border-radius: var(--radius-xs);
+  flex-shrink: 0;
+}
+
+.tool-match-count {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--info);
+  background: var(--bg-info);
+  padding: 1px 6px;
+  border-radius: var(--radius-xs);
+  flex-shrink: 0;
+}
+
+.tool-pattern-badge {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-style: italic;
+  color: var(--chat-text-dimmer);
+  background: var(--surface-pill);
+  padding: 2px 8px;
+  border-radius: var(--radius-xs);
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Mini Diff (Edit tool) ── */
+
+.tool-mini-diff {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  line-height: 1.6;
+  border-radius: 6px;
+  overflow: hidden;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.tool-diff-line {
+  display: flex;
+  padding: 0 10px;
+  min-height: 20px;
+}
+
+.tool-diff-line--add {
+  background: rgba(52, 211, 153, 0.06);
+}
+
+.tool-diff-line--remove {
+  background: rgba(248, 113, 113, 0.06);
+}
+
+.tool-diff-sign {
+  width: 16px;
+  flex-shrink: 0;
+  user-select: none;
+  color: var(--text-muted);
+}
+
+.tool-diff-line--add .tool-diff-sign {
+  color: var(--success);
+}
+
+.tool-diff-line--remove .tool-diff-sign {
+  color: var(--danger);
+}
+
+.tool-diff-text {
+  white-space: pre-wrap;
+  word-break: break-all;
+  color: var(--chat-text-dimmer);
+}
+
+.tool-diff-line--add .tool-diff-text {
+  color: rgba(52, 211, 153, 0.85);
+}
+
+.tool-diff-line--remove .tool-diff-text {
+  color: rgba(248, 113, 113, 0.7);
+}
+
+[data-theme="light"] .tool-diff-line--add {
+  background: rgba(22, 163, 74, 0.06);
+}
+
+[data-theme="light"] .tool-diff-line--remove {
+  background: rgba(220, 38, 38, 0.06);
+}
+
+[data-theme="light"] .tool-diff-line--add .tool-diff-sign {
+  color: #16a34a;
+}
+
+[data-theme="light"] .tool-diff-line--remove .tool-diff-sign {
+  color: #dc2626;
+}
+
+[data-theme="light"] .tool-diff-line--add .tool-diff-text {
+  color: rgba(22, 163, 74, 0.85);
+}
+
+[data-theme="light"] .tool-diff-line--remove .tool-diff-text {
+  color: rgba(220, 38, 38, 0.7);
+}
+
+/* ── Bash Terminal ── */
+
+.tool-bash-terminal {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  line-height: 1.6;
+}
+
+.tool-bash-command-line {
+  display: flex;
+  gap: 8px;
+  padding: 4px 0 8px;
+  border-bottom: 1px solid var(--surface-glass-divider);
+  margin-bottom: 8px;
+}
+
+.tool-bash-prompt {
+  color: var(--success);
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.tool-bash-cmd {
+  color: var(--chat-text-strong);
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.tool-bash-output {
+  color: var(--chat-text-dimmer);
+  white-space: pre-wrap;
+  overflow-x: auto;
+  max-height: 260px;
+  overflow-y: auto;
+  margin: 0;
+}
+
+.tool-bash-output--error {
+  color: var(--danger);
+}
+
+[data-theme="light"] .tool-bash-prompt {
+  color: #16a34a;
+}
+
+/* ── Search Results ── */
+
+.tool-expanded-search {
+  font-size: 12px;
+}
+
+.tool-search-files {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.tool-search-file {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--chat-text-dim);
+  padding: 2px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Code Preview (Read/Write) ── */
+
+.tool-code-preview {
+  max-height: 300px;
+  overflow-y: auto;
+  border-radius: 6px;
+}
+
+.tool-code-preview .code-block {
+  margin: 0;
+}
+
+.tool-code-more {
+  font-size: 11px;
+  color: var(--text-muted);
+  padding: 6px 0 0;
+  font-style: italic;
+}
+
+/* ── ReadGroup expanded list ── */
+
+.tool-read-group-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tool-read-group-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ══════════════════════════════════════════
    Task Block — Kiro Style
    ══════════════════════════════════════════ */
 
@@ -610,25 +872,6 @@
   }
 }
 
-/* ── AI Avatar Glow (Thinking State) ── */
-
-.message-avatar--ai.streaming {
-  animation: avatarBreath 2s ease-in-out infinite;
-}
-
-@keyframes avatarBreath {
-  0%, 100% {
-    box-shadow:
-      0 0 8px var(--accent-glow),
-      0 0 16px rgba(168, 85, 247, 0.2);
-  }
-  50% {
-    box-shadow:
-      0 0 16px var(--accent-glow),
-      0 0 32px rgba(168, 85, 247, 0.4),
-      0 0 48px rgba(168, 85, 247, 0.15);
-  }
-}
 
 /* ══════════════════════════════════════════
    Thinking Block — Animated Dots

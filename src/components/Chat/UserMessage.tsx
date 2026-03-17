@@ -14,8 +14,8 @@ export default memo(function UserMessage({ message }: { message: DisplayMessage 
 
   return (
     <div className="message-row user-message-row" data-message-id={message.id}>
-      <div className="message-avatar message-avatar--user">Y</div>
       <div className="message-content-wrapper">
+        <span className="message-role-label">You</span>
         <div className="user-message-content">{message.content}</div>
       </div>
     </div>

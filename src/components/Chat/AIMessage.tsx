@@ -1,12 +1,14 @@
-import { memo, useState } from 'react';
+import { memo, useState, useMemo } from 'react';
 import { CaretDown, CaretRight, CircleNotch, CheckCircle, Check } from '@phosphor-icons/react';
 import type { DisplayMessage, ToolCallDisplay } from '../../types';
 import CodeBlock from './CodeBlock';
+import ToolExpandedContent from './ToolExpandedContent';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useStreamingTypewriter } from '../../hooks/useTypewriter';
 import { ToolIcon, SpinnerIcon } from '../../data/toolIcons';
 import { getSemanticName, getToolIconBgClass } from '../../data/toolMeta';
+import { parseToolOutput } from '../../utils/toolOutputParser';
 
 type ToolType = 'read' | 'search' | 'edit' | 'command' | 'agent' | 'task' | 'other';
 
@@ -41,18 +43,6 @@ function getToolBlockStatus(tool: ToolCallDisplay, isStreaming?: boolean): 'done
   return 'done';
 }
 
-function parseEditDiff(output?: string): { added: number; removed: number } | null {
-  if (!output) return null;
-  const addMatch = output.match(/(\d+)\s*(?:insertion|addition|line)/);
-  const delMatch = output.match(/(\d+)\s*(?:deletion|removal)/);
-  if (addMatch || delMatch) {
-    return {
-      added: addMatch ? parseInt(addMatch[1], 10) : 0,
-      removed: delMatch ? parseInt(delMatch[1], 10) : 0,
-    };
-  }
-  return null;
-}
 
 function ToolStatusIndicator({ status, toolName }: { status: 'done' | 'running' | 'error'; toolName?: string }) {
   if (status === 'running') {
@@ -84,13 +74,13 @@ function ToolBlock({ tool, isStreaming }: { tool: ToolCallDisplay; isStreaming?:
   const [isExpanded, setIsExpanded] = useState(false);
   const toolType = getToolType(tool.name);
   const status = getToolBlockStatus(tool, isStreaming);
+  const parsed = useMemo(() => parseToolOutput(tool), [tool]);
 
   const fileName = tool.input.file_path
     ? String(tool.input.file_path).split('/').pop()
     : null;
 
-  const isEdit = tool.name === 'Edit' || tool.name === 'Write';
-  const diff = isEdit ? parseEditDiff(tool.output) : null;
+  const hasExpandableContent = !!(tool.output || tool.input.old_string || tool.input.content);
 
   return (
     <div className="tool-block">
@@ -117,27 +107,44 @@ function ToolBlock({ tool, isStreaming }: { tool: ToolCallDisplay; isStreaming?:
 
         {/* Command string for Bash */}
         {tool.name === 'Bash' && typeof tool.input.command === 'string' && (
-          <span className="tool-file-badge">{tool.input.command.slice(0, 60)}</span>
-        )}
-
-        {/* Diff counts for Edit */}
-        {diff && (
-          <span className="tool-diff-count">
-            <span className="tool-diff-add">+{diff.added}</span>
-            <span className="tool-diff-del">-{diff.removed}</span>
+          <span className="tool-file-badge">
+            {String(tool.input.command).length > 80
+              ? `${String(tool.input.command).slice(0, 80)}...`
+              : String(tool.input.command)}
           </span>
         )}
 
-        {tool.output && (
+        {/* Search pattern + count for Grep/Glob */}
+        {parsed.kind === 'search' && (
+          <>
+            {parsed.pattern && <span className="tool-pattern-badge">{parsed.pattern}</span>}
+            {parsed.matchCount > 0 && <span className="tool-match-count">{parsed.matchCount} results</span>}
+          </>
+        )}
+
+        {/* Line count for Read */}
+        {parsed.kind === 'read' && parsed.lineCount > 0 && (
+          <span className="tool-line-count">{parsed.lineCount} lines</span>
+        )}
+
+        {/* Diff counts for Edit/Write */}
+        {parsed.kind === 'edit' && (parsed.added > 0 || parsed.removed > 0) && (
+          <span className="tool-diff-count">
+            <span className="tool-diff-add">+{parsed.added}</span>
+            <span className="tool-diff-del">-{parsed.removed}</span>
+          </span>
+        )}
+
+        {hasExpandableContent && (
           <span className="tool-block-expand">
             {isExpanded ? <CaretDown size={14} weight="bold" /> : <CaretRight size={14} weight="bold" />}
           </span>
         )}
       </div>
 
-      {isExpanded && tool.output && (
+      {isExpanded && hasExpandableContent && (
         <div className="tool-block-content">
-          <pre className="tool-block-output">{tool.output}</pre>
+          <ToolExpandedContent tool={tool} />
         </div>
       )}
     </div>
@@ -145,13 +152,26 @@ function ToolBlock({ tool, isStreaming }: { tool: ToolCallDisplay; isStreaming?:
 }
 
 function ReadGroup({ tools, isStreaming }: { tools: ToolCallDisplay[]; isStreaming?: boolean }) {
+  const [isExpanded, setIsExpanded] = useState(false);
   const anyError = tools.some(t => t.output?.startsWith('Error:'));
   const anyRunning = isStreaming && tools.some(t => t.output === undefined);
   const status: 'done' | 'running' | 'error' = anyRunning ? 'running' : anyError ? 'error' : 'done';
 
   return (
     <div className="tool-block">
-      <div className="tool-block-header">
+      <div
+        className="tool-block-header"
+        onClick={() => setIsExpanded(!isExpanded)}
+        role="button"
+        aria-expanded={isExpanded}
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            setIsExpanded(!isExpanded);
+          }
+        }}
+      >
         <ToolStatusIndicator status={status} toolName="Read" />
         <span className="tool-block-label">
           {tools.length > 1 ? `Read ${tools.length} files` : 'Read file'}
@@ -167,7 +187,27 @@ function ReadGroup({ tools, isStreaming }: { tools: ToolCallDisplay[]; isStreami
             <span className="tool-block-more">+{tools.length - 4}</span>
           )}
         </div>
+        <span className="tool-block-expand">
+          {isExpanded ? <CaretDown size={14} weight="bold" /> : <CaretRight size={14} weight="bold" />}
+        </span>
       </div>
+
+      {isExpanded && (
+        <div className="tool-block-content">
+          <div className="tool-read-group-list">
+            {tools.map((t, i) => {
+              const filePath = t.input.file_path ? String(t.input.file_path) : 'unknown';
+              const lineCount = t.output ? t.output.split('\n').length : 0;
+              return (
+                <div key={i} className="tool-read-group-item">
+                  <span className="tool-expanded-path">{filePath}</span>
+                  {lineCount > 0 && <span className="tool-line-count">{lineCount} lines</span>}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -266,14 +306,14 @@ export default memo(function AIMessage({ message }: { message: DisplayMessage })
 
   return (
     <div className="message-row ai-message-row" data-message-id={message.id}>
-      <div className={`message-avatar message-avatar--ai ${message.isStreaming ? 'streaming' : ''}`}>
-        <div className="avatar-eyes">
-          <div className="avatar-eye" />
-          <div className="avatar-eye" />
-        </div>
-      </div>
-
       <div className="message-content-wrapper">
+        <div className={`ai-message-header ${message.isStreaming ? 'streaming' : ''}`}>
+          <div className="ai-avatar-inline">
+            <div className="avatar-eye" />
+            <div className="avatar-eye" />
+          </div>
+          <span className="message-role-label">Codeye</span>
+        </div>
         <div className="ai-message-flat">
           {groupedTools.map((item, idx) => {
             if ('kind' in item && item.kind === 'group') {
