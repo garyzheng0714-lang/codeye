@@ -587,64 +587,95 @@
 }
 
 .kiro-task-card {
-  background: #1a1a2e;
-  border-radius: 16px;
-  padding: 20px 24px;
-  margin-bottom: 8px;
-  color: #e0e0e8;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 6px;
 }
 
 .kiro-task-total {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 700;
-  color: #e0e0e8;
+  color: var(--text-primary);
   letter-spacing: 0.04em;
-  margin-bottom: 16px;
+  margin-bottom: 10px;
 }
 
 .kiro-task-section {
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 }
 
 .kiro-task-section-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 16px;
+  margin-bottom: 10px;
 }
 
 .kiro-task-section-title {
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--text-primary);
   letter-spacing: 0.02em;
 }
 
 .kiro-task-chevron {
-  color: #6b6b80;
+  color: var(--text-muted);
 }
 
-.kiro-task-list {
+.kiro-task-timeline {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding-left: 2px;
 }
 
-.kiro-task-item {
+.kiro-timeline-item {
   display: flex;
-  align-items: flex-start;
-  gap: 12px;
+  gap: 10px;
+  min-height: 28px;
+}
+
+.kiro-timeline-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 18px;
+  flex-shrink: 0;
+}
+
+.kiro-timeline-icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.kiro-timeline-line {
+  width: 2px;
+  flex: 1;
+  min-height: 8px;
+  background: var(--border-subtle);
+  margin: 3px 0;
+}
+
+.kiro-timeline-line--done {
+  background: rgba(52, 211, 153, 0.25);
+}
+
+.kiro-timeline-content {
+  padding: 1px 0 8px;
+  flex: 1;
+  min-width: 0;
 }
 
 .kiro-spinner {
   color: #6366f1;
-  animation: kiroSpin 1s linear infinite;
+  animation: kiroSpin 1.2s linear infinite;
 }
 
 .kiro-pending {
   color: #6366f1;
-  opacity: 0.5;
+  opacity: 0.4;
 }
 
 @keyframes kiroSpin {
@@ -652,47 +683,46 @@
 }
 
 .kiro-task-item-label {
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 400;
-  color: #d0d0dc;
-  line-height: 1.5;
+  color: var(--text-primary);
+  line-height: 1.45;
 }
 
-.kiro-task-item--done .kiro-task-item-label {
-  color: #6b6b80;
+.kiro-timeline-item--done .kiro-task-item-label {
+  color: var(--text-muted);
 }
 
 .kiro-check-done {
   color: #34d399;
   flex-shrink: 0;
-  margin-top: 1px;
 }
 
 .kiro-task-completed-btn {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   width: 100%;
-  padding: 12px 0 4px;
+  padding: 10px 0 4px;
   border: none;
   background: transparent;
   cursor: pointer;
   font-family: var(--font-body);
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
-  margin-top: 8px;
+  border-top: 1px solid var(--border-subtle);
+  margin-top: 4px;
 }
 
 .kiro-task-completed-text {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 700;
-  color: #e0e0e8;
+  color: var(--text-primary);
   letter-spacing: 0.02em;
   flex: 1;
   text-align: left;
 }
 
 .kiro-task-completed-arrow {
-  color: #6b6b80;
+  color: var(--text-muted);
   display: flex;
   align-items: center;
 }
@@ -701,10 +731,6 @@
   opacity: 0.85;
 }
 
-.kiro-task-list--done {
+.kiro-task-timeline--done {
   padding-top: 12px;
-}
-
-[data-theme="light"] .kiro-task-card {
-  background: #1a1a2e;
 }

@@ -42,13 +42,20 @@ export default memo(function TaskProgressCard() {
         <div className="kiro-task-section">
           <div className="kiro-task-section-header">
             <span className="kiro-task-section-title">IN PROGRESS ({pendingTasks.length})</span>
-            <CaretDown size={16} weight="bold" className="kiro-task-chevron" />
+            <CaretDown size={13} weight="bold" className="kiro-task-chevron" />
           </div>
-          <div className="kiro-task-list">
+          <div className="kiro-task-timeline">
             {pendingTasks.map((task, i) => (
-              <div key={`p-${i}`} className="kiro-task-item">
-                <CircleNotch size={22} weight="bold" className={`kiro-task-icon ${i === 0 && isRunning ? 'kiro-spinner' : 'kiro-pending'}`} />
-                <span className="kiro-task-item-label">{task.label}</span>
+              <div key={`p-${i}`} className="kiro-timeline-item">
+                <div className="kiro-timeline-rail">
+                  <div className="kiro-timeline-icon">
+                    <CircleNotch size={18} weight="bold" className={i === 0 ? 'kiro-spinner' : 'kiro-pending'} />
+                  </div>
+                  {i < pendingTasks.length - 1 && <div className="kiro-timeline-line" />}
+                </div>
+                <div className="kiro-timeline-content">
+                  <span className="kiro-task-item-label">{task.label}</span>
+                </div>
               </div>
             ))}
           </div>
@@ -61,20 +68,27 @@ export default memo(function TaskProgressCard() {
           className="kiro-task-completed-btn"
           onClick={() => setShowCompleted((v) => !v)}
         >
-          <CheckCircle size={22} weight="fill" className="kiro-check-done" />
+          <CheckCircle size={18} weight="fill" className="kiro-check-done" />
           <span className="kiro-task-completed-text">COMPLETED ({doneCount})</span>
           <span className="kiro-task-completed-arrow">
-            {showCompleted ? <CaretDown size={14} weight="bold" /> : <CaretRight size={14} weight="bold" />}
+            {showCompleted ? <CaretDown size={12} weight="bold" /> : <CaretRight size={12} weight="bold" />}
           </span>
         </button>
       )}
 
       {showCompleted && (
-        <div className="kiro-task-list kiro-task-list--done">
+        <div className="kiro-task-timeline kiro-task-timeline--done">
           {doneTasks.map((task, i) => (
-            <div key={`d-${i}`} className="kiro-task-item kiro-task-item--done">
-              <CheckCircle size={22} weight="fill" className="kiro-check-done" />
-              <span className="kiro-task-item-label">{task.label}</span>
+            <div key={`d-${i}`} className="kiro-timeline-item kiro-timeline-item--done">
+              <div className="kiro-timeline-rail">
+                <div className="kiro-timeline-icon">
+                  <CheckCircle size={18} weight="fill" className="kiro-check-done" />
+                </div>
+                {i < doneTasks.length - 1 && <div className="kiro-timeline-line kiro-timeline-line--done" />}
+              </div>
+              <div className="kiro-timeline-content">
+                <span className="kiro-task-item-label">{task.label}</span>
+              </div>
             </div>
           ))}
         </div>

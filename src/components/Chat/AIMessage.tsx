@@ -273,7 +273,7 @@ function TaskBlock({ tool, isStreaming }: { tool: ToolCallDisplay; isStreaming?:
   );
 }
 
-export default memo(function AIMessage({ message }: { message: DisplayMessage }) {
+export default memo(function AIMessage({ message, showAvatar = true }: { message: DisplayMessage; showAvatar?: boolean }) {
   const isThinking = message.isStreaming && !message.content && message.toolCalls.length === 0;
   const displayContent = useStreamingTypewriter(message.content || '', message.isStreaming ?? false);
 
@@ -298,13 +298,15 @@ export default memo(function AIMessage({ message }: { message: DisplayMessage })
   return (
     <div className="message-row ai-message-row" data-message-id={message.id}>
       <div className="message-content-wrapper">
-        <div className={`ai-message-header ${message.isStreaming ? 'streaming' : ''}`}>
-          <div className="ai-avatar-inline">
-            <div className="avatar-eye" />
-            <div className="avatar-eye" />
+        {showAvatar && (
+          <div className={`ai-message-header ${message.isStreaming ? 'streaming' : ''}`}>
+            <div className="ai-avatar-inline">
+              <div className="avatar-eye" />
+              <div className="avatar-eye" />
+            </div>
+            <span className="message-role-label">Codeye</span>
           </div>
-          <span className="message-role-label">Codeye</span>
-        </div>
+        )}
         <div className="ai-message-flat">
           {groupedTools.map((item, idx) => {
             if ('kind' in item && item.kind === 'group') {

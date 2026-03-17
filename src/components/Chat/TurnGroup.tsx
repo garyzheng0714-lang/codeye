@@ -30,13 +30,14 @@ export default memo(function TurnGroup({ turn, isLast }: Props) {
         </button>
       )}
       {(!toolsCollapsed || isLast) ? (
-        turn.assistantMessages.map((msg) => (
-          <AIMessage key={msg.id} message={msg} />
+        turn.assistantMessages.map((msg, idx) => (
+          <AIMessage key={msg.id} message={msg} showAvatar={idx === 0} />
         ))
       ) : (
         turn.assistantMessages.length > 0 && (
           <AIMessage
             message={turn.assistantMessages[turn.assistantMessages.length - 1]}
+            showAvatar
           />
         )
       )}

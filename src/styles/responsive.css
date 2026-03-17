@@ -1,4 +1,3 @@
-/* ── Tablet: sidebar collapses, content expands ── */
 @media (max-width: 768px) {
   .app-body {
     grid-template-columns: var(--activity-bar-w) 0 1fr;
@@ -14,17 +13,8 @@
   .sidebar-resize-handle {
     display: none;
   }
-
-  .title-bar-breadcrumb {
-    display: none;
-  }
-
-  .message-search {
-    min-width: 280px;
-  }
 }
 
-/* ── Mobile: full-width, no chrome ── */
 @media (max-width: 480px) {
   .app-body,
   .app-body.sidebar-collapsed {
@@ -43,14 +33,6 @@
     display: none;
   }
 
-  .title-bar-content {
-    padding: 0 var(--space-3);
-  }
-
-  .title-bar-breadcrumb {
-    display: none;
-  }
-
   .welcome-hints {
     grid-template-columns: 1fr;
   }
@@ -64,30 +46,10 @@
   }
 
   .message-list {
-    padding: var(--space-3) var(--space-4);
-    gap: var(--space-6);
-  }
-
-  .message-row {
-    max-width: 100%;
+    padding: 0 var(--space-3);
   }
 
   .input-area {
-    padding: var(--space-3) var(--space-4) var(--space-4);
-  }
-
-  .input-container {
-    border-radius: var(--radius-lg);
-  }
-
-  .git-dropdown {
-    width: calc(100vw - var(--space-8));
-    max-width: 258px;
-  }
-
-  .message-search {
-    min-width: 0;
-    left: var(--space-3);
-    right: var(--space-3);
+    padding: var(--space-3) var(--space-3) var(--space-4);
   }
 }
