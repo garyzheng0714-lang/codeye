@@ -16,4 +16,5 @@
 @import "./components/session-stats.css";
 @import "./components/file-tree.css";
 @import "./components/error-boundary.css";
+@import "./components/diff-pane.css";
 @import "./responsive.css";

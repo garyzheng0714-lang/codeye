@@ -101,6 +101,22 @@ describe('ActivityStream', () => {
     unsub();
   });
 
+  it('subscribeByType only fires for matching type', () => {
+    activityStream.clear();
+
+    const received: string[] = [];
+    const unsub = activityStream.subscribeByType('tool_executed', (entry) => {
+      received.push(entry.summary);
+    });
+
+    activityStream.push({ type: 'message_sent', sessionId: 's1', sessionName: 'T', summary: 'msg' });
+    activityStream.push({ type: 'tool_executed', sessionId: 's1', sessionName: 'T', summary: 'Edit: app.ts' });
+    activityStream.push({ type: 'error_occurred', sessionId: 's1', sessionName: 'T', summary: 'err' });
+
+    expect(received).toEqual(['Edit: app.ts']);
+    unsub();
+  });
+
   it('caps at max entries', () => {
     activityStream.clear();
 

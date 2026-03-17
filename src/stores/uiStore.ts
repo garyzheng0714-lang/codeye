@@ -11,6 +11,7 @@ interface UIState {
   activePanel: SidebarPanel;
   theme: ThemeId;
   splitEnabled: boolean;
+  diffPaneEnabled: boolean;
   permissionMode: PermissionMode;
 
   toggleSidebar: () => void;
@@ -18,6 +19,7 @@ interface UIState {
   setActivePanel: (panel: SidebarPanel) => void;
   setTheme: (theme: ThemeId) => void;
   toggleSplit: () => void;
+  toggleDiffPane: () => void;
   setPermissionMode: (mode: PermissionMode) => void;
 }
 
@@ -31,6 +33,7 @@ export const useUIStore = create<UIState>((set) => ({
   activePanel: 'sessions',
   theme: getStoredTheme(),
   splitEnabled: false,
+  diffPaneEnabled: false,
   permissionMode: 'default',
 
   toggleSidebar: () =>
@@ -53,6 +56,8 @@ export const useUIStore = create<UIState>((set) => ({
   },
 
   toggleSplit: () => set((state) => ({ splitEnabled: !state.splitEnabled })),
+
+  toggleDiffPane: () => set((state) => ({ diffPaneEnabled: !state.diffPaneEnabled })),
 
   setPermissionMode: (permissionMode) => set({ permissionMode }),
 }));

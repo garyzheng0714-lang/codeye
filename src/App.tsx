@@ -15,12 +15,14 @@ import { applyTheme, getStoredTheme } from './services/themeManager';
 import { initI18n } from './i18n';
 
 const SplitPane = lazy(() => import('./components/Chat/SplitPane'));
+const DiffPane = lazy(() => import('./components/Chat/DiffPane'));
 
 export default function App() {
   useClaudeChat();
   const sidebarCollapsed = useUIStore((s) => s.sidebarCollapsed);
   const sidebarWidth = useUIStore((s) => s.sidebarWidth);
   const splitEnabled = useUIStore((s) => s.splitEnabled);
+  const diffPaneEnabled = useUIStore((s) => s.diffPaneEnabled);
 
   useEffect(() => {
     initI18n();
@@ -82,7 +84,7 @@ export default function App() {
           <ActivityBar />
           <Sidebar />
           {!sidebarCollapsed && <SidebarBoundaryToggle />}
-          <main className={`app-main ${splitEnabled ? 'split-mode' : ''}`}>
+          <main className={`app-main ${splitEnabled || diffPaneEnabled ? 'split-mode' : ''}`}>
             <div className="primary-pane">
               <ErrorBoundary>
                 <ChatPanel />
@@ -94,6 +96,16 @@ export default function App() {
                 <ErrorBoundary>
                   <Suspense fallback={null}>
                     <SplitPane onClose={() => useUIStore.getState().toggleSplit()} />
+                  </Suspense>
+                </ErrorBoundary>
+              </>
+            )}
+            {diffPaneEnabled && !splitEnabled && (
+              <>
+                <div className="pane-divider" />
+                <ErrorBoundary>
+                  <Suspense fallback={null}>
+                    <DiffPane onClose={() => useUIStore.getState().toggleDiffPane()} />
                   </Suspense>
                 </ErrorBoundary>
               </>

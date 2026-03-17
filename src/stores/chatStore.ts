@@ -158,6 +158,14 @@ export const useChatStore = create<ChatState>()((set, get) => ({
       if (streamId && state.activeStreamId !== streamId) return state;
       if (!state.isStreaming && !streamId) return state;
 
+      activityStream.push({
+        type: 'tool_executed',
+        sessionId: state.sessionId || 'unknown',
+        sessionName: 'Current',
+        summary: `${tool.name}${tool.input.file_path ? ': ' + String(tool.input.file_path).split('/').pop() : ''}`,
+        metadata: { toolName: tool.name, toolId: tool.id, input: tool.input },
+      });
+
       const msgs = [...state.messages];
       const last = msgs[msgs.length - 1];
       if (last?.role === 'assistant') {

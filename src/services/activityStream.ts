@@ -72,6 +72,16 @@ class ActivityStream {
     return this.emitter.on(listener);
   }
 
+  subscribeByType(type: ActivityType, listener: (entry: ActivityEntry) => void): () => void {
+    const wrapper = ((entries: ActivityEntry[]) => {
+      const latest = entries[0];
+      if (latest && latest.type === type) {
+        listener(latest);
+      }
+    }) as (entries: ActivityEntry[]) => void;
+    return this.emitter.on(wrapper);
+  }
+
   clear(): void {
     this.entries = [];
     this.emitter.emit(this.entries);
