@@ -275,7 +275,7 @@ Voice: conversational, encouraging, concise. Never robotic or overly formal.
 - **Primary references**: Linear (information density, keyboard-first), Vercel (typography, spacing, restraint), Cursor/Windsurf (AI tool call patterns, chat UX conventions)
 - **Anti-references**: High-saturation gradients, "AI-glow" aesthetics, cluttered dashboards, overly decorative UI. Never look like a generic AI chatbot wrapper.
 - **Theme**: Dark-first with full light mode support. Dark uses deep neutral greys (#101012 base), light uses warm whites (#ffffff base). Purple accent (#a855f7 dark / #9333ea light) is the sole brand color — reserved for interactive focus, active states, and streaming indicators.
-- **Typography**: Inter with OpenType features (cv02-04, cv11) for UI, JetBrains Mono for code. Tight letter-spacing (-0.011em). Small base sizes (13-14px) for information density.
+- **Typography**: Sk-Modernist + Alibaba PuHuiTi for UI, JetBrains Mono for code. Tight letter-spacing (-0.011em). Small base sizes (13-14px) for information density.
 - **Motion**: Purposeful and subtle. Entrance animations (slideUp, fadeIn) are fast (120-300ms). The logo character has expressive states (blink, think, hop) that add warmth. All motion respects `prefers-reduced-motion`.
 - **Surfaces**: Glass-like overlays (rgba white/black at 3-7% opacity) for tool blocks and elevated elements. Deep shadows in dark mode, gentle shadows in light.
 
