@@ -1,4 +1,4 @@
-import { MessageSquare, List, Settings } from 'lucide-react';
+import { MessageSquare, List, FolderTree, Settings } from 'lucide-react';
 import { useUIStore } from '../../stores/uiStore';
 
 export default function ActivityBar() {
@@ -17,6 +17,15 @@ export default function ActivityBar() {
           type="button"
         >
           {sidebarCollapsed ? <MessageSquare size={18} strokeWidth={1.8} /> : <List size={18} strokeWidth={1.8} />}
+        </button>
+        <button
+          className={`activity-btn ${activePanel === 'files' && !sidebarCollapsed ? 'active' : ''}`}
+          onClick={() => setActivePanel('files')}
+          title="文件浏览器"
+          aria-label="文件浏览器"
+          type="button"
+        >
+          <FolderTree size={18} strokeWidth={1.8} />
         </button>
         <button
           className={`activity-btn ${activePanel === 'settings' && !sidebarCollapsed ? 'active' : ''}`}

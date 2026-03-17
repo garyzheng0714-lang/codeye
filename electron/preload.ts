@@ -97,6 +97,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
     delete: (key: string) => ipcRenderer.invoke('secret:delete', key),
     listKeys: () => ipcRenderer.invoke('secret:list-keys'),
   },
+  fileTree: {
+    readDir: (dirPath: string) =>
+      ipcRenderer.invoke('filetree:read-dir', { dirPath }),
+  },
   window: {
     minimize: () => ipcRenderer.invoke('window:minimize'),
     maximize: () => ipcRenderer.invoke('window:maximize'),

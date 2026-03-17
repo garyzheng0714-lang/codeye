@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import type { ThemeId } from '../services/themeManager';
 import { getStoredTheme, applyTheme } from '../services/themeManager';
 
-type SidebarPanel = 'sessions' | 'settings' | 'activity';
+type SidebarPanel = 'sessions' | 'settings' | 'activity' | 'files';
 export type PermissionMode = 'default' | 'plan' | 'full-access';
 
 interface UIState {

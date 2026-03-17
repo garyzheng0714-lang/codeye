@@ -1,5 +1,5 @@
 import { lazy, memo, Suspense, useCallback, useMemo, useState } from 'react';
-import { Search, FolderPlus, Plus, Package } from 'lucide-react';
+import { Search, FolderPlus, Plus, Package, RefreshCw } from 'lucide-react';
 import { useUIStore } from '../../stores/uiStore';
 import { useSessionStore } from '../../stores/sessionStore';
 import { useChatStore } from '../../stores/chatStore';
@@ -10,6 +10,7 @@ import type { SessionFolder } from '../../types';
 
 const SettingsPanel = lazy(() => import('../Settings/SettingsPanel'));
 const ActivityStream = lazy(() => import('../Chat/ActivityStream'));
+const FileTreePanel = lazy(() => import('../FileTree/FileTreePanel'));
 
 export default memo(function Sidebar() {
   const activePanel = useUIStore((s) => s.activePanel);
@@ -93,6 +94,15 @@ export default memo(function Sidebar() {
               </button>
             </div>
           </>
+        ) : activePanel === 'files' ? (
+          <>
+            <span className="sidebar-title">文件</span>
+            <div className="sidebar-actions">
+              <button className="sidebar-action-btn" onClick={() => window.dispatchEvent(new Event('codeye:refresh-file-tree'))} title="刷新" aria-label="刷新文件树">
+                <RefreshCw size={15} strokeWidth={1.8} />
+              </button>
+            </div>
+          </>
         ) : (
           <div style={{ flex: 1 }} />
         )}
@@ -126,6 +136,11 @@ export default memo(function Sidebar() {
         {activePanel === 'activity' && (
           <Suspense fallback={null}>
             <ActivityStream />
+          </Suspense>
+        )}
+        {activePanel === 'files' && (
+          <Suspense fallback={null}>
+            <FileTreePanel />
           </Suspense>
         )}
       </div>
