@@ -1,15 +1,16 @@
 import { useChatStore } from '../../stores/chatStore';
 import type { ChatMode } from '../../types';
 import { t } from '../../i18n';
+import { FlowArrow, Bug, Wrench, TestTube } from '@phosphor-icons/react';
 import CodeyeMark from '../Brand/CodeyeMark';
 import HintCard from './HintCard';
 import { MOCK_MESSAGES } from '../../data/mockConversation';
 
 const hints = [
-  { text: 'Explain the auth flow in this project' },
-  { text: 'Find and fix bugs in the API handlers' },
-  { text: 'Refactor the database layer' },
-  { text: 'Write tests for the core modules' },
+  { text: 'Explain the auth flow in this project', icon: FlowArrow },
+  { text: 'Find and fix bugs in the API handlers', icon: Bug },
+  { text: 'Refactor the database layer', icon: Wrench },
+  { text: 'Write tests for the core modules', icon: TestTube },
 ];
 
 const modeDescriptions: Record<ChatMode, string> = {
@@ -41,7 +42,7 @@ export default function WelcomeScreen() {
         <p className="welcome-subtitle">{modeDescriptions[mode]}</p>
         <div className="welcome-hints">
           {hints.map((h) => (
-            <HintCard key={h.text} text={h.text} />
+            <HintCard key={h.text} text={h.text} icon={h.icon} />
           ))}
         </div>
         <button

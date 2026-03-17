@@ -56,6 +56,9 @@
 }
 
 .hint-card {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
   padding: var(--space-4) var(--space-4);
   background: var(--bg-secondary);
   border: 1px solid var(--border-subtle);
@@ -67,6 +70,18 @@
   transition: all var(--transition-base);
   line-height: 1.5;
   position: relative;
+}
+
+.hint-card-icon {
+  flex-shrink: 0;
+  color: var(--accent);
+  opacity: 0.7;
+  margin-top: 2px;
+  transition: opacity var(--transition-fast);
+}
+
+.hint-card:hover .hint-card-icon {
+  opacity: 1;
 }
 
 .hint-card:hover {

@@ -1,8 +1,9 @@
+import type { Icon } from '@phosphor-icons/react';
 import { useChatStore } from '../../stores/chatStore';
 import { useSessionStore } from '../../stores/sessionStore';
 import { sendClaudeQuery } from '../../hooks/useClaudeChat';
 
-export default function HintCard({ text }: { text: string }) {
+export default function HintCard({ text, icon: IconComponent }: { text: string; icon?: Icon }) {
   const addUserMessage = useChatStore((s) => s.addUserMessage);
   const startAssistantMessage = useChatStore((s) => s.startAssistantMessage);
   const mode = useChatStore((s) => s.mode);
@@ -27,7 +28,8 @@ export default function HintCard({ text }: { text: string }) {
 
   return (
     <button type="button" className="hint-card" onClick={handleClick}>
-      {text}
+      {IconComponent && <IconComponent size={18} weight="bold" className="hint-card-icon" />}
+      <span>{text}</span>
     </button>
   );
 }
