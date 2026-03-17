@@ -176,6 +176,7 @@
   --activity-bar-w: 48px;
   --sidebar-w: 280px;
   --titlebar-h: 42px;
+  --chat-content-max-width: 720px;
 
   color-scheme: dark;
 }

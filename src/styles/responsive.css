@@ -70,26 +70,6 @@
 
   .message-row {
     max-width: 100%;
-    gap: var(--space-3);
-  }
-
-  .ai-message {
-    padding: var(--space-4);
-    border-radius: var(--radius-md);
-  }
-
-  .message-avatar {
-    width: 28px;
-    height: 28px;
-  }
-
-  .message-avatar svg {
-    width: 12px;
-    height: 12px;
-  }
-
-  .message-content-wrapper {
-    padding-top: 0;
   }
 
   .input-area {
