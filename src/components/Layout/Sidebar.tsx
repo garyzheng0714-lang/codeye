@@ -59,9 +59,21 @@ export default memo(function Sidebar() {
       }
       return;
     }
-    const nextIdx = folders.filter((f) => f.kind === 'virtual' && f.name.startsWith('Workspace')).length + 1;
-    createFolder('', `Workspace ${nextIdx}`, 'virtual');
-  }, [createFolder, folders, syncFolder]);
+    if ('showDirectoryPicker' in window) {
+      try {
+        const handle = await (window as any).showDirectoryPicker({ mode: 'read' });
+        const folder = createFolder(handle.name, handle.name, 'virtual');
+        void syncFolder(folder);
+        return;
+      } catch {
+        // user cancelled
+        return;
+      }
+    }
+    const name = prompt('输入工作区名称：');
+    if (!name?.trim()) return;
+    createFolder('', name.trim(), 'virtual');
+  }, [createFolder, syncFolder]);
 
   return (
     <div className="sidebar">
@@ -70,7 +82,7 @@ export default memo(function Sidebar() {
           <>
             <span className="sidebar-title">会话</span>
             <div className="sidebar-actions">
-              <button className="sidebar-action-btn" onClick={handleAddFolder} title="添加文件夹" aria-label="添加文件夹">
+              <button className="sidebar-action-btn" onClick={handleAddFolder} title="选择文件夹" aria-label="选择文件夹">
                 <Plus size={15} strokeWidth={2} />
               </button>
             </div>

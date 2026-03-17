@@ -207,7 +207,7 @@ export default memo(function SessionList({
       <div className="empty-state">
         <SearchIcon size={28} strokeWidth={1.2} className="empty-state-icon" aria-hidden="true" />
         <p>暂无项目</p>
-        <p>点击上方 + 添加工作区文件夹</p>
+        <p>点击上方 + 选择工作区文件夹</p>
       </div>
     );
   }
