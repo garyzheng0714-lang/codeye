@@ -20,6 +20,8 @@
   align-items: center;
   gap: var(--space-1);
   padding: var(--space-2) var(--space-2) var(--space-1);
+  -webkit-app-region: drag;
+  padding-top: env(titlebar-area-height, 38px);
 }
 
 .sidebar-search {

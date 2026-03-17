@@ -215,6 +215,15 @@ export const useSessionStore = create<SessionState>((set, get) => ({
             session.claudeSessionId === imported.claudeSessionId
         );
 
+        let displayName = imported.name;
+        if (displayName.startsWith('<') || displayName.startsWith('local-command') || !displayName.trim()) {
+          const firstUserMsg = imported.messages.find((m) => m.role === 'user');
+          if (firstUserMsg?.content) {
+            const text = firstUserMsg.content.replace(/<[^>]*>/g, '').trim();
+            displayName = text.length > 30 ? text.slice(0, 30) + '...' : text;
+          }
+        }
+
         const nextSession: SessionData = {
           id:
             existingIndex >= 0
@@ -222,7 +231,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
               : `claude-${folderId}-${imported.claudeSessionId}`,
           folderId,
           source: 'claude',
-          name: imported.name,
+          name: displayName || imported.name,
           cwd: imported.cwd,
           claudeSessionId: imported.claudeSessionId,
           model: normalizeImportedModelId(imported.model),
