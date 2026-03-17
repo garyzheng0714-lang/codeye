@@ -21,10 +21,11 @@
 .turn-group {
   display: flex;
   flex-direction: column;
-  padding: 20px 0;
+  padding: 20px var(--radius-lg);
   border-bottom: 1px solid rgba(255, 255, 255, 0.04);
   width: 100%;
   max-width: var(--chat-content-max-width);
+  box-sizing: border-box;
 }
 
 .turn-group:last-child {

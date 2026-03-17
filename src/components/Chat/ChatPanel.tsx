@@ -2,8 +2,6 @@ import { memo } from 'react';
 import MessageList from './MessageList';
 import InputArea from './InputArea';
 import WelcomeScreen from './WelcomeScreen';
-import MessageSearch from './MessageSearch';
-import PendingApprovals from './PendingApprovals';
 import { useChatStore } from '../../stores/chatStore';
 
 export default memo(function ChatPanel() {
@@ -11,9 +9,7 @@ export default memo(function ChatPanel() {
 
   return (
     <div className="chat-panel">
-      <MessageSearch />
       {hasMessages ? <MessageList /> : <WelcomeScreen />}
-      <PendingApprovals />
       <InputArea />
     </div>
   );

@@ -1,10 +1,9 @@
-import { MessageSquare, List, FolderTree, Settings } from 'lucide-react';
+import { MessageSquare, List, FolderTree } from 'lucide-react';
 import { useUIStore } from '../../stores/uiStore';
 
 export default function ActivityBar() {
   const { activePanel, setActivePanel, sidebarCollapsed } = useUIStore();
   const sessionsLabel = sidebarCollapsed ? 'Open conversations' : 'Conversations';
-  const settingsLabel = 'Open settings';
 
   return (
     <div className="activity-bar">
@@ -26,15 +25,6 @@ export default function ActivityBar() {
           type="button"
         >
           <FolderTree size={18} strokeWidth={1.8} />
-        </button>
-        <button
-          className={`activity-btn ${activePanel === 'settings' && !sidebarCollapsed ? 'active' : ''}`}
-          onClick={() => setActivePanel('settings')}
-          title={settingsLabel}
-          aria-label={settingsLabel}
-          type="button"
-        >
-          <Settings size={18} strokeWidth={1.8} />
         </button>
       </div>
     </div>

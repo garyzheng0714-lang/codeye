@@ -5,8 +5,6 @@ import { useSessionStore } from '../../stores/sessionStore';
 import SessionList from '../Session/SessionList';
 import type { SessionFolder } from '../../types';
 
-const SettingsPanel = lazy(() => import('../Settings/SettingsPanel'));
-const ActivityStream = lazy(() => import('../Chat/ActivityStream'));
 const FileTreePanel = lazy(() => import('../FileTree/FileTreePanel'));
 
 export default memo(function Sidebar() {
@@ -110,16 +108,6 @@ export default memo(function Sidebar() {
             syncingFolderIds={syncingFolderIds}
             onSyncFolder={syncFolder}
           />
-        )}
-        {activePanel === 'settings' && (
-          <Suspense fallback={null}>
-            <SettingsPanel />
-          </Suspense>
-        )}
-        {activePanel === 'activity' && (
-          <Suspense fallback={null}>
-            <ActivityStream />
-          </Suspense>
         )}
         {activePanel === 'files' && (
           <Suspense fallback={null}>
