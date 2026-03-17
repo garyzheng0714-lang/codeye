@@ -10,6 +10,7 @@ import {
   modelSupportsEffort,
 } from '../../data/models';
 import type { ModelId, EffortLevel } from '../../types';
+import DropdownPortal from './DropdownPortal';
 
 const tierLabels: Record<string, string> = {
   premium: '$$$',
@@ -19,7 +20,8 @@ const tierLabels: Record<string, string> = {
 
 export default function ModelConfigSelector() {
   const [open, setOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const model = useChatStore((s) => s.model);
   const effort = useChatStore((s) => s.effort);
   const isStreaming = useChatStore((s) => s.isStreaming);
@@ -34,9 +36,9 @@ export default function ModelConfigSelector() {
   useEffect(() => {
     if (!open) return;
     const handleClickOutside = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
+      const target = e.target as Node;
+      if (triggerRef.current?.contains(target) || dropdownRef.current?.contains(target)) return;
+      setOpen(false);
     };
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setOpen(false);
@@ -50,8 +52,9 @@ export default function ModelConfigSelector() {
   }, [open]);
 
   return (
-    <div className="config-selector" ref={containerRef}>
+    <div className="config-selector">
       <button
+        ref={triggerRef}
         className="config-selector-trigger"
         onClick={() => setOpen(!open)}
         disabled={isStreaming}
@@ -64,8 +67,8 @@ export default function ModelConfigSelector() {
         <span className="config-selector-effort">{supportsEffort ? currentEffort.shortLabel : 'N/A'}</span>
         <ChevronDown size={11} strokeWidth={2} className={`config-selector-chevron ${open ? 'open' : ''}`} />
       </button>
-      {open && (
-        <div className="config-selector-dropdown">
+      <DropdownPortal anchorRef={triggerRef} open={open} className="config-selector-dropdown">
+        <div ref={dropdownRef}>
           <div className="config-section">
             <span className="config-section-title">Model</span>
             {MODELS.map((m) => (
@@ -105,7 +108,7 @@ export default function ModelConfigSelector() {
             )}
           </div>
         </div>
-      )}
+      </DropdownPortal>
     </div>
   );
 }

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { ChevronDown, Check } from 'lucide-react';
 import ModelConfigSelector from './ModelConfigSelector';
 import SessionStats from './SessionStats';
+import DropdownPortal from './DropdownPortal';
 import { useUIStore, type PermissionMode } from '../../stores/uiStore';
 
 const permissionOptions: { id: PermissionMode; label: string; description: string; color: string }[] = [
@@ -15,16 +16,17 @@ export default function InputFooter() {
   const setPermissionMode = useUIStore((s) => s.setPermissionMode);
 
   const [open, setOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const current = permissionOptions.find((o) => o.id === permissionMode) ?? permissionOptions[0];
 
   useEffect(() => {
     if (!open) return;
     const handleClickOutside = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
+      const target = e.target as Node;
+      if (triggerRef.current?.contains(target) || dropdownRef.current?.contains(target)) return;
+      setOpen(false);
     };
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setOpen(false);
@@ -46,8 +48,9 @@ export default function InputFooter() {
     <div className="input-footer">
       <div className="input-footer-left">
         <ModelConfigSelector />
-        <div className="permission-selector" ref={containerRef}>
+        <div className="permission-selector">
           <button
+            ref={triggerRef}
             className={`permission-selector-trigger permission-trigger--${permissionMode}`}
             onClick={() => setOpen((v) => !v)}
             type="button"
@@ -59,8 +62,8 @@ export default function InputFooter() {
             <span className="permission-trigger-label">{current.label}</span>
             <ChevronDown size={11} strokeWidth={2} className={`permission-chevron ${open ? 'open' : ''}`} />
           </button>
-          {open && (
-            <div className="permission-dropdown">
+          <DropdownPortal anchorRef={triggerRef} open={open} className="permission-dropdown" align="left">
+            <div ref={dropdownRef}>
               {permissionOptions.map((opt) => (
                 <button
                   key={opt.id}
@@ -79,7 +82,7 @@ export default function InputFooter() {
                 </button>
               ))}
             </div>
-          )}
+          </DropdownPortal>
         </div>
       </div>
       <div className="input-footer-right">
