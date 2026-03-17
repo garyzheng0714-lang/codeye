@@ -20,6 +20,7 @@ import type { GitResultDisplay, InputAttachment } from '../types';
 function getActions(): StoreActions {
   const s = useChatStore.getState();
   return {
+    // Zustand actions are stable -- they use set() internally, always current state
     appendAssistantContent: s.appendAssistantContent,
     finishStreaming: s.finishStreaming,
     addToolCall: s.addToolCall,
@@ -28,7 +29,9 @@ function getActions(): StoreActions {
     setClaudeSessionId: s.setClaudeSessionId,
     setRuntimeSlashCommands,
     getLastAssistantContent: () => {
-      const last = s.messages[s.messages.length - 1];
+      // Pure read -- must get fresh state each call (not captured `s`)
+      const current = useChatStore.getState();
+      const last = current.messages[current.messages.length - 1];
       if (last?.role !== 'assistant') return null;
       return last.content;
     },
