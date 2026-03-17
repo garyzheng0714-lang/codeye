@@ -3,17 +3,21 @@ import { test, expect } from '../../fixtures/app';
 test.describe('Session Management', () => {
   test('empty state shows when no folders exist', async ({ sidebarPage }) => {
     await expect(sidebarPage.emptyState).toBeVisible();
-    await expect(sidebarPage.emptyState).toContainText('No folders yet');
+    await expect(sidebarPage.emptyState).toContainText('暂无项目');
   });
 
   test('new session button creates a session', async ({ sidebarPage }) => {
+    // First add a folder, then create a session via hover
+    await sidebarPage.addFolderBtn.click();
+    await expect(sidebarPage.projectGroups).toHaveCount(1);
+
     await sidebarPage.createSession();
-    await expect(sidebarPage.folderSections).toHaveCount(1);
     await expect(sidebarPage.sessionItems).toHaveCount(1);
     await expect(sidebarPage.sessionItems.first()).toHaveClass(/active/);
   });
 
   test('Ctrl+N shortcut creates a session', async ({ sidebarPage }) => {
+    await sidebarPage.addFolderBtn.click();
     await sidebarPage.createSessionViaShortcut();
     await expect(sidebarPage.sessionItems).toHaveCount(1);
   });
@@ -46,6 +50,7 @@ test.describe('Session Management', () => {
   });
 
   test('can rename session by double-click', async ({ sidebarPage }) => {
+    await sidebarPage.addFolderBtn.click();
     await sidebarPage.createSession();
     await expect(sidebarPage.sessionItems).toHaveCount(1);
 
@@ -54,15 +59,16 @@ test.describe('Session Management', () => {
   });
 
   test('can delete a session', async ({ sidebarPage }) => {
+    await sidebarPage.addFolderBtn.click();
     await sidebarPage.createSession();
     await expect(sidebarPage.sessionItems).toHaveCount(1);
 
     await sidebarPage.deleteSession(0);
     await expect(sidebarPage.sessionItems).toHaveCount(0);
-    await expect(sidebarPage.folderEmptyState).toBeVisible();
   });
 
   test('delete requires inline confirmation before removing the session', async ({ sidebarPage }) => {
+    await sidebarPage.addFolderBtn.click();
     await sidebarPage.createSession();
     await expect(sidebarPage.sessionItems).toHaveCount(1);
 
@@ -72,6 +78,7 @@ test.describe('Session Management', () => {
   });
 
   test('search filters sessions', async ({ sidebarPage }) => {
+    await sidebarPage.addFolderBtn.click();
     await sidebarPage.createSession();
     await expect(sidebarPage.sessionItems).toHaveCount(1);
     await sidebarPage.renameSession(0, 'Unique Alpha');

@@ -3,11 +3,10 @@ import { Page, Locator } from '@playwright/test';
 export class SidebarPage {
   readonly page: Page;
   readonly sessionItems: Locator;
-  readonly folderSections: Locator;
-  readonly folderHeaders: Locator;
+  readonly projectGroups: Locator;
+  readonly projectHeaders: Locator;
   readonly searchInput: Locator;
   readonly emptyState: Locator;
-  readonly folderEmptyState: Locator;
   readonly settingsBtn: Locator;
   readonly sessionsBtn: Locator;
   readonly settingsPanel: Locator;
@@ -20,12 +19,11 @@ export class SidebarPage {
 
   constructor(page: Page) {
     this.page = page;
-    this.folderSections = page.locator('.folder-section');
-    this.folderHeaders = page.locator('.folder-header');
-    this.sessionItems = page.locator('.session-item');
+    this.projectGroups = page.locator('.project-group');
+    this.projectHeaders = page.locator('.project-header');
+    this.sessionItems = page.locator('.session-row');
     this.searchInput = page.locator('.sidebar-search input');
     this.emptyState = page.locator('.empty-state');
-    this.folderEmptyState = page.locator('.folder-empty');
     this.settingsBtn = page.getByRole('button', { name: 'Open settings' });
     this.sessionsBtn = page.locator('.activity-bar-top').getByRole('button', { name: /conversations/i });
     this.settingsPanel = page.locator('.settings-panel');
@@ -34,18 +32,14 @@ export class SidebarPage {
     this.settingsContent = page.locator('.settings-content');
     this.settingsSelect = page.locator('.settings-select').first();
     this.shortcutRows = page.locator('.shortcut-row');
-    this.addFolderBtn = page.getByRole('button', { name: 'Add Folder' });
+    this.addFolderBtn = page.getByRole('button', { name: '添加文件夹' });
   }
 
   async createSession() {
-    const folderCount = await this.folderSections.count();
-    if (folderCount === 0) {
-      await this.addFolderBtn.click();
-      await this.folderHeaders.first().waitFor({ state: 'visible' });
-    }
-    await this.folderHeaders.first().hover();
-    const newBtn = this.page.locator('.folder-new-session').first();
-    await newBtn.click();
+    // Hover the first project header to reveal the new session button
+    const header = this.projectHeaders.first();
+    await header.hover();
+    await this.page.getByRole('button', { name: '在此文件夹新建会话' }).first().click();
   }
 
   async createSessionViaShortcut() {
@@ -63,16 +57,16 @@ export class SidebarPage {
 
   async deleteSession(index: number) {
     await this.revealDeleteConfirm(index);
-    await this.sessionItems.nth(index).locator('.session-confirm-delete').click();
+    await this.sessionItems.nth(index).locator('.session-confirm-archive').click();
   }
 
   async revealDeleteConfirm(index: number) {
     await this.sessionItems.nth(index).hover();
-    await this.sessionItems.nth(index).locator('.session-delete').click();
+    await this.sessionItems.nth(index).locator('.session-archive').click();
   }
 
   sessionDeleteConfirm(index: number) {
-    return this.sessionItems.nth(index).locator('.session-confirm-delete');
+    return this.sessionItems.nth(index).locator('.session-confirm-archive');
   }
 
   async searchSessions(query: string) {
@@ -80,7 +74,7 @@ export class SidebarPage {
   }
 
   sessionName(index: number) {
-    return this.sessionItems.nth(index).locator('.session-name');
+    return this.sessionItems.nth(index).locator('.session-title');
   }
 
   async openSettings() {

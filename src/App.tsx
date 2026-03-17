@@ -60,7 +60,7 @@ export default function App() {
     const handler = (e: KeyboardEvent) => {
       const mod = e.metaKey || e.ctrlKey;
 
-      // Cmd+N — new session
+      // Cmd+N — new session in active folder
       if (mod && e.key === 'n') {
         e.preventDefault();
         if (useChatStore.getState().isStreaming) {
@@ -69,7 +69,8 @@ export default function App() {
         }
         saveCurrentSession();
         useChatStore.getState().clearMessages();
-        useSessionStore.getState().createSession();
+        const activeFolderId = useSessionStore.getState().activeFolderId;
+        useSessionStore.getState().createSession(undefined, activeFolderId ?? undefined);
       }
       // Cmd+L — focus input
       if (mod && e.key === 'l') {

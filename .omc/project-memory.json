@@ -220,22 +220,40 @@
   },
   "hotPaths": [
     {
+      "path": "src",
+      "accessCount": 30,
+      "lastAccessed": 1773714958302,
+      "type": "directory"
+    },
+    {
       "path": "src/storage/sessionPersistence.ts",
       "accessCount": 26,
       "lastAccessed": 1773711606597,
       "type": "file"
     },
     {
-      "path": "src",
-      "accessCount": 24,
-      "lastAccessed": 1773709919324,
+      "path": "",
+      "accessCount": 25,
+      "lastAccessed": 1773714915864,
       "type": "directory"
     },
     {
-      "path": "",
-      "accessCount": 18,
-      "lastAccessed": 1773711441456,
-      "type": "directory"
+      "path": "src/components/Layout/Sidebar.tsx",
+      "accessCount": 24,
+      "lastAccessed": 1773717526551,
+      "type": "file"
+    },
+    {
+      "path": "src/stores/sessionStore.ts",
+      "accessCount": 23,
+      "lastAccessed": 1773717462841,
+      "type": "file"
+    },
+    {
+      "path": "src/components/Session/SessionList.tsx",
+      "accessCount": 22,
+      "lastAccessed": 1773717503866,
+      "type": "file"
     },
     {
       "path": "electron/ipc/projects.ts",
@@ -244,27 +262,15 @@
       "type": "file"
     },
     {
-      "path": "src/components/Session/SessionList.tsx",
-      "accessCount": 17,
-      "lastAccessed": 1773712422767,
-      "type": "file"
-    },
-    {
-      "path": "src/stores/sessionStore.ts",
-      "accessCount": 16,
-      "lastAccessed": 1773709912601,
-      "type": "file"
-    },
-    {
-      "path": "src/components/Layout/Sidebar.tsx",
-      "accessCount": 14,
-      "lastAccessed": 1773709733043,
-      "type": "file"
-    },
-    {
       "path": "src/services/gitIntegration.ts",
-      "accessCount": 13,
-      "lastAccessed": 1773711441508,
+      "accessCount": 16,
+      "lastAccessed": 1773714908949,
+      "type": "file"
+    },
+    {
+      "path": "src/components/Session/SessionRow.tsx",
+      "accessCount": 14,
+      "lastAccessed": 1773715946310,
       "type": "file"
     },
     {
@@ -275,14 +281,20 @@
     },
     {
       "path": "src/types/session.ts",
-      "accessCount": 9,
-      "lastAccessed": 1773707125848,
+      "accessCount": 11,
+      "lastAccessed": 1773714915847,
       "type": "file"
     },
     {
-      "path": "src/components/Session/SessionRow.tsx",
+      "path": "src/components/Session/ProjectHeader.tsx",
+      "accessCount": 10,
+      "lastAccessed": 1773717421323,
+      "type": "file"
+    },
+    {
+      "path": "src/styles/components/session-list.css",
       "accessCount": 9,
-      "lastAccessed": 1773709733151,
+      "lastAccessed": 1773717569591,
       "type": "file"
     },
     {
@@ -292,15 +304,21 @@
       "type": "file"
     },
     {
-      "path": "src/components/Session/ProjectHeader.tsx",
+      "path": "src/types/electron.d.ts",
       "accessCount": 6,
-      "lastAccessed": 1773704386428,
+      "lastAccessed": 1773714943960,
       "type": "file"
     },
     {
-      "path": "src/types/electron.d.ts",
+      "path": "src/types/index.ts",
       "accessCount": 5,
-      "lastAccessed": 1773708271023,
+      "lastAccessed": 1773714909001,
+      "type": "file"
+    },
+    {
+      "path": "src/utils/session.ts",
+      "accessCount": 5,
+      "lastAccessed": 1773714923874,
       "type": "file"
     },
     {
@@ -310,21 +328,9 @@
       "type": "file"
     },
     {
-      "path": "src/styles/components/session-list.css",
+      "path": "ROADMAP.md",
       "accessCount": 4,
-      "lastAccessed": 1773709726890,
-      "type": "file"
-    },
-    {
-      "path": "src/utils/session.ts",
-      "accessCount": 4,
-      "lastAccessed": 1773709923315,
-      "type": "file"
-    },
-    {
-      "path": "src/types/index.ts",
-      "accessCount": 3,
-      "lastAccessed": 1773704257691,
+      "lastAccessed": 1773714468736,
       "type": "file"
     },
     {
@@ -376,21 +382,27 @@
       "type": "file"
     },
     {
-      "path": "electron/ipc/claude.ts",
-      "accessCount": 2,
-      "lastAccessed": 1773704268306,
-      "type": "file"
-    },
-    {
-      "path": "ROADMAP.md",
-      "accessCount": 2,
-      "lastAccessed": 1773704280755,
+      "path": "src/migrations/v2-to-v3-branch.ts",
+      "accessCount": 3,
+      "lastAccessed": 1773714943899,
       "type": "file"
     },
     {
       "path": "src/storage/bootstrap.ts",
+      "accessCount": 3,
+      "lastAccessed": 1773714949189,
+      "type": "file"
+    },
+    {
+      "path": ".context/attachments/PR instructions.md",
+      "accessCount": 3,
+      "lastAccessed": 1773717709149,
+      "type": "file"
+    },
+    {
+      "path": "electron/ipc/claude.ts",
       "accessCount": 2,
-      "lastAccessed": 1773704386320,
+      "lastAccessed": 1773704268306,
       "type": "file"
     },
     {
@@ -412,15 +424,15 @@
       "type": "directory"
     },
     {
-      "path": "src/migrations/v2-to-v3-branch.ts",
+      "path": "docs/superpowers/specs/2026-03-15-sidebar-redesign-design.md",
       "accessCount": 2,
-      "lastAccessed": 1773711580732,
+      "lastAccessed": 1773714468681,
       "type": "file"
     },
     {
-      "path": ".context/attachments/PR instructions.md",
+      "path": "docs/superpowers/plans/2026-03-15-sidebar-redesign.md",
       "accessCount": 2,
-      "lastAccessed": 1773712525177,
+      "lastAccessed": 1773714469045,
       "type": "file"
     },
     {
@@ -451,18 +463,6 @@
       "path": "src/services/sessionInbox.ts",
       "accessCount": 1,
       "lastAccessed": 1773703882717,
-      "type": "file"
-    },
-    {
-      "path": "docs/superpowers/specs/2026-03-15-sidebar-redesign-design.md",
-      "accessCount": 1,
-      "lastAccessed": 1773703896379,
-      "type": "file"
-    },
-    {
-      "path": "docs/superpowers/plans/2026-03-15-sidebar-redesign.md",
-      "accessCount": 1,
-      "lastAccessed": 1773703896750,
       "type": "file"
     },
     {
