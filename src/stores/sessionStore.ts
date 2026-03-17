@@ -86,6 +86,8 @@ interface SessionState {
   ) => void;
   forkSession: (sourceId: string, fromMessageIndex: number) => SessionData | null;
   updateSessionBranch: (id: string, branch: string | null) => void;
+  renameFolder: (id: string, name: string) => void;
+  removeFolder: (id: string) => void;
   getFolder: (id: string) => SessionFolder | undefined;
   getSession: (id: string) => SessionData | undefined;
 }
@@ -385,6 +387,24 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       sessions: state.sessions.map((session) =>
         session.id === id ? { ...session, branch } : session
       ),
+    })),
+
+  renameFolder: (id, name) =>
+    set((state) => ({
+      folders: state.folders.map((folder) =>
+        folder.id === id ? { ...folder, name, updatedAt: now() } : folder
+      ),
+    })),
+
+  removeFolder: (id) =>
+    set((state) => ({
+      folders: state.folders.filter((folder) => folder.id !== id),
+      sessions: state.sessions.filter((session) => session.folderId !== id),
+      activeFolderId: state.activeFolderId === id ? null : state.activeFolderId,
+      activeSessionId:
+        state.sessions.find((s) => s.id === state.activeSessionId)?.folderId === id
+          ? null
+          : state.activeSessionId,
     })),
 
   getFolder: (id) => get().folders.find((folder) => folder.id === id),

@@ -10,6 +10,7 @@ import { Search as SearchIcon } from 'lucide-react';
 import { useSessionStore } from '../../stores/sessionStore';
 import { useChatStore } from '../../stores/chatStore';
 import { stopClaude } from '../../hooks/useClaudeChat';
+import { saveCurrentSession } from '../../utils/session';
 import ProjectHeader from './ProjectHeader';
 import SessionRow from './SessionRow';
 import type { SessionData, SessionFolder } from '../../types';
@@ -31,8 +32,11 @@ export default memo(function SessionList({
   const activeSessionId = useSessionStore((s) => s.activeSessionId);
   const setActiveFolder = useSessionStore((s) => s.setActiveFolder);
   const setActiveSession = useSessionStore((s) => s.setActiveSession);
+  const createSession = useSessionStore((s) => s.createSession);
   const deleteSession = useSessionStore((s) => s.deleteSession);
   const renameSession = useSessionStore((s) => s.renameSession);
+  const renameFolder = useSessionStore((s) => s.renameFolder);
+  const removeFolder = useSessionStore((s) => s.removeFolder);
   const saveSessionMessages = useSessionStore((s) => s.saveSessionMessages);
   const getFolder = useSessionStore((s) => s.getFolder);
 
@@ -45,6 +49,7 @@ export default memo(function SessionList({
 
   const [collapsedFolderIds, setCollapsedFolderIds] = useState<Set<string>>(new Set());
   const [confirmingSessionId, setConfirmingSessionId] = useState<string | null>(null);
+  const [confirmingFolderId, setConfirmingFolderId] = useState<string | null>(null);
   const deferredSearch = useDeferredValue(searchQuery);
 
   useEffect(() => {
@@ -93,21 +98,6 @@ export default memo(function SessionList({
       .filter(Boolean) as { folder: SessionFolder; sessions: SessionData[] }[];
   }, [deferredSearch, folders, sessions]);
 
-  const checkoutSessionBranch = useCallback(
-    (session: SessionData) => {
-      if (!session.branch || !window.electronAPI?.projects.checkoutBranch) return;
-      const folder = getFolder(session.folderId);
-      if (!folder || folder.kind !== 'local' || !folder.path) return;
-      window.electronAPI.projects
-        .checkoutBranch(folder.path, session.branch)
-        .then((r) => {
-          if (!r.success) console.warn(`[git] checkout ${session.branch} failed:`, r.error);
-        })
-        .catch((err) => console.warn('[git] checkout error:', err));
-    },
-    [getFolder],
-  );
-
   const handleSelectSession = useCallback(
     (session: SessionData) => {
       if (session.id === activeSessionId) return;
@@ -146,10 +136,8 @@ export default memo(function SessionList({
         clearMessages();
         setClaudeSessionId(null);
       }
-
-      checkoutSessionBranch(session);
     },
-    [activeSessionId, checkoutSessionBranch, clearMessages, finishStreaming, getFolder, loadSession, saveSessionMessages, setActiveFolder, setActiveSession, setClaudeSessionId, setCwd, setSessionId],
+    [activeSessionId, clearMessages, finishStreaming, getFolder, loadSession, saveSessionMessages, setActiveFolder, setActiveSession, setClaudeSessionId, setCwd, setSessionId],
   );
 
   const handleToggleFolder = useCallback(
@@ -173,6 +161,19 @@ export default memo(function SessionList({
     [deferredSearch, onSyncFolder, syncingFolderIds],
   );
 
+  const handleNewSessionInFolder = useCallback(
+    (folderId: string) => {
+      if (useChatStore.getState().isStreaming) {
+        stopClaude();
+        useChatStore.getState().finishStreaming();
+      }
+      saveCurrentSession();
+      useChatStore.getState().clearMessages();
+      createSession(undefined, folderId);
+    },
+    [createSession],
+  );
+
   const handleArchiveSession = useCallback(
     (session: SessionData) => {
       deleteSession(session.id);
@@ -189,12 +190,24 @@ export default memo(function SessionList({
     [activeSessionId, clearMessages, deleteSession, getFolder, setClaudeSessionId, setCwd, setSessionId],
   );
 
+  const handleRemoveFolder = useCallback(
+    (folderId: string) => {
+      if (confirmingFolderId === folderId) {
+        removeFolder(folderId);
+        setConfirmingFolderId(null);
+      } else {
+        setConfirmingFolderId(folderId);
+      }
+    },
+    [confirmingFolderId, removeFolder],
+  );
+
   if (folders.length === 0) {
     return (
       <div className="empty-state">
         <SearchIcon size={28} strokeWidth={1.2} className="empty-state-icon" aria-hidden="true" />
-        <p>暂无文件夹</p>
-        <p>添加一个工作区文件夹以开始</p>
+        <p>暂无项目</p>
+        <p>点击上方 + 添加工作区文件夹</p>
       </div>
     );
   }
@@ -222,23 +235,30 @@ export default memo(function SessionList({
               isOpen={isOpen}
               sessionCount={folderSessions.length}
               isSyncing={isSyncing}
-              onClick={() => handleToggleFolder(folder)}
+              onToggle={() => handleToggleFolder(folder)}
+              onNewSession={() => handleNewSessionInFolder(folder.id)}
+              onRename={(name) => renameFolder(folder.id, name)}
+              onRemove={() => handleRemoveFolder(folder.id)}
             />
             <div className={`project-sessions-shell ${isOpen ? 'open' : ''}`}>
               <div className="project-sessions">
-                {folderSessions.map((session) => (
-                  <SessionRow
-                    key={session.id}
-                    session={session}
-                    isActive={activeSessionId === session.id}
-                    isConfirming={confirmingSessionId === session.id}
-                    onSelect={() => handleSelectSession(session)}
-                    onArchiveClick={() => setConfirmingSessionId(session.id)}
-                    onConfirm={() => handleArchiveSession(session)}
-                    onCancelConfirm={() => setConfirmingSessionId(null)}
-                    onRename={(name) => renameSession(session.id, name)}
-                  />
-                ))}
+                {folderSessions.length === 0 ? (
+                  <span className="folder-empty-hint">无线程</span>
+                ) : (
+                  folderSessions.map((session) => (
+                    <SessionRow
+                      key={session.id}
+                      session={session}
+                      isActive={activeSessionId === session.id}
+                      isConfirming={confirmingSessionId === session.id}
+                      onSelect={() => handleSelectSession(session)}
+                      onArchiveClick={() => setConfirmingSessionId(session.id)}
+                      onConfirm={() => handleArchiveSession(session)}
+                      onCancelConfirm={() => setConfirmingSessionId(null)}
+                      onRename={(name) => renameSession(session.id, name)}
+                    />
+                  ))
+                )}
               </div>
             </div>
           </section>

@@ -1,12 +1,8 @@
 import { lazy, memo, Suspense, useCallback, useMemo, useState } from 'react';
-import { Search, FolderPlus, Plus, Package, RefreshCw } from 'lucide-react';
+import { Search, Plus, Package, RefreshCw } from 'lucide-react';
 import { useUIStore } from '../../stores/uiStore';
 import { useSessionStore } from '../../stores/sessionStore';
-import { useChatStore } from '../../stores/chatStore';
-import { stopClaude } from '../../hooks/useClaudeChat';
-import { saveCurrentSession } from '../../utils/session';
 import SessionList from '../Session/SessionList';
-import { generateFoodBranchName, resolveBranchConflict } from '../../services/gitIntegration';
 import type { SessionFolder } from '../../types';
 
 const SettingsPanel = lazy(() => import('../Settings/SettingsPanel'));
@@ -18,7 +14,6 @@ export default memo(function Sidebar() {
   const folders = useSessionStore((s) => s.folders);
   const activeFolderId = useSessionStore((s) => s.activeFolderId);
   const createFolder = useSessionStore((s) => s.createFolder);
-  const createSession = useSessionStore((s) => s.createSession);
   const importClaudeSessions = useSessionStore((s) => s.importClaudeSessions);
   const markFolderSynced = useSessionStore((s) => s.markFolderSynced);
 
@@ -70,37 +65,6 @@ export default memo(function Sidebar() {
     createFolder('', `Workspace ${nextIdx}`, 'virtual');
   }, [createFolder, folders, syncFolder]);
 
-  const handleNewSession = useCallback(async () => {
-    if (useChatStore.getState().isStreaming) {
-      stopClaude();
-      useChatStore.getState().finishStreaming();
-    }
-    saveCurrentSession();
-    useChatStore.getState().clearMessages();
-
-    const folder = activeFolder;
-    if (folder?.kind === 'local' && folder.path && window.electronAPI?.projects.createBranch) {
-      try {
-        const gitStatus = await window.electronAPI.projects.getGitStatus(folder.path);
-        if (gitStatus.available) {
-          const existingBranches = await window.electronAPI.projects.listBranches(folder.path);
-          const suggested = generateFoodBranchName();
-          const resolved = resolveBranchConflict(suggested, existingBranches);
-          const result = await window.electronAPI.projects.createBranch(folder.path, resolved);
-          if (result.success) {
-            createSession(undefined, folder.id, result.branch);
-            return;
-          }
-          console.warn('[git] Branch creation failed:', result.error);
-        }
-      } catch (err) {
-        console.warn('[git] Branch creation error:', err);
-      }
-    }
-
-    createSession();
-  }, [activeFolder, createSession]);
-
   return (
     <div className="sidebar">
       <div className="sidebar-header">
@@ -108,11 +72,8 @@ export default memo(function Sidebar() {
           <>
             <span className="sidebar-title">会话</span>
             <div className="sidebar-actions">
-              <button className="sidebar-action-btn" onClick={handleNewSession} title="新建会话" aria-label="新建会话">
-                <Plus size={15} strokeWidth={2} />
-              </button>
               <button className="sidebar-action-btn" onClick={handleAddFolder} title="添加文件夹" aria-label="添加文件夹">
-                <FolderPlus size={15} strokeWidth={1.8} />
+                <Plus size={15} strokeWidth={2} />
               </button>
             </div>
           </>
