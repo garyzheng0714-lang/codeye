@@ -4,6 +4,7 @@ import { stopClaude } from '../../hooks/useClaudeChat';
 import { useInputComposer } from '../../hooks/useInputComposer';
 import InputFooter from './InputFooter';
 import TaskProgressCard from './TaskProgressCard';
+import SlashPalette from './SlashPalette';
 
 export default memo(function InputArea() {
   const {
@@ -11,6 +12,8 @@ export default memo(function InputArea() {
     mode,
     isStreaming,
     canSend,
+    showPalette,
+    slashQuery,
     textareaRef,
     composingRef,
     placeholders,
@@ -18,13 +21,21 @@ export default memo(function InputArea() {
     handleInput,
     handlePaste,
     handleSend,
+    handleCommandSelect,
+    setShowPalette,
   } = useInputComposer();
 
   return (
     <div className={`input-area ${isStreaming ? 'is-streaming' : ''}`}>
       <div className="input-container-wrapper">
         <TaskProgressCard />
-        <div className={`input-container ${isStreaming ? 'is-streaming' : ''}`}>
+        <div className={`input-container ${isStreaming ? 'is-streaming' : ''}`} style={{ position: 'relative' }}>
+          <SlashPalette
+            query={slashQuery}
+            visible={showPalette}
+            onSelect={handleCommandSelect}
+            onClose={() => setShowPalette(false)}
+          />
           <textarea
             ref={textareaRef}
             className={`input-textarea ${isStreaming ? 'is-streaming' : ''}`}

@@ -572,6 +572,79 @@
   color: var(--bg-base);
 }
 
+/* ── Slash Command Palette ── */
+
+.slash-palette {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  right: 0;
+  margin-bottom: var(--space-2);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  z-index: 50;
+  max-height: 320px;
+  overflow-y: auto;
+  animation: slashFadeIn 120ms ease-out;
+}
+
+@keyframes slashFadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.slash-palette-list {
+  padding: var(--space-1);
+  display: flex;
+  flex-direction: column;
+}
+
+.slash-palette-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  text-align: left;
+  transition: background var(--transition-fast);
+  color: var(--text-secondary);
+}
+
+.slash-palette-item:hover,
+.slash-palette-item.active {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.slash-palette-name {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--accent);
+  min-width: 100px;
+  flex-shrink: 0;
+}
+
+.slash-palette-desc {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.slash-palette-category {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
 /* ── Light Theme ── */
 
 [data-theme="light"] .input-container {
