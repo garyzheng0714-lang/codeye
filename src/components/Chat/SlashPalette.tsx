@@ -1,5 +1,12 @@
-import { memo, useState, useEffect, useRef } from 'react';
+import { memo, useState, useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
 import { filterCommands, type SlashCommand } from '../../data/slashCommands';
+
+export interface SlashPaletteHandle {
+  navigateUp: () => void;
+  navigateDown: () => void;
+  selectActive: () => void;
+  getActiveCommand: () => SlashCommand | undefined;
+}
 
 interface SlashPaletteProps {
   query: string;
@@ -8,7 +15,7 @@ interface SlashPaletteProps {
   onClose: () => void;
 }
 
-export default memo(function SlashPalette({ query, visible, onSelect, onClose }: SlashPaletteProps) {
+export default memo(forwardRef<SlashPaletteHandle, SlashPaletteProps>(function SlashPalette({ query, visible, onSelect }, ref) {
   const [activeIndex, setActiveIndex] = useState(0);
   const listRef = useRef<HTMLDivElement>(null);
   const matches = filterCommands(query);
@@ -17,30 +24,14 @@ export default memo(function SlashPalette({ query, visible, onSelect, onClose }:
     setActiveIndex(0);
   }, [query]);
 
-  useEffect(() => {
-    if (!visible) return;
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        setActiveIndex((i) => Math.min(i + 1, matches.length - 1));
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        setActiveIndex((i) => Math.max(i - 1, 0));
-      } else if (e.key === 'Enter' || e.key === 'Tab') {
-        e.preventDefault();
-        if (matches[activeIndex]) {
-          onSelect(matches[activeIndex]);
-        }
-      } else if (e.key === 'Escape') {
-        e.preventDefault();
-        onClose();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown, true);
-    return () => window.removeEventListener('keydown', handleKeyDown, true);
-  }, [visible, activeIndex, matches, onSelect, onClose]);
+  useImperativeHandle(ref, () => ({
+    navigateUp: () => setActiveIndex((i) => Math.max(i - 1, 0)),
+    navigateDown: () => setActiveIndex((i) => Math.min(i + 1, matches.length - 1)),
+    selectActive: () => {
+      if (matches[activeIndex]) onSelect(matches[activeIndex]);
+    },
+    getActiveCommand: () => matches[activeIndex],
+  }), [activeIndex, matches, onSelect]);
 
   // Scroll active item into view
   useEffect(() => {
@@ -79,4 +70,4 @@ export default memo(function SlashPalette({ query, visible, onSelect, onClose }:
       </div>
     </div>
   );
-});
+}));

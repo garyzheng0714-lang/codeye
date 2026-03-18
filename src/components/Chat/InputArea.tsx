@@ -1,12 +1,13 @@
-import { memo } from 'react';
+import { memo, useRef } from 'react';
 import { ArrowUp, Square } from 'lucide-react';
 import { stopClaude } from '../../hooks/useClaudeChat';
 import { useInputComposer } from '../../hooks/useInputComposer';
 import InputFooter from './InputFooter';
 import TaskProgressCard from './TaskProgressCard';
-import SlashPalette from './SlashPalette';
+import SlashPalette, { type SlashPaletteHandle } from './SlashPalette';
 
 export default memo(function InputArea() {
+  const paletteRef = useRef<SlashPaletteHandle>(null);
   const {
     input,
     mode,
@@ -14,10 +15,11 @@ export default memo(function InputArea() {
     canSend,
     showPalette,
     slashQuery,
+    paletteHasMatches,
     textareaRef,
     composingRef,
     placeholders,
-    handleKeyDown,
+    handleKeyDown: composerHandleKeyDown,
     handleInput,
     handlePaste,
     handleSend,
@@ -25,12 +27,41 @@ export default memo(function InputArea() {
     setShowPalette,
   } = useInputComposer();
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    // Slash palette keyboard navigation — handled here, not in the palette
+    if (showPalette && paletteHasMatches) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        paletteRef.current?.navigateDown();
+        return;
+      }
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        paletteRef.current?.navigateUp();
+        return;
+      }
+      if (e.key === 'Enter' || e.key === 'Tab') {
+        e.preventDefault();
+        paletteRef.current?.selectActive();
+        return;
+      }
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setShowPalette(false);
+        return;
+      }
+    }
+    // Everything else delegates to the composer
+    composerHandleKeyDown(e);
+  };
+
   return (
     <div className={`input-area ${isStreaming ? 'is-streaming' : ''}`}>
       <div className="input-container-wrapper">
         <TaskProgressCard />
         <div className={`input-container ${isStreaming ? 'is-streaming' : ''}`} style={{ position: 'relative' }}>
           <SlashPalette
+            ref={paletteRef}
             query={slashQuery}
             visible={showPalette}
             onSelect={handleCommandSelect}

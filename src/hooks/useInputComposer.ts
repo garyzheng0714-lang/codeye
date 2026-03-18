@@ -316,18 +316,9 @@ export function useInputComposer() {
   }, [handleCommandSelect]);
 
   // --- Event handlers ---
+  // Note: Slash palette keyboard nav (ArrowUp/Down, Enter, Tab, Escape when palette open)
+  // is handled in InputArea.tsx via paletteRef, NOT here.
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    // Slash palette navigation
-    if (showPalette && e.key === 'Escape') {
-      e.preventDefault();
-      setShowPalette(false);
-      return;
-    }
-    if (showPalette && paletteHasMatches && ['ArrowDown', 'ArrowUp', 'Enter', 'Tab'].includes(e.key)) {
-      e.preventDefault();
-      return;
-    }
-
     // Send
     const isComposing = composingRef.current || e.nativeEvent.isComposing;
     if (e.key === 'Enter' && !isComposing && (!e.shiftKey || e.metaKey || e.ctrlKey)) {
@@ -463,6 +454,7 @@ export function useInputComposer() {
     pendingCount,
     canSend,
     showPalette,
+    paletteHasMatches,
     showContextSuggestions,
     slashQuery,
     contextRefs,
