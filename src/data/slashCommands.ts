@@ -21,7 +21,7 @@ const slashCommands: SlashCommand[] = [
   { name: 'think-med', description: 'Balanced speed and thinking depth', category: 'effort', icon: 'effort' },
   { name: 'think-high', description: 'Deep thinking, thorough responses', category: 'effort', icon: 'effort' },
 
-  // Skills
+  // Skills — built-in
   { name: 'commit', description: 'Create a git commit with staged changes', category: 'skill', icon: 'git' },
   { name: 'build-fix', description: 'Fix build and type errors incrementally', category: 'skill', icon: 'build' },
   { name: 'code-review', description: 'Security and quality review of changes', category: 'skill', icon: 'review' },
@@ -34,6 +34,21 @@ const slashCommands: SlashCommand[] = [
   { name: 'simplify', description: 'Review code for reuse, quality, efficiency', category: 'skill', icon: 'clean' },
   { name: 'save-session', description: 'Save current session state to file', category: 'skill', icon: 'save' },
   { name: 'resume-session', description: 'Resume work from saved session', category: 'skill', icon: 'restore' },
+
+  // Skills — gstack
+  { name: 'plan-eng-review', description: 'Engineering plan review — architecture, tests, performance', category: 'skill', icon: 'review' },
+  { name: 'plan-ceo-review', description: 'CEO/founder plan review — scope, vision, product strategy', category: 'skill', icon: 'review' },
+  { name: 'plan-design-review', description: 'Design audit — visual hierarchy, typography, spacing', category: 'skill', icon: 'review' },
+  { name: 'qa', description: 'QA test and fix — find bugs, fix in source, verify', category: 'skill', icon: 'test' },
+  { name: 'qa-only', description: 'QA report only — find bugs without fixing', category: 'skill', icon: 'test' },
+  { name: 'qa-design-review', description: 'Design QA — find and fix visual issues', category: 'skill', icon: 'review' },
+  { name: 'browse', description: 'Headless browser — navigate, click, screenshot, assert', category: 'skill', icon: 'search' },
+  { name: 'ship', description: 'Ship workflow — test, review, version, push, create PR', category: 'skill', icon: 'git' },
+  { name: 'writing-plans', description: 'Write implementation plans for multi-step tasks', category: 'skill', icon: 'plan' },
+  { name: 'executing-plans', description: 'Execute plans with review checkpoints', category: 'skill', icon: 'plan' },
+  { name: 'deploy', description: 'Deploy to production or staging', category: 'skill', icon: 'git' },
+  { name: 'retro', description: 'Weekly engineering retrospective with metrics', category: 'skill', icon: 'review' },
+  { name: 'document-release', description: 'Update docs to match what shipped', category: 'skill', icon: 'plan' },
 
   // Actions
   { name: 'clear', description: 'Clear current conversation', category: 'action', icon: 'clear' },
