@@ -1,69 +1,71 @@
 # Codeye
 
-Claude Code 桌面 GUI 客户端。基于 Electron + React + TypeScript 构建，通过调用本地 `claude` CLI 实现与 Claude 的交互式对话、代码编写与项目规划。
+Codeye 是一个 Claude Code 桌面 GUI 客户端。项目基于 Electron、React 和 TypeScript 构建，通过本地 `claude` CLI 提供交互式对话、代码编写、项目规划、会话管理和 Git 工作流辅助。
 
-## 功能特性
+## 功能概览
 
-- **多模型切换** — 支持 Claude Opus 4.6 / Sonnet 4.6 / Haiku 4.5，可随时通过斜杠命令或下拉菜单切换
-- **三种工作模式** — Code（编码）、Chat（对话）、Plan（规划）
-- **思考深度控制** — Low / Medium / High 三级 effort 调节（Opus & Sonnet）
-- **会话管理** — 多会话、文件夹分组、自动持久化、历史搜索、会话分叉
-- **斜杠命令** — 内置 30+ 命令（模式切换、模型选择、Git 操作、代码审查、TDD 等），支持自定义命令与运行时扩展
-- **Git 集成** — 分支管理、提交/推送/PR 状态卡片、检查点（checkpoint）
-- **文件树浏览** — 侧边栏项目文件树，快速了解项目结构
-- **代码高亮与 Diff** — 基于 Shiki 的语法高亮，分屏 Diff 视图
-- **工具审批** — Claude 调用工具前可弹出审批弹窗，支持多种权限模式（default / plan / auto / bypassPermissions 等）
-- **费用追踪** — 实时显示 token 用量与 API 费用
-- **附件支持** — 拖拽或粘贴文件作为上下文
-- **主题** — 浅色 / 深色主题
-- **国际化** — 中文 / English
-- **应用内更新** — 基于 GitHub Releases 的自动更新（需 Developer ID 签名才可静默安装）
-- **快捷键** — `Cmd+N` 新建会话、`Cmd+L` 聚焦输入、`Cmd+B` 切换侧边栏、`Cmd+\` 分屏、`Cmd+Shift+C` 全局唤起窗口
+- 多模型切换：内置 Opus、Sonnet、Haiku 三档模型别名。
+- 三种工作模式：Code、Chat、Plan。
+- 思考深度控制：`low`、`medium`、`high`，适用于支持 effort 的模型。
+- 会话管理：多会话、文件夹分组、历史搜索、会话分叉和本地持久化。
+- 斜杠命令：内置模式、模型、Git、TDD、代码审查、QA、部署等命令，并支持自定义命令。
+- Git 集成：分支状态、提交/推送结果、PR 状态卡片和检查点能力。
+- 文件树浏览：在侧边栏查看当前项目文件结构。
+- 代码高亮与 diff：使用 Shiki 渲染代码块，并提供分屏 diff 视图。
+- 工具审批：在 Claude 调用工具前按权限模式进行审批。
+- 成本追踪：展示 token 用量和估算费用。
+- 附件支持：可拖拽或粘贴文件作为上下文。
+- 主题与国际化：浅色/深色主题，中文和英文界面文案。
+- 应用内更新：基于 GitHub Releases 的 Electron 更新能力。
 
 ## 前置要求
 
-- [Node.js](https://nodejs.org/) >= 20
-- [Claude Code CLI](https://www.npmjs.com/package/@anthropic-ai/claude-code)（`npm i -g @anthropic-ai/claude-code`），并完成 `claude login`
-- macOS（当前仅构建 macOS 包）
+- Node.js `>= 20`
+- npm
+- 已安装并登录的 Claude Code CLI：
+
+  ```bash
+  npm install -g @anthropic-ai/claude-code
+  claude login
+  ```
+
+- macOS 用于当前打包目标。
 
 ## 快速开始
 
 ```bash
-# 安装依赖
 npm install
-
-# 启动开发环境（Vite + Electron 热重载）
 npm run dev
 ```
 
-开发服务器默认运行在 `http://localhost:5180`。
+`npm run dev` 会同时启动：
 
-## 构建与打包
+- Vite 前端开发服务器
+- Electron 主进程 TypeScript watch 编译
+- Electron 开发窗口
 
-```bash
-# 仅构建前端
-npm run build
+开发服务器默认使用 `http://localhost:5180`。
 
-# 构建 macOS DMG + ZIP
-npm run dist:mac
-```
+## Scripts
 
-产物输出到 `release/` 目录。
+| Command | Description |
+| --- | --- |
+| `npm run dev` | 启动 Vite、Electron 编译 watch 和 Electron 开发窗口。 |
+| `npm run build` | TypeScript project build，并构建前端资源。 |
+| `npm run build:electron` | 只编译 Electron 主进程。 |
+| `npm run dist` | 构建前端、Electron 主进程并运行 electron-builder。 |
+| `npm run dist:mac` | 构建 macOS DMG 和 ZIP。 |
+| `npm run lint` | 运行 ESLint。 |
+| `npm test` | 运行 Vitest 单元测试。 |
+| `npm run test:watch` | 以 watch 模式运行 Vitest。 |
+| `npm run test:e2e` | 运行 Playwright E2E 测试。 |
 
-## 测试
-
-```bash
-# 单元测试（Vitest）
-npm test
-
-# E2E 测试（Playwright）
-npm run test:e2e
-```
+构建产物输出到 `release/` 目录。
 
 ## 技术栈
 
 | 层级 | 技术 |
-|------|------|
+| --- | --- |
 | 桌面框架 | Electron 41 |
 | 前端 | React 19 + TypeScript 5.9 |
 | 构建工具 | Vite 7 |
@@ -77,25 +79,43 @@ npm run test:e2e
 
 ## 项目结构
 
-```
-electron/          Electron 主进程 & IPC 处理
-  ipc/             Claude CLI 调用、会话、项目、文件树、密钥管理
-src/
-  components/      React 组件（Chat、Layout、Session、FileTree 等）
-  data/            模型定义、斜杠命令、工具元数据
-  hooks/           自定义 Hooks（Claude 通信、文件树、Git 等）
-  i18n/            国际化（en / zh-CN）
-  services/        核心服务（消息处理、流批量、Git、主题、权限、费用追踪等）
-  stores/          Zustand 状态（chat、session、ui）
-  types/           TypeScript 类型定义
-  utils/           工具函数
-build/             应用图标
-tests/             E2E 测试
+```text
+.
+├── electron/              # Electron 主进程、preload、IPC 和 updater
+│   └── ipc/               # Claude、会话、项目、文件树和密钥相关 IPC
+├── src/
+│   ├── components/        # Chat、Layout、Session、FileTree 等 UI 组件
+│   ├── data/              # 模型、斜杠命令和工具元数据
+│   ├── hooks/             # Claude 通信、输入、附件、Git、文件树等 hooks
+│   ├── i18n/              # en 和 zh-CN 文案
+│   ├── services/          # 流式会话、Git、审批、成本、主题等核心服务
+│   ├── storage/           # 本地存储与迁移
+│   ├── stores/            # Zustand stores
+│   ├── styles/            # 样式入口、tokens 和组件样式
+│   ├── types/             # TypeScript 类型
+│   └── utils/             # 工具函数
+├── tests/                 # Playwright E2E 测试
+├── build/                 # 应用图标资源
+├── scripts/               # 打包校验脚本
+├── RELEASING.md           # 发版说明
+└── package.json
 ```
 
-## 发版
+## 配置与运行说明
 
-详见 [RELEASING.md](./RELEASING.md)。
+- Codeye 通过本机 `claude` CLI 与 Claude Code 交互，因此需要先完成 CLI 安装和登录。
+- Electron 主进程使用 `contextIsolation: true`，通过 preload/IPC 暴露桌面能力。
+- 开发模式下 Electron 加载 `VITE_DEV_SERVER_URL`；生产构建加载 `dist/index.html`。
+- 自动更新配置发布到 GitHub Releases，发布流程见 [RELEASING.md](./RELEASING.md)。
+
+## 测试
+
+```bash
+npm test
+npm run test:e2e
+```
+
+单元测试覆盖会话、消息处理、Git、权限、存储迁移、命令和工具服务等模块。E2E 测试位于 `tests/e2e/`。
 
 ## License
 
