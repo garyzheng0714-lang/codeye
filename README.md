@@ -1,6 +1,17 @@
-# Codeye
+# codeye
 
-Codeye 是一个 Claude Code 桌面 GUI 客户端。项目基于 Electron、React 和 TypeScript 构建，通过本地 `claude` CLI 提供交互式对话、代码编写、项目规划、会话管理和 Git 工作流辅助。
+![类型：桌面工具](https://img.shields.io/badge/%E7%B1%BB%E5%9E%8B-%E6%A1%8C%E9%9D%A2%E5%B7%A5%E5%85%B7-7c3aed)
+![技术栈：Electron / React](https://img.shields.io/badge/%E6%8A%80%E6%9C%AF%E6%A0%88-Electron%20%2F%20React-47848f)
+![状态：维护中](https://img.shields.io/badge/%E7%8A%B6%E6%80%81-%E7%BB%B4%E6%8A%A4%E4%B8%AD-2ea44f)
+![README：中文](https://img.shields.io/badge/README-%E4%B8%AD%E6%96%87-d73a49)
+
+`codeye` 是一个 Claude Code 桌面 GUI 客户端，通过本机 `claude` CLI 提供交互式对话、代码编写、项目规划、会话管理和 Git 工作流辅助。
+
+## 仓库定位
+
+- 分类：桌面工具 / AI 编程客户端。
+- 面向对象：希望用图形界面管理 Claude Code 会话、项目文件、审批和 Git 工作流的开发者。
+- 使用边界：本仓库提供 Electron 桌面客户端；实际模型访问与认证依赖本机已安装并登录的 `claude` CLI。
 
 ## 功能概览
 
@@ -24,10 +35,10 @@ Codeye 是一个 Claude Code 桌面 GUI 客户端。项目基于 Electron、Reac
 - npm
 - 已安装并登录的 Claude Code CLI：
 
-  ```bash
-  npm install -g @anthropic-ai/claude-code
-  claude login
-  ```
+```bash
+npm install -g @anthropic-ai/claude-code
+claude login
+```
 
 - macOS 用于当前打包目标。
 
@@ -40,15 +51,15 @@ npm run dev
 
 `npm run dev` 会同时启动：
 
-- Vite 前端开发服务器
-- Electron 主进程 TypeScript watch 编译
-- Electron 开发窗口
+- Vite 前端开发服务器。
+- Electron 主进程 TypeScript watch 编译。
+- Electron 开发窗口。
 
 开发服务器默认使用 `http://localhost:5180`。
 
-## Scripts
+## 常用命令
 
-| Command | Description |
+| Command | 说明 |
 | --- | --- |
 | `npm run dev` | 启动 Vite、Electron 编译 watch 和 Electron 开发窗口。 |
 | `npm run build` | TypeScript project build，并构建前端资源。 |
@@ -66,14 +77,14 @@ npm run dev
 
 | 层级 | 技术 |
 | --- | --- |
-| 桌面框架 | Electron 41 |
-| 前端 | React 19 + TypeScript 5.9 |
-| 构建工具 | Vite 7 |
-| 样式 | Tailwind CSS 4 |
-| 状态管理 | Zustand 5 |
-| 代码高亮 | Shiki 4 |
-| Markdown | react-markdown + remark-gfm |
-| 虚拟列表 | @tanstack/react-virtual |
+| 桌面框架 | Electron `41` |
+| 前端 | React `19` + TypeScript `5.9` |
+| 构建工具 | Vite `7` |
+| 样式 | Tailwind CSS `4` |
+| 状态管理 | Zustand `5` |
+| 代码高亮 | Shiki `4` |
+| Markdown | `react-markdown` + `remark-gfm` |
+| 虚拟列表 | `@tanstack/react-virtual` |
 | 打包 | electron-builder |
 | 测试 | Vitest + Playwright |
 
@@ -117,6 +128,6 @@ npm run test:e2e
 
 单元测试覆盖会话、消息处理、Git、权限、存储迁移、命令和工具服务等模块。E2E 测试位于 `tests/e2e/`。
 
-## License
+## 许可证
 
-Private — 暂未开源。
+Private，暂未开源。
